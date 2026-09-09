@@ -1,0 +1,998 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>D365 ERD Builder</title>
+<meta name="description" content="Upload a Dynamics 365 / Dataverse solution customizations.xml and explore its entity relationships as an interactive ERD. Everything runs in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#eef1f5; --surface:#ffffff; --surface-2:#e7ecf2; --surface-3:#dde3eb;
+  --border:#cfd7e1; --border-strong:#b4bfcd;
+  --ink:#16202b; --ink-2:#33414f; --muted:#5b6773; --faint:#8793a1;
+  --accent:#1d6f8b; --accent-strong:#12556d; --accent-soft:#d6e8ee;
+  /* group palette (cycled across entity groups) */
+  --gc0:#1d6f8b; --gc1:#b4603a; --gc2:#6d5aa6; --gc3:#3f7a52; --gc4:#a23c5b; --gc5:#3a6ea5; --gc6:#c08a3e; --gc7:#557089;
+  --g-system:#98a2b0;
+  --rel-business:#1d6f8b; --rel-ownership:#9aa6b4; --rel-audit:#b7bfc9; --rel-portal:#c08a3e; --rel-generic:#8b98a8;
+  --pk:#b4603a; --fk:#1d6f8b;
+  --danger:#b3402f;
+  --shadow:0 1px 2px rgba(16,32,43,.06),0 8px 24px rgba(16,32,43,.10);
+  --shadow-lift:0 2px 6px rgba(16,32,43,.10),0 18px 44px rgba(16,32,43,.22);
+  --font-ui:'Archivo',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e151c; --surface:#16202b; --surface-2:#1c2833; --surface-3:#233240;
+  --border:#2a3a48; --border-strong:#3a4d5e;
+  --ink:#e6edf3; --ink-2:#c2ceda; --muted:#8a97a5; --faint:#66727f;
+  --accent:#4fb3d0; --accent-strong:#7fcfe6; --accent-soft:#123039;
+  --gc0:#4fb3d0; --gc1:#d68a63; --gc2:#a08fd6; --gc3:#5fa87a; --gc4:#d67a97; --gc5:#7fb0e0; --gc6:#d0a05e; --gc7:#8fa6ba;
+  --g-system:#6b7684;
+  --rel-business:#4fb3d0; --rel-ownership:#6b7684; --rel-audit:#4f5a66; --rel-portal:#d0a05e; --rel-generic:#5c6673;
+  --pk:#d68a63; --fk:#4fb3d0;
+  --danger:#e07a63;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.5);
+  --shadow-lift:0 2px 6px rgba(0,0,0,.5),0 18px 44px rgba(0,0,0,.66);
+}}
+:root[data-theme="dark"]{
+  --bg:#0e151c; --surface:#16202b; --surface-2:#1c2833; --surface-3:#233240;
+  --border:#2a3a48; --border-strong:#3a4d5e;
+  --ink:#e6edf3; --ink-2:#c2ceda; --muted:#8a97a5; --faint:#66727f;
+  --accent:#4fb3d0; --accent-strong:#7fcfe6; --accent-soft:#123039;
+  --gc0:#4fb3d0; --gc1:#d68a63; --gc2:#a08fd6; --gc3:#5fa87a; --gc4:#d67a97; --gc5:#7fb0e0; --gc6:#d0a05e; --gc7:#8fa6ba;
+  --g-system:#6b7684;
+  --rel-business:#4fb3d0; --rel-ownership:#6b7684; --rel-audit:#4f5a66; --rel-portal:#d0a05e; --rel-generic:#5c6673;
+  --pk:#d68a63; --fk:#4fb3d0;
+  --danger:#e07a63;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.5);
+  --shadow-lift:0 2px 6px rgba(0,0,0,.5),0 18px 44px rgba(0,0,0,.66);
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);
+  font-size:14px;line-height:1.45;overflow:hidden;-webkit-font-smoothing:antialiased}
+img{max-width:100%}
+[hidden]{display:none!important}
+
+/* ---------- uploader ---------- */
+#uploader{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;
+  padding:24px;background:
+  radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0) 0 0/22px 22px, var(--bg);overflow:auto}
+.up-card{width:100%;max-width:560px;background:var(--surface);border:1px solid var(--border);border-radius:16px;
+  box-shadow:var(--shadow-lift);padding:30px 30px 26px;margin:auto}
+.up-brand{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.up-logo{width:34px;height:34px;border-radius:9px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;flex:none;box-shadow:var(--shadow)}
+.up-logo svg{width:20px;height:20px}
+.up-card h1{font-size:21px;font-weight:700;margin:0;letter-spacing:-.01em}
+.up-card .sub{color:var(--muted);font-size:13.5px;margin:10px 0 20px;line-height:1.5}
+.drop{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border:2px dashed var(--border-strong);border-radius:12px;padding:34px 20px;text-align:center;
+  cursor:pointer;transition:border-color .15s,background .15s;background:var(--bg)}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop svg{width:34px;height:34px;color:var(--accent);margin-bottom:8px}
+.drop .big{font-size:15px;font-weight:600;color:var(--ink)}
+.drop .small{font-size:12px;color:var(--muted);margin-top:4px}
+.up-note{margin-top:16px;font-size:12px;color:var(--muted);line-height:1.55;display:flex;gap:8px;align-items:flex-start}
+.up-note svg{width:15px;height:15px;color:var(--accent);flex:none;margin-top:1px}
+.up-err{margin-top:14px;padding:10px 12px;border-radius:9px;background:rgba(179,64,47,.10);
+  border:1px solid var(--danger);color:var(--danger);font-size:12.5px;line-height:1.5;display:none}
+.up-err.show{display:block}
+.up-actions{margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.up-sample{background:none;border:none;color:var(--accent);font-family:var(--font-ui);font-size:12.5px;font-weight:600;cursor:pointer;padding:0}
+.up-sample:hover{text-decoration:underline}
+.up-theme{margin-left:auto}
+.up-ver{margin-top:16px;font-size:11px;color:var(--faint);font-family:var(--font-mono)}
+.up-ver a{color:var(--faint);text-decoration:none}
+.up-ver a:hover{text-decoration:underline}
+
+#app{display:grid;grid-template-columns:296px 1fr;height:100vh;height:100dvh}
+
+/* ---------- rail ---------- */
+#rail{background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;min-height:0}
+.rail-head{padding:16px 16px 12px;border-bottom:1px solid var(--border)}
+.brand{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.brand h1{font-size:16px;font-weight:700;margin:0;letter-spacing:-.01em}
+.brand .env{font-family:var(--font-mono);font-size:10.5px;color:var(--muted);
+  border:1px solid var(--border);border-radius:5px;padding:1px 6px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brand p{margin:6px 0 0;font-size:11.5px;color:var(--muted);line-height:1.4;flex-basis:100%}
+.newfile{margin-top:10px;width:100%;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:7px 8px;border:1px solid var(--border-strong);background:var(--surface);color:var(--ink-2);
+  border-radius:8px;font-family:var(--font-ui);font-size:12px;font-weight:600;cursor:pointer}
+.newfile:hover{background:var(--surface-2);border-color:var(--accent)}
+.newfile svg{width:14px;height:14px}
+.search{margin-top:12px;position:relative}
+.search input{width:100%;padding:8px 10px 8px 30px;border:1px solid var(--border-strong);border-radius:8px;
+  background:var(--bg);color:var(--ink);font-family:var(--font-ui);font-size:13px}
+.search input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+.search svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--faint)}
+.rail-scroll{overflow-y:auto;flex:1;min-height:0;padding:4px 0 16px}
+.rail-scroll::-webkit-scrollbar{width:9px}
+.rail-scroll::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:6px;border:2px solid var(--surface)}
+.sect{padding:12px 16px 4px}
+.sect-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.sect-h h2{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:0}
+.linkbtns{display:flex;gap:8px}
+.linkbtn{background:none;border:none;color:var(--accent);font-family:var(--font-ui);font-size:11px;
+  font-weight:600;cursor:pointer;padding:0}
+.linkbtn:hover{text-decoration:underline}
+.grp{margin-bottom:2px}
+.grp-h{display:flex;align-items:center;gap:8px;padding:5px 4px;cursor:pointer;border-radius:6px;user-select:none}
+.grp-h:hover{background:var(--surface-2)}
+.grp-dot{width:9px;height:9px;border-radius:2.5px;flex:none}
+.grp-h .name{font-size:11.5px;font-weight:600;color:var(--ink-2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grp-h .ct{font-family:var(--font-mono);font-size:10.5px;color:var(--faint)}
+.grp-h .caret{width:12px;height:12px;color:var(--faint);transition:transform .15s}
+.grp.collapsed .caret{transform:rotate(-90deg)}
+.grp.collapsed .items{display:none}
+.items{padding-left:6px}
+.ent{display:flex;align-items:center;gap:8px;padding:3px 6px 3px 4px;border-radius:6px;cursor:pointer}
+.ent:hover{background:var(--surface-2)}
+.ent input{margin:0;accent-color:var(--accent);cursor:pointer;flex:none}
+.ent .lbl{font-size:12px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.ent.off .lbl{color:var(--faint)}
+.ent .rc{font-family:var(--font-mono);font-size:10px;color:var(--faint)}
+.rel-row{display:flex;align-items:center;gap:9px;padding:5px 4px;cursor:pointer;border-radius:6px}
+.rel-row:hover{background:var(--surface-2)}
+.rel-row input{margin:0;cursor:pointer;flex:none}
+.rel-swatch{width:22px;height:0;border-top-width:2.5px;border-top-style:solid;flex:none}
+.rel-row .name{font-size:12px;color:var(--ink-2);flex:1}
+.rel-row .rc{font-family:var(--font-mono);font-size:10px;color:var(--faint)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:4px 16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 8px;border:1px solid var(--border-strong);
+  background:var(--surface);color:var(--ink-2);border-radius:8px;font-family:var(--font-ui);font-size:12px;font-weight:600;cursor:pointer}
+.btn:hover{background:var(--surface-2);border-color:var(--accent)}
+.btn.wide{grid-column:1 / -1}
+.btn svg{width:14px;height:14px}
+.seg-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin:8px 16px 3px}
+.seg{display:flex;margin:0 16px 6px;border:1px solid var(--border-strong);border-radius:8px;overflow:hidden}
+.seg button{flex:1;border:none;background:var(--surface);color:var(--muted);font-family:var(--font-ui);
+  font-size:11.5px;font-weight:600;padding:6px 4px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--border)}
+.seg button:hover{background:var(--surface-2)}
+.seg button.on{background:var(--accent);color:#fff}
+.railver{padding:12px 16px 4px;font-size:10.5px;color:var(--faint);font-family:var(--font-mono)}
+.railver a{color:var(--accent);text-decoration:none}
+.railver a:hover{text-decoration:underline}
+
+/* ---------- stage ---------- */
+#stage-wrap{position:relative;min-width:0;background:
+  radial-gradient(circle at 1px 1px, var(--border) 1px, transparent 0) 0 0/22px 22px,
+  var(--bg)}
+#stage{width:100%;height:100%;display:block;cursor:grab}
+#stage.panning{cursor:grabbing}
+.link{fill:none;stroke-width:1.4px;stroke-linecap:round}
+.link.dim{opacity:.12}
+.link.hot{stroke-width:2.4px}
+.linklabel{font-family:var(--font-mono);font-size:9.5px;fill:var(--muted);pointer-events:none;
+  paint-order:stroke;stroke:var(--bg);stroke-width:3px}
+.mult{font-family:var(--font-mono);font-size:11px;font-weight:600;fill:var(--ink-2);pointer-events:none;
+  paint-order:stroke;stroke:var(--bg);stroke-width:3.5px}
+.mult.dim{opacity:.14}
+.node{cursor:grab}
+.node.dragging{cursor:grabbing}
+.node.dim{opacity:.28}
+.card{position:relative;background:var(--surface);border:1px solid var(--border-strong);border-radius:9px;
+  box-shadow:var(--shadow);overflow:hidden;font-family:var(--font-ui)}
+.rz{position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:nwse-resize;z-index:3}
+.rz::after{content:'';position:absolute;right:3px;bottom:3px;width:0;height:0;
+  border-left:8px solid transparent;border-bottom:8px solid var(--faint);opacity:.55}
+.rz:hover::after{opacity:1;border-bottom-color:var(--accent)}
+.node.sel .card,.node.hot .card{box-shadow:var(--shadow-lift);border-color:var(--accent)}
+.card-h{display:flex;align-items:center;gap:7px;padding:7px 8px 7px 10px;cursor:pointer;
+  border-left:4px solid var(--grp,var(--g-system));background:var(--surface)}
+.card-h:hover{background:var(--surface-2)}
+.card-h .tt{flex:1;min-width:0}
+.card-h .dn{font-size:12.5px;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-h .ln{font-family:var(--font-mono);font-size:9.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hbtn{border:none;background:none;color:var(--faint);cursor:pointer;padding:2px;border-radius:5px;flex:none;display:flex}
+.hbtn:hover{background:var(--surface-3);color:var(--ink)}
+.hbtn svg{width:14px;height:14px}
+.fields{border-top:1px solid var(--border);max-height:340px;overflow-y:auto}
+.f{display:flex;align-items:center;gap:6px;padding:3px 9px;border-bottom:1px solid var(--surface-2)}
+.f:last-child{border-bottom:none}
+.f .fn{font-family:var(--font-mono);font-size:11px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.f.key .fn{color:var(--ink);font-weight:500}
+.f .ft{font-family:var(--font-mono);font-size:9px;color:var(--faint);text-transform:lowercase}
+.badge{font-family:var(--font-mono);font-size:8.5px;font-weight:600;padding:0 4px;border-radius:3px;letter-spacing:.03em;flex:none}
+.badge.pk{color:#fff;background:var(--pk)}
+.badge.fk{color:var(--fk);border:1px solid var(--fk)}
+.f .tgt{font-family:var(--font-mono);font-size:9px;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:96px}
+.morebar{padding:5px 9px;font-size:10.5px;color:var(--accent);cursor:pointer;font-weight:600;background:var(--surface-2);text-align:center}
+.morebar:hover{background:var(--surface-3)}
+.req{width:5px;height:5px;border-radius:50%;background:var(--pk);flex:none}
+
+/* zoom + status */
+.floats{position:absolute;right:14px;bottom:14px;display:flex;flex-direction:column;gap:7px;align-items:flex-end}
+.zoomctl{display:flex;background:var(--surface);border:1px solid var(--border-strong);border-radius:9px;box-shadow:var(--shadow);overflow:hidden}
+.zoomctl button{border:none;background:none;color:var(--ink-2);width:34px;height:32px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.zoomctl button:hover{background:var(--surface-2)}
+.zoomctl button+button{border-left:1px solid var(--border)}
+.status{position:absolute;left:14px;bottom:14px;font-family:var(--font-mono);font-size:10.5px;color:var(--muted);
+  background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:5px 9px;box-shadow:var(--shadow)}
+.hint{position:absolute;left:50%;top:14px;transform:translateX(-50%);font-size:11.5px;color:var(--muted);
+  background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:5px 14px;box-shadow:var(--shadow);
+  pointer-events:none;transition:opacity .5s;text-align:center}
+.themebtn{position:absolute;right:14px;top:14px;width:34px;height:34px;border-radius:9px;border:1px solid var(--border-strong);
+  background:var(--surface);color:var(--ink-2);cursor:pointer;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center}
+.themebtn:hover{background:var(--surface-2)}
+.themebtn svg{width:16px;height:16px}
+.toast{position:absolute;left:50%;bottom:58px;transform:translateX(-50%) translateY(8px);
+  background:var(--ink);color:var(--surface);font-size:12px;font-weight:600;padding:8px 14px;border-radius:8px;
+  box-shadow:var(--shadow-lift);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;max-width:70%;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (max-width:820px){
+  #app{grid-template-columns:1fr}
+  #rail{position:absolute;z-index:20;width:296px;height:100%;transform:translateX(-100%);transition:transform .2s;box-shadow:var(--shadow-lift)}
+  #rail.open{transform:none}
+}
+.railtoggle{display:none}
+@media (max-width:820px){.railtoggle{display:flex;position:absolute;left:14px;top:14px;z-index:15;
+  width:38px;height:38px;border-radius:9px;border:1px solid var(--border-strong);background:var(--surface);
+  color:var(--ink);align-items:center;justify-content:center;box-shadow:var(--shadow);cursor:pointer}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ---------- upload screen ---------- -->
+<div id="uploader">
+  <div class="up-card">
+    <div class="up-brand">
+      <span class="up-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><path d="M10 6.5h4a1.5 1.5 0 0 1 1.5 1.5v6"/></svg></span>
+      <h1>D365 ERD Builder</h1>
+      <button class="themebtn up-theme" id="themebtn2" aria-label="Toggle theme" style="position:static;box-shadow:none"></button>
+    </div>
+    <p class="sub">Upload a Dynamics 365 / Dataverse solution <b>customizations.xml</b> and get an interactive entity-relationship diagram — drag tables, follow lookups, and export to PNG&nbsp;/&nbsp;SVG.</p>
+    <label class="drop" id="drop">
+      <input type="file" id="file" accept=".xml,text/xml,application/xml" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+      <div class="big">Drop customizations.xml here</div>
+      <div class="small">or click to choose a file</div>
+    </label>
+    <div class="up-err" id="upErr"></div>
+    <div class="up-note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span>Your file never leaves your browser — parsing and rendering happen entirely on this page. To get the XML: export a solution containing your tables from Power Apps, unzip it, and use the <code>customizations.xml</code> inside.</span>
+    </div>
+    <div class="up-actions">
+      <button class="up-sample" id="loadSample">Explore a sample schema instead →</button>
+    </div>
+    <div class="up-ver">D365 ERD Builder <span id="verUp"></span></div>
+  </div>
+</div>
+
+<!-- ---------- explorer ---------- -->
+<div id="app" hidden>
+  <aside id="rail">
+    <div class="rail-head">
+      <div class="brand">
+        <h1>D365 ERD Builder</h1>
+        <span class="env" id="envTag"></span>
+        <p id="brandBlurb">Toggle tables, drag to arrange, click a header to expand its columns.</p>
+      </div>
+      <button class="newfile" id="newfile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>Load a different file</button>
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="q" type="search" placeholder="Find a table…" autocomplete="off">
+      </div>
+    </div>
+    <div class="rail-scroll">
+      <div class="sect">
+        <div class="sect-h"><h2>Tables</h2><div class="linkbtns">
+          <button class="linkbtn" id="selAll">All</button>
+          <button class="linkbtn" id="selNone">None</button>
+          <button class="linkbtn" id="selCore">Custom</button>
+        </div></div>
+        <div id="entlist"></div>
+      </div>
+      <div class="sect">
+        <div class="sect-h"><h2>Relationships</h2></div>
+        <div id="rellist"></div>
+      </div>
+      <div class="sect">
+        <div class="sect-h"><h2>Arrange</h2></div>
+        <div class="actions" style="padding-left:0;padding-right:0">
+          <button class="btn" id="arrange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 14h6v6h-6zM10 7h4M7 10v4"/></svg>Auto-arrange</button>
+          <button class="btn" id="fit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5"/></svg>Fit view</button>
+          <button class="btn" id="expandAll"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>Expand all</button>
+          <button class="btn" id="collapseAll"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 11l-5-5-5 5M17 18l-5-5-5 5"/></svg>Collapse</button>
+          <button class="btn wide" id="reset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Reset to defaults</button>
+        </div>
+      </div>
+      <div class="sect">
+        <div class="sect-h"><h2>Diagram style</h2></div>
+      </div>
+      <div class="seg-label">Relationship notation</div>
+      <div class="seg" id="segNotation"><button data-v="crow">Crow's foot</button><button data-v="uml">UML</button></div>
+      <div class="seg-label">Connection lines</div>
+      <div class="seg" id="segLines"><button data-v="straight">Straight</button><button data-v="curved">Curved</button></div>
+      <div class="sect">
+        <div class="sect-h"><h2>Export</h2></div>
+        <div class="actions" style="padding-left:0;padding-right:0">
+          <button class="btn" id="expPng"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v13M7 11l5 5 5-5"/></svg>PNG</button>
+          <button class="btn" id="expSvg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v13M7 11l5 5 5-5"/></svg>SVG</button>
+        </div>
+      </div>
+      <div class="railver" id="railver"></div>
+    </div>
+  </aside>
+  <div id="stage-wrap">
+    <button class="railtoggle" id="railtoggle" aria-label="Toggle panel"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg></button>
+    <svg id="stage"><g id="viewport"><g id="links"></g><g id="labels"></g><g id="nodes"></g></g></svg>
+    <button class="themebtn" id="themebtn" aria-label="Toggle theme"></button>
+    <div class="hint" id="hint">Scroll to zoom · drag background to pan · drag a card to move it</div>
+    <div class="status" id="status"></div>
+    <div class="toast" id="toast"></div>
+    <div class="floats">
+      <div class="zoomctl"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const APP_VERSION='1.0.0';
+const REPO_URL='https://github.com/BobCFF/D365-ERD-Builder';
+const SVGNS='http://www.w3.org/2000/svg';
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const NODE_W=250;
+const esc=s=>(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+/* ======================================================================
+   1. customizations.xml parser  ->  {entities, relationships, meta}
+   ====================================================================== */
+// case-insensitive helpers (solution XML tag casing is inconsistent across versions)
+function kids(el,name){ const out=[],n=name.toLowerCase(); if(!el)return out;
+  for(const c of el.children) if(c.localName&&c.localName.toLowerCase()===n)out.push(c); return out; }
+function kid(el,name){ return kids(el,name)[0]||null; }
+function deepAll(el,name){ const out=[],n=name.toLowerCase(); if(!el)return out;
+  (function walk(e){ for(const c of e.children){ if(c.localName&&c.localName.toLowerCase()===n)out.push(c); walk(c);} })(el); return out; }
+function txt(el){ return el?(el.textContent||'').trim():''; }
+// pick the localized string, preferring English (1033) then first available
+function localized(container,tag){ const nodes=kids(container,tag); if(!nodes.length)return '';
+  let pick=nodes.find(n=>n.getAttribute('languagecode')==='1033')||nodes[0];
+  return (pick.getAttribute('description')||pick.getAttribute('label')||txt(pick)||'').trim(); }
+
+function normRequired(r){ r=(r||'').toLowerCase();
+  if(r==='applicationrequired'||r==='required')return 'required';
+  if(r==='systemrequired')return 'systemrequired';
+  if(r==='recommended')return 'recommended';
+  return 'none'; }
+const FK_TYPES=new Set(['lookup','customer','owner','partylist','party']);
+
+function parseCustomizations(xmlString){
+  const doc=new DOMParser().parseFromString(xmlString,'application/xml');
+  const perr=doc.querySelector('parsererror');
+  if(perr) throw new Error('That file is not valid XML. Make sure you selected customizations.xml (not the .zip).');
+
+  // locate the <Entities> container, then its direct <Entity> wrappers
+  const root=doc.documentElement;
+  if(!root) throw new Error('Empty file.');
+  const entitiesNode=deepAll(doc,'entities').find(n=>kids(n,'entity').length) ;
+  const wrappers=entitiesNode?kids(entitiesNode,'entity'):[];
+  if(!wrappers.length){
+    throw new Error('No <Entities> found. This does not look like a Dynamics 365 / Dataverse solution customizations.xml.');
+  }
+
+  const entities={};
+  for(const w of wrappers){
+    // inner <entity> node (the one that actually carries <attributes>)
+    const info=kid(w,'entityinfo');
+    const inner=(info?kids(info,'entity')[0]:null) || deepAll(w,'entity').find(e=>kid(e,'attributes'));
+    if(!inner) continue;
+    const logical=(inner.getAttribute('Name')||inner.getAttribute('name')||txt(kid(w,'name'))||'').toLowerCase();
+    if(!logical) continue;
+
+    // display name: prefer wrapper <Name LocalizedName="..">, then entity localized names
+    const nameEl=kid(w,'name');
+    let display=(nameEl&&nameEl.getAttribute('LocalizedName'))||'';
+    if(!display){ const ln=kid(inner,'localizednames'); display=localized(ln,'localizedname'); }
+    display=display||logical;
+
+    const attrs=[];
+    const attrsNode=kid(inner,'attributes');
+    for(const a of kids(attrsNode,'attribute')){
+      const name=(txt(kid(a,'logicalname'))||a.getAttribute('PhysicalName')||a.getAttribute('physicalname')||'').toLowerCase();
+      if(!name) continue;
+      const type=(txt(kid(a,'type'))||'').toLowerCase()||'nvarchar';
+      const dn=kid(a,'displaynames');
+      const adisplay=localized(dn,'displayname')|| name;
+      const dsc=kid(a,'descriptions');
+      const desc=localized(dsc,'description');
+      const required=normRequired(txt(kid(a,'requiredlevel')));
+      const at={name,type,required,display:adisplay,desc};
+      if(FK_TYPES.has(type)){ at.fk=true; at.targets=[]; }
+      attrs.push(at);
+    }
+    entities[logical]={logical,display,attributes:attrs};
+  }
+  if(!Object.keys(entities).length) throw new Error('Found the solution file but no tables with attributes inside it.');
+
+  // relationships: every <EntityRelationship> anywhere in the document, de-duplicated by Name
+  const relationships=[]; const seenRel=new Set();
+  for(const rel of deepAll(doc,'entityrelationship')){
+    const type=txt(kid(rel,'entityrelationshiptype'))||'OneToMany';
+    const referencing=(txt(kid(rel,'referencingentityname'))||'').toLowerCase();
+    const referenced=(txt(kid(rel,'referencedentityname'))||'').toLowerCase();
+    const attr=(txt(kid(rel,'referencingattributename'))||'').toLowerCase();
+    const name=rel.getAttribute('Name')||rel.getAttribute('name')||(referenced+'_'+referencing+'_'+attr);
+    if(seenRel.has(name))continue; seenRel.add(name);
+    if(!referencing||!referenced)continue;
+    relationships.push({name,type,referenced,referencing,attr,cat:categorize(attr,referencing,referenced),label:''});
+  }
+
+  // fill lookup targets + relationship labels from parsed attributes
+  for(const r of relationships){
+    if(r.type!=='OneToMany')continue;
+    const e=entities[r.referencing]; if(!e)continue;
+    const a=e.attributes.find(x=>x.name===r.attr);
+    if(a){ a.fk=true; if(!a.targets)a.targets=[]; if(!a.targets.includes(r.referenced))a.targets.push(r.referenced);
+      r.label=a.desc||a.display||''; }
+  }
+
+  return {entities,relationships,meta:{source:'customizations.xml'}};
+}
+
+function categorize(attr,referencing,referenced){
+  const a=attr||'';
+  if(a==='ownerid'||a.startsWith('owning')||referenced==='team'&&a!=='') return a==='ownerid'||a.startsWith('owning')?'ownership':'business';
+  if(['createdby','modifiedby','createdonbehalfby','modifiedonbehalfby'].includes(a)) return 'audit';
+  if(referencing.startsWith('adx_')||referencing.startsWith('mspp_')||referenced.startsWith('adx_')||referenced.startsWith('mspp_')||a.startsWith('adx_')||a.startsWith('mspp_')) return 'portal';
+  if(['regardingobjectid','objectid','activityid'].includes(a)||referencing==='activityparty'||referenced==='activityparty') return 'generic';
+  return 'business';
+}
+
+/* ======================================================================
+   2. explorer engine  (adapted from the standalone erd-explorer)
+   ====================================================================== */
+// group colour vars, cycled across non-system entity groups
+const GVARS=['--gc0','--gc1','--gc2','--gc3','--gc4','--gc5','--gc6','--gc7'];
+const REL_CATS=[
+  ['business','Business lookups','--rel-business'],
+  ['ownership','Ownership','--rel-ownership'],
+  ['audit','Created / modified by','--rel-audit'],
+  ['portal','Portal (adx / mspp)','--rel-portal'],
+  ['generic','Generic / activity-party','--rel-generic'],
+];
+const CATVAR=Object.fromEntries(REL_CATS.map(c=>[c[0],c[2]]));
+const DASHED=new Set(['audit','generic','ownership']);
+
+// ---- module state (reset on every boot) ----
+let MODEL,ENT,RELS,allIds,O2M,bizCount,GROUPS,GVAR,CORE,LS;
+let N,visible,expanded,cats,gcollapsed,sizes,saved;
+let notation='crow',curved=true;
+let curT={x:0,y:0,k:1};
+let hotId=null,selId=null,rafPending=false,pan=null,dragN=null,viewTimer=null;
+let themeChoice=null; try{themeChoice=localStorage.getItem('d365-erd-theme')||null;}catch(e){}
+
+// ---- dom handles (stage chrome is persistent) ----
+const svg=document.getElementById('stage'), viewport=document.getElementById('viewport');
+const gLinks=document.getElementById('links'), gLabels=document.getElementById('labels'), gNodes=document.getElementById('nodes');
+const entlist=document.getElementById('entlist'), rellist=document.getElementById('rellist');
+const defs=document.createElementNS(SVGNS,'defs'); svg.insertBefore(defs,svg.firstChild);
+
+/* ---------- transform / pan / zoom ---------- */
+function applyT(){ viewport.setAttribute('transform',`translate(${curT.x},${curT.y}) scale(${curT.k})`); }
+function zoomAt(mx,my,nk){ nk=clamp(nk,0.12,2.6); curT.x=mx-(mx-curT.x)*(nk/curT.k); curT.y=my-(my-curT.y)*(nk/curT.k); curT.k=nk; applyT(); }
+function saveViewSoon(){ clearTimeout(viewTimer); viewTimer=setTimeout(saveState,400); }
+
+/* ---------- markers ---------- */
+function markerDefs(prefix,colf){ let s='';
+  for(const [cat,,v] of REL_CATS){ const c=colf(v,cat);
+    s+=`<marker id="${prefix}-cf-${cat}" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="15" viewBox="0 0 12 12" refX="0.5" refY="6" orient="auto"><path d="M0,1 L11,6 M0,11 L11,6 M0,6 L11,6" fill="none" stroke="${c}" stroke-width="1.3"/></marker>`;
+    s+=`<marker id="${prefix}-one-${cat}" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="15" viewBox="0 0 12 12" refX="7" refY="6" orient="auto"><path d="M6,1.5 L6,10.5" stroke="${c}" stroke-width="1.7" fill="none"/></marker>`;
+  } return s; }
+
+/* ---------- state persistence (per-schema key) ---------- */
+function loadState(){ try{ return JSON.parse(localStorage.getItem(LS))||{}; }catch(e){ return {}; } }
+function saveState(){ if(!LS)return; try{ localStorage.setItem(LS, JSON.stringify({
+  pos:Object.fromEntries(Object.keys(N).filter(k=>visible.has(k)).map(k=>[k,[Math.round(N[k].x),Math.round(N[k].y)]])),
+  vis:[...visible], exp:[...expanded], cats:[...cats], gc:[...gcollapsed], view:[curT.x,curT.y,curT.k],
+  sizes:Object.fromEntries(Object.entries(sizes).map(([k,v])=>[k,[Math.round(v.w),Math.round(v.h)]])),
+  notation, curved
+})); }catch(e){} }
+
+/* ---------- grouping (derived from the uploaded schema) ---------- */
+function buildGroups(){
+  // prefix = publisher prefix (segment before first underscore) for custom tables; else "system"
+  const counts={};
+  for(const id of allIds){ const m=id.match(/^([a-z][a-z0-9]*)_/); const key=m?m[1]:null; if(key)counts[key]=(counts[key]||0)+1; }
+  const prefixes=Object.keys(counts).sort((a,b)=>counts[b]-counts[a]||a.localeCompare(b));
+  GROUPS=[]; GVAR={};
+  prefixes.forEach((p,i)=>{ const key='p_'+p; const v=GVARS[i%GVARS.length];
+    GROUPS.push([key,p.toUpperCase()+' tables',v]); GVAR[key]=v; });
+  GROUPS.push(['system','Standard / System','--g-system']); GVAR['system']='--g-system';
+}
+function groupOf(id){ const m=id.match(/^([a-z][a-z0-9]*)_/); return m&&GVAR['p_'+m[1]]?'p_'+m[1]:'system'; }
+
+/* ---------- boot ---------- */
+function boot(model,sourceLabel){
+  MODEL=model; ENT=model.entities; RELS=model.relationships;
+  allIds=Object.keys(ENT).sort((a,b)=>(ENT[a].display||a).localeCompare(ENT[b].display||b));
+
+  // annotate PK / FK, initial sort
+  for(const id of allIds){ const e=ENT[id]; const pk=id+'id';
+    for(const a of e.attributes) a.pk=(a.name===pk)||(a.name==='activityid')||(a.type==='primarykey');
+    e.attributes.sort((a,b)=>{ const r=x=>x.pk?0:x.fk?1:2; return r(a)-r(b)||a.name.localeCompare(b.name); });
+  }
+  O2M=RELS.filter(r=>r.type==='OneToMany'&&ENT[r.referenced]&&ENT[r.referencing]);
+  bizCount={}; for(const r of O2M){ if(r.cat!=='business')continue; bizCount[r.referenced]=(bizCount[r.referenced]||0)+1; bizCount[r.referencing]=(bizCount[r.referencing]||0)+1; }
+  for(const r of O2M){ if(r.cat!=='business')continue; const a=ENT[r.referencing].attributes.find(x=>x.name===r.attr); if(a)a.biz=true; }
+  for(const id of allIds) ENT[id].attributes.sort((a,b)=>{ const rk=x=>x.pk?0:x.biz?1:x.fk?2:3; return rk(a)-rk(b)||a.name.localeCompare(b.name); });
+
+  buildGroups();
+  for(const id of allIds) ENT[id].group=groupOf(id);
+  // default set ("Custom") = every table carrying a publisher prefix, plus the standard
+  // tables they connect to directly, so the first diagram already shows real relationships.
+  const custom=allIds.filter(id=>groupOf(id)!=='system');
+  CORE=new Set(custom.length?custom:allIds);
+  if(custom.length){ const cs=new Set(custom);
+    for(const r of O2M){ if(r.cat!=='business')continue;
+      if(cs.has(r.referencing)&&ENT[r.referenced])CORE.add(r.referenced);
+      if(cs.has(r.referenced)&&ENT[r.referencing])CORE.add(r.referencing); } }
+
+  // per-schema persistence key
+  const sig=allIds.join(',');
+  let h=0; for(let i=0;i<sig.length;i++){ h=(h*31+sig.charCodeAt(i))|0; }
+  LS='d365-erd::'+(h>>>0).toString(36)+'::'+allIds.length;
+  saved=loadState();
+
+  // reset live state
+  N={};
+  visible=new Set(saved.vis&&saved.vis.length? saved.vis.filter(id=>ENT[id]) : [...CORE]);
+  expanded=new Set((saved.exp||[]).filter(id=>ENT[id]));
+  cats=new Set(saved.cats&&saved.cats.length? saved.cats : ['business']);
+  gcollapsed=new Set(saved.gc||[]);
+  sizes={}; if(saved.sizes)for(const [k,v] of Object.entries(saved.sizes))sizes[k]={w:v[0],h:v[1]};
+  notation=saved.notation==='uml'?'uml':'crow';
+  curved=saved.curved!==false;
+  hotId=selId=null;
+
+  // chrome
+  document.getElementById('envTag').textContent=sourceLabel||'';
+  document.getElementById('brandBlurb').textContent=
+    `${allIds.length} tables · ${O2M.length} relationships parsed. Toggle tables, drag to arrange, click a header to expand columns.`;
+
+  gNodes.textContent=''; gLinks.textContent=''; gLabels.textContent='';
+  buildSidebar(); buildRelList();
+  recolorMarkers();
+  for(const id of visible)buildNode(id);
+  let needLayout=false;
+  for(const id of visible){ const p=saved.pos&&saved.pos[id]; if(p){N[id].x=p[0];N[id].y=p[1];place(id);} else needLayout=true; }
+  if(needLayout){ const fixed=new Set([...visible].filter(id=>saved.pos&&saved.pos[id])); forceLayout([...visible],fixed.size?fixed:null); }
+  drawLinks();
+  if(saved.view){ curT={x:saved.view[0],y:saved.view[1],k:saved.view[2]}; applyT(); } else { fit(); }
+  syncSegs();
+
+  document.getElementById('uploader').hidden=true;
+  document.getElementById('app').hidden=false;
+  setTimeout(()=>{ if(!saved.view)fit(); },50);
+  const hint=document.getElementById('hint'); if(hint){ hint.style.opacity=''; setTimeout(()=>{ hint.style.opacity='0'; },4600); }
+}
+
+/* ---------- sidebar ---------- */
+function buildSidebar(){
+  entlist.innerHTML='';
+  for(const [key,label,gv] of GROUPS){
+    const ids=allIds.filter(id=>ENT[id].group===key); if(!ids.length)continue;
+    const grp=document.createElement('div'); grp.className='grp'+(gcollapsed.has(key)?' collapsed':''); grp.dataset.g=key;
+    const h=document.createElement('div'); h.className='grp-h';
+    h.innerHTML=`<span class="grp-dot" style="background:var(${gv})"></span><span class="name">${esc(label)}</span>`
+      +`<span class="ct"></span><svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>`;
+    h.addEventListener('click',()=>{ grp.classList.toggle('collapsed'); grp.classList.contains('collapsed')?gcollapsed.add(key):gcollapsed.delete(key); saveState(); });
+    grp.appendChild(h);
+    const items=document.createElement('div'); items.className='items';
+    for(const id of ids){
+      const e=ENT[id];
+      const row=document.createElement('label'); row.className='ent'+(visible.has(id)?'':' off'); row.dataset.id=id;
+      const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=visible.has(id);
+      cb.addEventListener('change',()=>toggleEntity(id,cb.checked));
+      const lbl=document.createElement('span'); lbl.className='lbl'; lbl.textContent=e.display||id; lbl.title=id;
+      const rc=document.createElement('span'); rc.className='rc'; rc.textContent=bizCount[id]||'';
+      row.append(cb,lbl,rc); items.appendChild(row);
+    }
+    grp.appendChild(items); entlist.appendChild(grp);
+  }
+  updateGroupCounts();
+}
+function updateGroupCounts(){ document.querySelectorAll('.grp').forEach(grp=>{ const ids=allIds.filter(id=>ENT[id].group===grp.dataset.g);
+  grp.querySelector('.ct').textContent=`${ids.filter(i=>visible.has(i)).length}/${ids.length}`; }); }
+function syncCheckboxes(){ document.querySelectorAll('.ent').forEach(row=>{ const on=visible.has(row.dataset.id);
+  row.classList.toggle('off',!on); row.querySelector('input').checked=on; }); updateGroupCounts(); }
+function buildRelList(){
+  rellist.innerHTML='';
+  for(const [cat,label,v] of REL_CATS){
+    const cnt=O2M.filter(r=>r.cat===cat).length; if(!cnt)continue;
+    const row=document.createElement('label'); row.className='rel-row';
+    const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=cats.has(cat);
+    cb.addEventListener('change',()=>{ cb.checked?cats.add(cat):cats.delete(cat); drawLinks(); saveState(); });
+    const sw=document.createElement('span'); sw.className='rel-swatch'; sw.style.borderTopColor=`var(${v})`;
+    if(DASHED.has(cat))sw.style.borderTopStyle='dashed';
+    const nm=document.createElement('span'); nm.className='name'; nm.textContent=label;
+    const rc=document.createElement('span'); rc.className='rc'; rc.textContent=cnt;
+    row.append(cb,sw,nm,rc); rellist.appendChild(row);
+  }
+}
+
+/* ---------- card html ---------- */
+function cardHTML(id){
+  const e=ENT[id], exp=expanded.has(id);
+  const key=e.attributes.filter(a=>a.pk||a.biz), rest=e.attributes.filter(a=>!(a.pk||a.biz));
+  const shown=exp?e.attributes:key;
+  let rows=shown.map(a=>{
+    const badge=a.pk?'<span class="badge pk">PK</span>':a.fk?'<span class="badge fk">FK</span>':'';
+    const tgt=a.fk&&a.targets&&a.targets.length?`<span class="tgt" title="→ ${esc(a.targets.join(', '))}">→ ${esc((ENT[a.targets[0]]||{}).display||a.targets[0])}</span>`:'';
+    const req=(a.required==='required'||a.required==='systemrequired')?'<span class="req" title="required"></span>':'';
+    return `<div class="f${(a.pk||a.fk)?' key':''}" title="${esc(a.display||a.name)}${a.desc?' — '+esc(a.desc):''}">${badge}<span class="fn">${esc(a.name)}</span>${tgt}${req}<span class="ft">${esc(a.type)}</span></div>`;
+  }).join('');
+  if(!shown.length)rows='<div class="f"><span class="fn" style="color:var(--faint)">no columns in export</span></div>';
+  let more='';
+  if(!exp&&rest.length)more=`<div class="morebar" data-more="${id}">+${rest.length} more column${rest.length>1?'s':''}</div>`;
+  else if(exp&&rest.length)more=`<div class="morebar" data-more="${id}">collapse to keys</div>`;
+  const gv=GVAR[e.group];
+  return `<div class="card" style="--grp:var(${gv})">
+    <div class="card-h" style="border-left-color:var(${gv})">
+      <div class="tt"><div class="dn">${esc(e.display||id)}</div><div class="ln">${esc(id)}</div></div>
+      <button class="hbtn" data-hide="${id}" title="Hide table" aria-label="Hide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+    </div>
+    <div class="fields">${rows}${more}</div>
+    <div class="rz" title="Drag to resize"></div>
+  </div>`;
+}
+
+/* ---------- nodes ---------- */
+function place(id){ const n=N[id]; n.g.setAttribute('transform',`translate(${n.x},${n.y})`); }
+function nodeMeasure(id){ const n=N[id]; const sz=sizes[id];
+  const w=(sz&&sz.w)||NODE_W; n.card.style.width=w+'px';
+  const fields=n.card.querySelector('.fields');
+  if(sz&&sz.h){ const hh=n.card.querySelector('.card-h').offsetHeight; fields.style.maxHeight=Math.max(28,sz.h-hh-1)+'px'; n.card.style.height=sz.h+'px'; }
+  else { fields.style.maxHeight=''; n.card.style.height=''; }
+  const h=(sz&&sz.h)||n.card.offsetHeight;
+  n.w=w; n.h=h; n.fo.setAttribute('width',w+4); n.fo.setAttribute('height',h+4); }
+function buildNode(id){
+  const g=document.createElementNS(SVGNS,'g'); g.setAttribute('class','node'); g.dataset.id=id;
+  const fo=document.createElementNS(SVGNS,'foreignObject'); fo.setAttribute('width',NODE_W+4); fo.setAttribute('height',4000); fo.setAttribute('overflow','visible');
+  const wrap=document.createElement('div'); wrap.setAttribute('xmlns','http://www.w3.org/1999/xhtml'); wrap.innerHTML=cardHTML(id);
+  fo.appendChild(wrap); g.appendChild(fo); gNodes.appendChild(g);
+  N[id]={g,fo,card:wrap.firstElementChild,x:0,y:0,w:NODE_W,h:120};
+  wireNode(id); nodeMeasure(id);
+}
+function refreshNode(id){ const n=N[id], wrap=n.fo.firstChild; wrap.innerHTML=cardHTML(id); n.card=wrap.firstElementChild; wireNode(id); nodeMeasure(id); }
+function toggleExpand(id){ expanded.has(id)?expanded.delete(id):expanded.add(id); refreshNode(id); drawLinks(); saveState(); }
+function wireNode(id){
+  const n=N[id];
+  n.card.querySelector('[data-hide]').addEventListener('click',ev=>{ ev.stopPropagation(); toggleEntity(id,false); });
+  const mb=n.card.querySelector('[data-more]');
+  if(mb)mb.addEventListener('click',ev=>{ ev.stopPropagation(); toggleExpand(id); });
+  n.g.addEventListener('mousedown',ev=>{ if(ev.button!==0)return; if(ev.target.closest('[data-hide]')||ev.target.closest('.morebar')||ev.target.closest('.rz'))return; startDrag(id,ev); });
+  n.g.addEventListener('mouseenter',()=>highlight(id));
+  n.g.addEventListener('mouseleave',()=>highlight(null));
+  const rz=n.card.querySelector('.rz');
+  if(rz)rz.addEventListener('mousedown',ev=>{ ev.preventDefault(); ev.stopPropagation();
+    const sx=ev.clientX, sy=ev.clientY, w0=n.w, h0=n.h;
+    function mv(e){ sizes[id]={ w:clamp(w0+(e.clientX-sx)/curT.k,182,620), h:clamp(h0+(e.clientY-sy)/curT.k,88,1000) }; nodeMeasure(id); scheduleLinks(); }
+    function up(){ window.removeEventListener('mousemove',mv); window.removeEventListener('mouseup',up); saveState(); }
+    window.addEventListener('mousemove',mv); window.addEventListener('mouseup',up); });
+}
+function startDrag(id,e){ e.preventDefault(); const n=N[id]; dragN={id,sx:e.clientX,sy:e.clientY,ox:n.x,oy:n.y,moved:false,header:!!e.target.closest('.card-h')}; n.g.classList.add('dragging'); selectNode(id); }
+function endDrag(){ const d=dragN; dragN=null; const n=N[d.id]; n.g.classList.remove('dragging'); if(!d.moved&&d.header)toggleExpand(d.id); saveState(); }
+
+/* ---------- links ---------- */
+function edgeList(){ const out=[]; for(const r of O2M){ if(!cats.has(r.cat))continue; if(!visible.has(r.referenced)||!visible.has(r.referencing))continue; out.push(r);} return out; }
+function anchor(n,tx,ty){ const cx=n.x+n.w/2,cy=n.y+n.h/2; let dx=tx-cx,dy=ty-cy; if(!dx&&!dy)return[cx,cy];
+  const hw=n.w/2,hh=n.h/2; const sx=dx?hw/Math.abs(dx):Infinity, sy=dy?hh/Math.abs(dy):Infinity; const s=Math.min(sx,sy); return[cx+dx*s,cy+dy*s]; }
+function scheduleLinks(){ if(rafPending)return; rafPending=true; requestAnimationFrame(()=>{rafPending=false;drawLinks();}); }
+function qpt(p1,c,p2,t){ const u=1-t; return [u*u*p1[0]+2*u*t*c[0]+t*t*p2[0], u*u*p1[1]+2*u*t*c[1]+t*t*p2[1]]; }
+function buildEdges(edges){
+  const pairTot={},seen={},out=[];
+  for(const r of edges){ const k=[r.referenced,r.referencing].sort().join('|'); pairTot[k]=(pairTot[k]||0)+1; }
+  for(const r of edges){
+    const a=N[r.referencing], b=N[r.referenced];
+    const k=[r.referenced,r.referencing].sort().join('|'); const idx=(seen[k]=(seen[k]||0)+1)-1, tot=pairTot[k];
+    let d,p1,p2,c,star,one;
+    if(r.referenced===r.referencing){ const x=a.x+a.w,y=a.y+a.h*0.5,off=30+idx*18;
+      p1=[x,y-11]; p2=[x,y+11]; c=[x+off,y];
+      d=`M${p1[0]},${p1[1]} C${x+off},${y-off} ${x+off},${y+off} ${p2[0]},${p2[1]}`;
+      star=[x+off*0.7,y-off*0.35]; one=[x+off*0.7,y+off*0.35];
+    } else {
+      const acx=a.x+a.w/2,acy=a.y+a.h/2,bcx=b.x+b.w/2,bcy=b.y+b.h/2;
+      p1=anchor(a,bcx,bcy); p2=anchor(b,acx,acy);
+      const midx=(p1[0]+p2[0])/2,midy=(p1[1]+p2[1])/2;
+      let nx=-(p2[1]-p1[1]),ny=(p2[0]-p1[0]); const len=Math.hypot(nx,ny)||1; nx/=len;ny/=len;
+      let off=(idx-(tot-1)/2)*26;
+      if(curved) off+=clamp(len*0.16,22,110);
+      c=[midx+nx*off, midy+ny*off];
+      d=`M${p1[0]},${p1[1]} Q${c[0]},${c[1]} ${p2[0]},${p2[1]}`;
+      star=qpt(p1,c,p2,0.14); one=qpt(p1,c,p2,0.86);
+    }
+    out.push({r,d,p1,p2,c,star,one,mid:qpt(p1,c,p2,0.5)});
+  }
+  return out;
+}
+function drawLinks(){
+  if(!O2M)return;
+  const edges=edgeList(), built=buildEdges(edges);
+  gLinks.textContent=''; gLabels.textContent='';
+  const focus=hotId||selId, uml=notation==='uml';
+  for(const e of built){
+    const r=e.r;
+    const path=document.createElementNS(SVGNS,'path'); path.setAttribute('d',e.d);
+    let cls='link'; if(focus)cls+=(r.referenced===focus||r.referencing===focus)?' hot':' dim';
+    path.setAttribute('class',cls); path.setAttribute('stroke',`var(${CATVAR[r.cat]})`);
+    if(DASHED.has(r.cat))path.setAttribute('stroke-dasharray','4 3');
+    if(!uml){ path.setAttribute('marker-start',`url(#arr-cf-${r.cat})`); path.setAttribute('marker-end',`url(#arr-one-${r.cat})`); }
+    gLinks.appendChild(path);
+    const lit=focus&&(r.referenced===focus||r.referencing===focus);
+    if(uml){ mult(e.star,'*',cls); mult(e.one,'1',cls); }
+    if(lit&&(r.label||r.attr)){
+      const t=document.createElementNS(SVGNS,'text'); t.setAttribute('class','linklabel'); t.setAttribute('x',e.mid[0]); t.setAttribute('y',e.mid[1]); t.setAttribute('text-anchor','middle');
+      t.textContent=(r.label&&r.label.length<26)?r.label:r.attr; gLabels.appendChild(t);
+    }
+  }
+  updateStatus(edges.length);
+}
+function mult(pt,txt,cls){ const t=document.createElementNS(SVGNS,'text');
+  t.setAttribute('class','mult'+(cls.includes('dim')?' dim':'')); t.setAttribute('x',pt[0]); t.setAttribute('y',pt[1]); t.setAttribute('text-anchor','middle'); t.setAttribute('dominant-baseline','central');
+  t.textContent=txt; gLabels.appendChild(t); }
+function highlight(id){ hotId=id; applyDim(); drawLinks(); }
+function selectNode(id){ selId=id; document.querySelectorAll('.node').forEach(g=>g.classList.toggle('sel',g.dataset.id===id)); applyDim(); drawLinks(); }
+function deselect(){ selId=null; document.querySelectorAll('.node.sel').forEach(g=>g.classList.remove('sel')); applyDim(); drawLinks(); }
+function applyDim(){ const f=hotId||selId;
+  if(!f){ document.querySelectorAll('.node').forEach(g=>g.classList.remove('dim','hot')); return; }
+  const nbr=new Set([f]); for(const r of edgeList()){ if(r.referenced===f)nbr.add(r.referencing); if(r.referencing===f)nbr.add(r.referenced); }
+  document.querySelectorAll('.node').forEach(g=>{ const on=nbr.has(g.dataset.id); g.classList.toggle('dim',!on); g.classList.toggle('hot',g.dataset.id===f); });
+}
+
+/* ---------- force layout ---------- */
+function forceLayout(ids,fixed){
+  if(!ids.length)return;
+  const cols=Math.max(1,Math.ceil(Math.sqrt(ids.length))), rows=Math.ceil(ids.length/cols);
+  const CX=340, CY=250;
+  const P=ids.map((id,i)=>{ const n=N[id]; const sv=fixed&&fixed.has(id);
+    let x,y;
+    if(sv){ x=n.x+n.w/2; y=n.y+n.h/2; }
+    else { x=((i%cols)-(cols-1)/2)*CX + (Math.random()*60-30); y=(Math.floor(i/cols)-(rows-1)/2)*CY + (Math.random()*60-30); }
+    return {id,x,y,w:n.w,h:n.h,vx:0,vy:0}; });
+  const idx=Object.fromEntries(P.map((p,i)=>[p.id,i]));
+  const links=edgeList().filter(r=>idx[r.referenced]!=null&&idx[r.referencing]!=null&&r.referenced!==r.referencing);
+  for(let it=0;it<360;it++){
+    const alpha=1-it/360;
+    for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){ const a=P[i],b=P[j]; let dx=a.x-b.x,dy=a.y-b.y; let d2=dx*dx+dy*dy||0.01; let d=Math.sqrt(d2);
+      let rep=180000/d2; if(rep>1600)rep=1600; let fx=dx/d*rep,fy=dy/d*rep; a.vx+=fx;a.vy+=fy;b.vx-=fx;b.vy-=fy; }
+    for(const l of links){ const a=P[idx[l.referencing]],b=P[idx[l.referenced]]; let dx=b.x-a.x,dy=b.y-a.y; let d=Math.hypot(dx,dy)||1; let f=(d-260)*0.035; let fx=dx/d*f,fy=dy/d*f; a.vx+=fx;a.vy+=fy;b.vx-=fx;b.vy-=fy; }
+    for(const p of P){ p.vx-=p.x*0.006; p.vy-=p.y*0.006; }
+    for(const p of P){ if(fixed&&fixed.has(p.id)){p.vx=p.vy=0;continue;} p.x+=clamp(p.vx*alpha,-40,40); p.y+=clamp(p.vy*alpha,-40,40); p.vx*=0.85;p.vy*=0.85; }
+  }
+  for(let pass=0;pass<14;pass++)for(let i=0;i<P.length;i++)for(let j=i+1;j<P.length;j++){ const a=P[i],b=P[j];
+    const dx=a.x-b.x,dy=a.y-b.y; const ox=(a.w+b.w)/2+26-Math.abs(dx), oy=(a.h+b.h)/2+18-Math.abs(dy);
+    if(ox>0&&oy>0){ if(ox<oy){ const s=(dx<0?-1:1)*ox/2; if(!(fixed&&fixed.has(a.id)))a.x+=s; if(!(fixed&&fixed.has(b.id)))b.x-=s; }
+      else { const s=(dy<0?-1:1)*oy/2; if(!(fixed&&fixed.has(a.id)))a.y+=s; if(!(fixed&&fixed.has(b.id)))b.y-=s; } } }
+  for(const p of P){ N[p.id].x=p.x-p.w/2; N[p.id].y=p.y-p.h/2; place(p.id); }
+}
+
+/* ---------- visibility ---------- */
+function toggleEntity(id,on){
+  if(on){ visible.add(id); if(!N[id])buildNode(id); N[id].g.style.display='';
+    if((N[id].x===0&&N[id].y===0)){ const rel=O2M.find(r=>(r.referenced===id&&visible.has(r.referencing))||(r.referencing===id&&visible.has(r.referenced)));
+      const base=rel?N[rel.referenced===id?rel.referencing:rel.referenced]:null;
+      N[id].x=(base?base.x:0)+(Math.random()*160-80); N[id].y=(base?base.y:0)+140+Math.random()*70; place(id); }
+  } else { visible.delete(id); if(N[id])N[id].g.style.display='none'; if(selId===id)selId=null; if(hotId===id)hotId=null; }
+  syncCheckboxes(); applyDim(); drawLinks(); saveState();
+}
+function setVisible(ids){ const want=new Set(ids);
+  for(const id of allIds){ const on=want.has(id); if(on&&!visible.has(id))toggleEntity(id,true); else if(!on&&visible.has(id))toggleEntity(id,false); } }
+
+/* ---------- fit ---------- */
+function fit(){ const ids=[...visible]; if(!ids.length)return;
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  for(const id of ids){ const n=N[id]; x0=Math.min(x0,n.x);y0=Math.min(y0,n.y);x1=Math.max(x1,n.x+n.w);y1=Math.max(y1,n.y+n.h); }
+  const pad=64,w=x1-x0+pad*2,h=y1-y0+pad*2, r=svg.getBoundingClientRect();
+  const k=clamp(Math.min(r.width/w,r.height/h),0.12,1.6);
+  curT.k=k; curT.x=r.width/2-(x0+(x1-x0)/2)*k; curT.y=r.height/2-(y0+(y1-y0)/2)*k; applyT(); saveState();
+}
+
+/* ---------- export ---------- */
+let toastT=null;
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2800); }
+function truncate(str,max){ str=str==null?'':String(str); return str.length>max?str.slice(0,Math.max(1,max-1))+'…':str; }
+function nodeSVG(id,col){
+  const n=N[id],e=ENT[id]; const gcol=getComputedStyle(document.documentElement).getPropertyValue(GVAR[e.group]).trim()||col.faint;
+  const w=n.w,h=n.h, headerH=Math.min(40,h);
+  const exp=expanded.has(id); const key=e.attributes.filter(a=>a.pk||a.biz), rest=e.attributes.filter(a=>!(a.pk||a.biz));
+  const shown=exp?e.attributes:key, restN=rest.length;
+  const p=[]; p.push(`<g transform="translate(${n.x},${n.y})">`);
+  p.push(`<rect width="${w}" height="${h}" rx="9" fill="${col.surface}" stroke="${col.border}"/>`);
+  p.push(`<rect width="4" height="${h}" fill="${gcol}"/>`);
+  p.push(`<text x="12" y="17" font-size="12.5" font-weight="700" fill="${col.ink}">${esc(truncate(e.display||id,Math.floor((w-26)/7)))}</text>`);
+  p.push(`<text x="12" y="30" font-size="9.5" font-family="'IBM Plex Mono',monospace" fill="${col.muted}">${esc(truncate(id,Math.floor((w-26)/6)))}</text>`);
+  p.push(`<line x1="0" y1="${headerH}" x2="${w}" y2="${headerH}" stroke="${col.border}"/>`);
+  const avail=h-headerH-6, rowH=17, maxRows=Math.max(0,Math.floor(avail/rowH));
+  let list=shown, trailing='';
+  if(shown.length>maxRows){ list=shown.slice(0,Math.max(0,maxRows-1)); trailing=`+${shown.length-list.length} more`; }
+  else if(restN&&!exp&&shown.length<maxRows){ trailing=`+${restN} more column${restN>1?'s':''}`; }
+  let ry=headerH+13;
+  for(const a of list){
+    let tx=12;
+    if(a.pk){ p.push(`<rect x="10" y="${ry-9}" width="17" height="12" rx="2.5" fill="${col.pk}"/><text x="18.5" y="${ry}" font-size="8" font-family="'IBM Plex Mono',monospace" font-weight="700" fill="#fff" text-anchor="middle">PK</text>`); tx=32; }
+    else if(a.fk){ p.push(`<rect x="10" y="${ry-9}" width="17" height="12" rx="2.5" fill="none" stroke="${col.fk}"/><text x="18.5" y="${ry}" font-size="8" font-family="'IBM Plex Mono',monospace" font-weight="700" fill="${col.fk}" text-anchor="middle">FK</text>`); tx=32; }
+    const typeStr=truncate(a.type,12), nameMax=Math.floor((w-tx-14-typeStr.length*5.4)/6.2);
+    p.push(`<text x="${tx}" y="${ry}" font-size="11" font-family="'IBM Plex Mono',monospace" fill="${(a.pk||a.fk)?col.ink:col.ink2}">${esc(truncate(a.name,Math.max(4,nameMax)))}</text>`);
+    p.push(`<text x="${w-8}" y="${ry}" font-size="8.5" font-family="'IBM Plex Mono',monospace" fill="${col.faint}" text-anchor="end">${esc(typeStr)}</text>`);
+    ry+=rowH;
+  }
+  if(trailing)p.push(`<text x="${w/2}" y="${ry}" font-size="9.5" font-weight="600" fill="${col.accent}" text-anchor="middle">${esc(trailing)}</text>`);
+  p.push('</g>'); return p.join('');
+}
+function exportSVG(){
+  const ids=[...visible]; if(!ids.length)return null;
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  for(const id of ids){ const n=N[id]; x0=Math.min(x0,n.x);y0=Math.min(y0,n.y);x1=Math.max(x1,n.x+n.w);y1=Math.max(y1,n.y+n.h); }
+  const pad=48, W=Math.ceil(x1-x0+pad*2), H=Math.ceil(y1-y0+pad*2), ox=pad-x0, oy=pad-y0;
+  const cs=getComputedStyle(document.documentElement), C=v=>cs.getPropertyValue(v).trim()||'#000';
+  const col={bg:C('--bg'),surface:C('--surface'),border:C('--border-strong'),ink:C('--ink'),ink2:C('--ink-2'),muted:C('--muted'),faint:C('--faint'),accent:C('--accent'),pk:C('--pk'),fk:C('--fk')};
+  const uml=notation==='uml';
+  const s=[`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" font-family="Archivo, system-ui, sans-serif">`];
+  s.push('<defs>', markerDefs('e',(v,cat)=>C(CATVAR[cat])), '</defs>');
+  s.push(`<rect width="${W}" height="${H}" fill="${col.bg}"/>`);
+  s.push(`<g transform="translate(${ox},${oy})" fill="none" stroke-width="1.4">`);
+  const built=buildEdges(edgeList());
+  for(const e of built){ const r=e.r; const deco=uml?'':` marker-start="url(#e-cf-${r.cat})" marker-end="url(#e-one-${r.cat})"`;
+    s.push(`<path d="${e.d}" stroke="${C(CATVAR[r.cat])}"${DASHED.has(r.cat)?' stroke-dasharray="4 3"':''}${deco}/>`); }
+  s.push('</g>');
+  if(uml){ s.push(`<g transform="translate(${ox},${oy})" font-family="'IBM Plex Mono',monospace" font-size="11" font-weight="600" fill="${col.ink2}" text-anchor="middle">`);
+    for(const e of built){ s.push(`<text x="${e.star[0]}" y="${e.star[1]}" dy="0.35em" paint-order="stroke" stroke="${col.bg}" stroke-width="3.5">*</text>`);
+      s.push(`<text x="${e.one[0]}" y="${e.one[1]}" dy="0.35em" paint-order="stroke" stroke="${col.bg}" stroke-width="3.5">1</text>`); }
+    s.push('</g>'); }
+  s.push(`<g transform="translate(${ox},${oy})">`);
+  for(const id of ids)s.push(nodeSVG(id,col));
+  s.push('</g></svg>');
+  return {svg:s.join(''),w:W,h:H};
+}
+function svgToPng(svg,w,h,scale){ return new Promise((res,rej)=>{ const img=new Image();
+  img.onload=()=>{ try{ const c=document.createElement('canvas'); c.width=Math.round(w*scale); c.height=Math.round(h*scale);
+    const ctx=c.getContext('2d'); ctx.scale(scale,scale); ctx.drawImage(img,0,0); c.toBlob(b=>b?res(b):rej(new Error('empty canvas')),'image/png'); }catch(err){ rej(err); } };
+  img.onerror=()=>rej(new Error('SVG render failed')); img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg); }); }
+function downloadBlob(blob,fname){ const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=fname;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1500); }
+async function doExport(kind){
+  const out=exportSVG(); if(!out){ toast('Nothing to export — add some tables first.'); return; }
+  const fname=`d365-erd-${new Date().toISOString().slice(0,10)}.${kind}`;
+  try{
+    if(kind==='svg'){ downloadBlob(new Blob([out.svg],{type:'image/svg+xml;charset=utf-8'}),fname); toast('SVG downloaded — check your downloads.'); }
+    else { toast('Rendering PNG…'); const blob=await svgToPng(out.svg,out.w,out.h,2); downloadBlob(blob,fname); toast('PNG downloaded — check your downloads.'); }
+  }catch(e){ toast('Export failed'+(e&&e.message?': '+e.message:'')); }
+}
+
+/* ---------- status / theme ---------- */
+function updateStatus(ec){ if(!allIds)return; document.getElementById('status').textContent=`${visible.size} tables · ${ec} relationships · ${allIds.length} total`; }
+const themebtn=document.getElementById('themebtn'), themebtn2=document.getElementById('themebtn2');
+const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const MOON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>';
+function currentDark(){ if(themeChoice==='dark')return true; if(themeChoice==='light')return false; return matchMedia('(prefers-color-scheme:dark)').matches; }
+function recolorMarkers(){ const cs=getComputedStyle(document.documentElement); defs.innerHTML=markerDefs('arr',(v)=>cs.getPropertyValue(v).trim()||'#888'); }
+function applyTheme(){ themeChoice?document.documentElement.setAttribute('data-theme',themeChoice):document.documentElement.removeAttribute('data-theme');
+  const icon=currentDark()?SUN:MOON; themebtn.innerHTML=icon; themebtn2.innerHTML=icon; if(O2M)recolorMarkers(); }
+function toggleTheme(){ themeChoice=currentDark()?'light':'dark'; try{localStorage.setItem('d365-erd-theme',themeChoice);}catch(e){} applyTheme(); saveState(); }
+themebtn.addEventListener('click',toggleTheme); themebtn2.addEventListener('click',toggleTheme);
+matchMedia('(prefers-color-scheme:dark)').addEventListener('change',()=>{ if(!themeChoice)applyTheme(); });
+
+/* ---------- persistent stage chrome ---------- */
+svg.addEventListener('wheel',e=>{ e.preventDefault(); const r=svg.getBoundingClientRect(); zoomAt(e.clientX-r.left,e.clientY-r.top,curT.k*Math.exp(-e.deltaY*0.0015)); saveViewSoon(); },{passive:false});
+svg.addEventListener('mousedown',e=>{ if(e.button!==0)return; if(e.target.closest('.node'))return; pan={x:e.clientX,y:e.clientY,ox:curT.x,oy:curT.y,moved:false}; svg.classList.add('panning'); });
+window.addEventListener('mousemove',e=>{
+  if(pan){ curT.x=pan.ox+(e.clientX-pan.x); curT.y=pan.oy+(e.clientY-pan.y); if(Math.abs(e.clientX-pan.x)+Math.abs(e.clientY-pan.y)>3)pan.moved=true; applyT(); return; }
+  if(dragN){ const dx=e.clientX-dragN.sx, dy=e.clientY-dragN.sy; if(Math.abs(dx)+Math.abs(dy)>4)dragN.moved=true;
+    const n=N[dragN.id]; n.x=dragN.ox+dx/curT.k; n.y=dragN.oy+dy/curT.k; place(dragN.id); scheduleLinks(); }
+});
+window.addEventListener('mouseup',()=>{
+  if(pan){ const m=pan.moved; pan=null; svg.classList.remove('panning'); if(!m)deselect(); saveViewSoon(); }
+  if(dragN)endDrag();
+});
+document.getElementById('selAll').addEventListener('click',()=>{ setVisible(allIds); });
+document.getElementById('selNone').addEventListener('click',()=>setVisible([]));
+document.getElementById('selCore').addEventListener('click',()=>{ setVisible([...CORE]); forceLayout([...visible]); fit(); });
+document.getElementById('arrange').addEventListener('click',()=>{ forceLayout([...visible]); drawLinks(); fit(); });
+document.getElementById('fit').addEventListener('click',fit);
+document.getElementById('expandAll').addEventListener('click',()=>{ visible.forEach(id=>expanded.add(id)); visible.forEach(refreshNode); drawLinks(); saveState(); });
+document.getElementById('collapseAll').addEventListener('click',()=>{ expanded.clear(); visible.forEach(refreshNode); drawLinks(); saveState(); });
+document.getElementById('reset').addEventListener('click',()=>{ try{localStorage.removeItem(LS);}catch(e){} boot(MODEL,document.getElementById('envTag').textContent); });
+document.getElementById('expPng').addEventListener('click',()=>doExport('png'));
+document.getElementById('expSvg').addEventListener('click',()=>doExport('svg'));
+function wireSeg(elId,get,set){ const box=document.getElementById(elId);
+  box.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ set(b.dataset.v); syncSegs(); drawLinks(); saveState(); })); }
+function syncSegs(){
+  document.querySelectorAll('#segNotation button').forEach(b=>b.classList.toggle('on',b.dataset.v===notation));
+  document.querySelectorAll('#segLines button').forEach(b=>b.classList.toggle('on',b.dataset.v===(curved?'curved':'straight')));
+}
+wireSeg('segNotation',()=>notation,v=>{notation=v;});
+wireSeg('segLines',()=>curved?'curved':'straight',v=>{curved=(v==='curved');});
+document.getElementById('zin').addEventListener('click',()=>{ const r=svg.getBoundingClientRect(); zoomAt(r.width/2,r.height/2,curT.k*1.3); saveViewSoon(); });
+document.getElementById('zout').addEventListener('click',()=>{ const r=svg.getBoundingClientRect(); zoomAt(r.width/2,r.height/2,curT.k/1.3); saveViewSoon(); });
+document.getElementById('railtoggle').addEventListener('click',()=>document.getElementById('rail').classList.toggle('open'));
+const q=document.getElementById('q');
+q.addEventListener('input',()=>{ const s=q.value.trim().toLowerCase();
+  document.querySelectorAll('.ent').forEach(row=>{ const id=row.dataset.id,e=ENT[id]; const hit=!s||id.includes(s)||(e.display||'').toLowerCase().includes(s); row.style.display=hit?'':'none'; });
+  document.querySelectorAll('.grp').forEach(grp=>{ const any=[...grp.querySelectorAll('.ent')].some(r=>r.style.display!=='none'); grp.style.display=any?'':'none'; }); });
+addEventListener('keydown',e=>{ if(document.getElementById('app').hidden)return;
+  if(e.key==='/'&&document.activeElement!==q){e.preventDefault();q.focus();} if(e.key==='f'&&document.activeElement!==q&&document.activeElement!==document.body===false)fit(); if(e.key==='Escape')deselect(); });
+
+/* ---------- upload wiring ---------- */
+const uploader=document.getElementById('uploader'), drop=document.getElementById('drop'),
+  fileInput=document.getElementById('file'), upErr=document.getElementById('upErr');
+function showErr(msg){ upErr.textContent=msg; upErr.classList.add('show'); }
+function clearErr(){ upErr.classList.remove('show'); }
+function handleFile(file){
+  if(!file)return; clearErr();
+  if(file.size>60*1024*1024){ showErr('That file is very large (>60 MB). If it is a solution .zip, unzip it and pick the customizations.xml inside.'); return; }
+  const reader=new FileReader();
+  reader.onerror=()=>showErr('Could not read that file.');
+  reader.onload=()=>{
+    try{
+      const model=parseCustomizations(String(reader.result));
+      boot(model,file.name);
+    }catch(err){ showErr(err&&err.message?err.message:'Could not parse that file.'); }
+  };
+  reader.readAsText(file);
+}
+fileInput.addEventListener('change',()=>handleFile(fileInput.files[0]));
+;['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.add('over'); }));
+;['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop',e=>{ const f=e.dataTransfer&&e.dataTransfer.files[0]; handleFile(f); });
+document.getElementById('newfile').addEventListener('click',()=>{ clearErr(); fileInput.value=''; document.getElementById('app').hidden=true; uploader.hidden=false; });
+document.getElementById('loadSample').addEventListener('click',()=>{ clearErr(); boot(SAMPLE_MODEL(),'sample-schema.xml'); });
+
+/* ---------- tiny built-in sample so the tool is explorable without a file ---------- */
+function SAMPLE_MODEL(){
+  const A=(name,type,opt={})=>Object.assign({name,type,required:opt.req||'none',display:opt.d||name,desc:opt.desc||''},
+    (type==='lookup')?{fk:true,targets:opt.t||[]}:{});
+  const entities={
+    account:{logical:'account',display:'Company',attributes:[
+      A('accountid','primarykey',{d:'Account'}),A('name','nvarchar',{req:'required',d:'Account Name'}),
+      A('primarycontactid','lookup',{d:'Primary Contact',t:['contact']}),A('ownerid','owner',{d:'Owner'}),
+      A('createdby','lookup',{d:'Created By',t:['systemuser']}),A('cff_industryid','lookup',{d:'Industry',t:['cff_industry']})]},
+    contact:{logical:'contact',display:'Contact',attributes:[
+      A('contactid','primarykey',{d:'Contact'}),A('fullname','nvarchar',{d:'Full Name'}),
+      A('parentcustomerid','lookup',{d:'Company',t:['account']}),A('ownerid','owner',{d:'Owner'})]},
+    systemuser:{logical:'systemuser',display:'User',attributes:[
+      A('systemuserid','primarykey',{d:'User'}),A('fullname','nvarchar',{d:'Full Name'})]},
+    cff_project:{logical:'cff_project',display:'Project',attributes:[
+      A('cff_projectid','primarykey',{d:'Project'}),A('cff_name','nvarchar',{req:'required',d:'Name'}),
+      A('cff_companyid','lookup',{d:'Company',t:['account']}),A('cff_leadid','lookup',{d:'Lead',t:['contact']}),
+      A('cff_stageid','lookup',{d:'Stage',t:['cff_stage']}),A('ownerid','owner',{d:'Owner'})]},
+    cff_projecttask:{logical:'cff_projecttask',display:'Project Task',attributes:[
+      A('cff_projecttaskid','primarykey',{d:'Project Task'}),A('cff_subject','nvarchar',{d:'Subject'}),
+      A('cff_projectid','lookup',{d:'Project',t:['cff_project']}),A('cff_assigneeid','lookup',{d:'Assignee',t:['systemuser']})]},
+    cff_stage:{logical:'cff_stage',display:'Stage',attributes:[
+      A('cff_stageid','primarykey',{d:'Stage'}),A('cff_name','nvarchar',{d:'Name'})]},
+    cff_industry:{logical:'cff_industry',display:'Industry',attributes:[
+      A('cff_industryid','primarykey',{d:'Industry'}),A('cff_name','nvarchar',{d:'Name'})]},
+  };
+  const rel=(referenced,referencing,attr,cat)=>({name:referenced+'_'+referencing+'_'+attr,type:'OneToMany',referenced,referencing,attr,cat,label:''});
+  const relationships=[
+    rel('account','contact','parentcustomerid','business'),
+    rel('contact','account','primarycontactid','business'),
+    rel('account','cff_project','cff_companyid','business'),
+    rel('contact','cff_project','cff_leadid','business'),
+    rel('cff_stage','cff_project','cff_stageid','business'),
+    rel('cff_project','cff_projecttask','cff_projectid','business'),
+    rel('systemuser','cff_projecttask','cff_assigneeid','business'),
+    rel('cff_industry','account','cff_industryid','business'),
+    rel('systemuser','account','ownerid','ownership'),
+    rel('systemuser','contact','ownerid','ownership'),
+    rel('systemuser','cff_project','ownerid','ownership'),
+    rel('systemuser','account','createdby','audit'),
+  ];
+  return {entities,relationships,meta:{source:'sample'}};
+}
+
+/* ---------- init (upload screen) ---------- */
+document.getElementById('verUp').textContent='v'+APP_VERSION;
+document.getElementById('railver').innerHTML='v'+APP_VERSION+' · <a href="'+REPO_URL+'/blob/main/CHANGELOG.md" target="_blank" rel="noopener">changelog</a>';
+applyTheme();
+</script>
+</body>
+</html>
