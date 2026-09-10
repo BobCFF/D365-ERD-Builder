@@ -20,8 +20,8 @@ body{margin:0}
 img{max-width:100%}
 [hidden]{display:none!important}
 :root{
-  --bg:#eef1f5; --surface:#ffffff; --surface-2:#e7ecf2; --surface-3:#dde3eb;
-  --border:#cfd7e1; --border-strong:#b4bfcd;
+  --bg:#f7f9fc; --surface:#ffffff; --surface-2:#eef2f7; --surface-3:#e4eaf1;
+  --border:#dbe1ea; --border-strong:#bcc6d3;
   --ink:#16202b; --ink-2:#33414f; --muted:#5b6773; --faint:#8793a1;
   --accent:#1d6f8b; --accent-strong:#12556d; --accent-soft:#d6e8ee;
   --g-spine:#1d6f8b; --g-sync:#b4603a; --g-activity:#6d5aa6; --g-category:#3f7a52; --g-reference:#657186; --g-system:#98a2b0;
