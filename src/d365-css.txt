@@ -138,6 +138,12 @@ input[type=checkbox]:focus-visible,input[type=radio]:focus-visible{outline:2px s
   padding:6px 14px;border-radius:6px;cursor:pointer;white-space:nowrap}
 .tab:hover{color:var(--ink)}
 .tab.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+/* On dark-ground themes the surface pill barely differs from the tab bar, so the
+   active tab is filled with the accent (dark ground as text) to stand out. */
+@media (prefers-color-scheme:dark){:root:not([data-theme]) .tab.on{background:var(--accent);color:var(--bg);font-weight:700;box-shadow:none}}
+:root[data-theme="dark"] .tab.on,
+:root[data-theme="contrast"] .tab.on,
+:root[data-theme="lowlight"] .tab.on{background:var(--accent);color:var(--bg);font-weight:700;box-shadow:none}
 .top-actions{margin-left:auto;display:flex;align-items:center;gap:8px}
 .tbtn{display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 12px;border:1px solid var(--border-strong);
   background:var(--surface);color:var(--ink-2);border-radius:9px;font-family:var(--font-ui);font-size:12.5px;font-weight:600;cursor:pointer}
