@@ -17,6 +17,12 @@ import base64
 import hashlib
 import os
 
+# Single source of truth for the version shown on the page. The sources carry
+# the literal `__APP_VERSION__` placeholder (in `APP_VERSION` and `.lver`); the
+# build stamps this value into both, so the version lives in exactly one place.
+# Bump this + add a CHANGELOG.md entry for each release.
+VERSION = "2.10.0"
+
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(ROOT, "src")
 
@@ -36,9 +42,14 @@ def main():
     assert "/*FONTFACE*/" in css, "fontface placeholder missing in d365-css.txt"
     assert "<!--SAMPLE-->" in body, "sample placeholder missing in d365-body.txt"
     assert "</script>" not in sample, "sample.xml must not contain </script>"
+    assert "__APP_VERSION__" in js, "version placeholder missing in d365-js.txt"
+    assert "__APP_VERSION__" in body, "version placeholder missing in d365-body.txt"
 
     css = css.replace("/*FONTFACE*/", ff)
     body = body.replace("<!--SAMPLE-->", sample)
+    # Stamp the single-source version into both the script and the sidebar label.
+    js = js.replace("__APP_VERSION__", VERSION)
+    body = body.replace("__APP_VERSION__", VERSION)
 
     # The <script> element's exact text content, used both for the tag and its hash.
     script_content = "\n" + js + "\n"
