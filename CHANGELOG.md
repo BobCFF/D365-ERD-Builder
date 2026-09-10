@@ -7,6 +7,15 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.13.3] — 2026-09-10
+
+### Changed
+- **Lightened the Light theme.** The page background and secondary surfaces
+  (toolbar chips, table header row, hover rows) were noticeably grey; they're
+  now closer to white (`--bg` #eef1f5→#f7f9fc, `--surface-2` #e7ecf2→#eef2f7,
+  `--surface-3` #dde3eb→#e4eaf1) with borders lightened to match. White cards
+  and popovers still read against the ground; other themes are unchanged.
+
 ## [2.13.2] — 2026-09-10
 
 ### Fixed
