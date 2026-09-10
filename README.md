@@ -8,6 +8,11 @@ It's a single, self-contained static page (`index.html`). There is no backend an
 no build step: **the XML is parsed and rendered entirely in your browser**, so your
 schema never leaves your machine.
 
+## New in 2.6.0
+
+- **Seven color themes** — System, Light, Dark, High Contrast, Monochrome, Low
+  Light and Rainbow. Cycle them from the top-bar button or pick one in Settings.
+
 ## New in 2.5.0
 
 - The **minimap is draggable** (drag its header; double-click to reset) and keeps

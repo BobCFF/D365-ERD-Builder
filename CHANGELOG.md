@@ -7,6 +7,15 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.6.0] — 2026-09-10
+
+### Added
+- **More color themes.** The top-bar theme button now cycles through seven
+  numbered themes — **System, Light, Dark, High Contrast, Monochrome, Low Light,
+  Rainbow** — showing the name as it switches. Each can also be picked directly
+  from **Settings → Appearance**. The choice persists and applies with no flash
+  on load; markers, the minimap, and exports all follow the active theme.
+
 ## [2.5.2] — 2026-09-10
 
 ### Changed
