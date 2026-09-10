@@ -278,7 +278,7 @@ function buildSidebar(){
       const e=ENT[id];
       const row=document.createElement('label'); row.className='ent'+(visible.has(id)?'':' off'); row.dataset.id=id;
       const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=visible.has(id);
-      cb.addEventListener('change',()=>toggleEntity(id,cb.checked));
+      cb.addEventListener('change',()=>{ pushUndo(); toggleEntity(id,cb.checked); });
       const lbl=document.createElement('span'); lbl.className='lbl'; lbl.textContent=e.display||id; lbl.title=id;
       const rc=document.createElement('span'); rc.className='rc'; rc.textContent=bizCount[id]||'';
       row.append(cb,lbl,rc); items.appendChild(row);
@@ -364,7 +364,7 @@ function openCardMenu(id,x,y){ const e=ENT[id];
     {label:'Keys — PK & FK', fn:()=>setDetail(id,'keys')},
     {label:'Minimize — title only', fn:()=>setDetail(id,'title')},
     {sep:true},
-    {label:'Hide table', danger:true, fn:()=>toggleEntity(id,false)}
+    {label:'Hide table', danger:true, fn:()=>{ pushUndo(); toggleEntity(id,false); }}
   ]); }
 function wireNode(id){
   const n=N[id];
@@ -383,8 +383,8 @@ function wireNode(id){
     window.addEventListener('mousemove',mv); window.addEventListener('mouseup',up); });
   onTouchDrag(rz,{ start:t=>({sx:t.clientX,sy:t.clientY,w0:n.w,h0:n.h}), move:(t,c)=>rzResize(t.clientX,t.clientY,c.w0,c.h0,c.sx,c.sy), end:()=>saveState() });
 }
-function startDrag(id,e){ e.preventDefault(); const n=N[id]; dragN={id,sx:e.clientX,sy:e.clientY,ox:n.x,oy:n.y,moved:false,header:!!e.target.closest('.card-h')}; n.g.classList.add('dragging'); selectNode(id); }
-function endDrag(){ const d=dragN; dragN=null; const n=N[d.id]; n.g.classList.remove('dragging'); if(!d.moved&&d.header)headerToggle(d.id); saveState(); }
+function startDrag(id,e){ e.preventDefault(); const n=N[id]; dragN={id,sx:e.clientX,sy:e.clientY,ox:n.x,oy:n.y,moved:false,header:!!e.target.closest('.card-h'),undo:snapState()}; n.g.classList.add('dragging'); selectNode(id); }
+function endDrag(){ const d=dragN; dragN=null; const n=N[d.id]; n.g.classList.remove('dragging'); if(d.moved){ undoSnap=d.undo; updateUndoBtn(); } else if(d.header)headerToggle(d.id); saveState(); }
 
 /* ---------- links ---------- */
 function edgeList(){ const out=[]; for(const r of O2M){ if(!cats.has(r.cat))continue; if(!visible.has(r.referenced)||!visible.has(r.referencing))continue; out.push(r);} return out; }
@@ -524,6 +524,20 @@ function toggleEntity(id,on){
 }
 function setVisible(ids){ const want=new Set(ids);
   for(const id of allIds){ const on=want.has(id); if(on&&!visible.has(id))toggleEntity(id,true); else if(!on&&visible.has(id))toggleEntity(id,false); } }
+
+/* ---------- single-level undo (last move / hide / show / arrange) ---------- */
+let undoSnap=null;
+function snapState(){ const pos={}; for(const id of visible){ const n=N[id]; if(n)pos[id]=[n.x,n.y]; }
+  const sz={}; for(const k in sizes)sz[k]={w:sizes[k].w,h:sizes[k].h};
+  return { pos, vis:[...visible], sizes:sz, cardState:Object.assign({},cardState) }; }
+function updateUndoBtn(){ const u=document.getElementById('undo'); if(u)u.disabled=!undoSnap; }
+function pushUndo(){ undoSnap=snapState(); updateUndoBtn(); }
+function applyUndo(){ if(!undoSnap)return; const s=undoSnap; undoSnap=null;
+  setVisible(s.vis);
+  Object.keys(sizes).forEach(k=>delete sizes[k]); for(const k in s.sizes)sizes[k]={w:s.sizes[k].w,h:s.sizes[k].h};
+  Object.keys(cardState).forEach(k=>delete cardState[k]); Object.assign(cardState,s.cardState);
+  for(const id of s.vis){ const n=N[id]; if(!n)continue; if(s.pos[id]){ n.x=s.pos[id][0]; n.y=s.pos[id][1]; } refreshNode(id); place(id); }
+  drawLinks(); saveState(); updateUndoBtn(); toast('Undone'); }
 
 /* ---------- fit ---------- */
 function fit(){ const ids=[...visible]; if(!ids.length)return;
@@ -677,7 +691,7 @@ async function doExport(kind){
 }
 
 /* ---------- status / theme ---------- */
-const APP_VERSION='2.8.2';
+const APP_VERSION='2.9.0';
 function updateStatus(ec){ document.getElementById('status').textContent=`v${APP_VERSION} · ${visible.size} of ${allIds.length} tables · ${ec} relationships shown`; }
 const themebtn=document.getElementById('themebtn');
 const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
@@ -702,6 +716,7 @@ function applyTheme(){ const m=themeMeta();
   (m.v==='system')?document.documentElement.removeAttribute('data-theme'):document.documentElement.setAttribute('data-theme',m.v);
   themebtn.innerHTML=m.special?SWATCH:(currentDark()?SUN:MOON);
   themebtn.title=`Theme: ${m.label} — click to cycle`;
+  const tn=document.getElementById('themeName'); if(tn)tn.textContent=m.label;
   recolorMarkers(); _mmGroupCol={}; if(typeof mmRenderNodes==='function')mmRenderNodes(); }
 function cycleTheme(){ const i=THEMES.findIndex(t=>t.v===themeId()); const ni=(i+1)%THEMES.length, next=THEMES[ni];
   themeChoice=next.v==='system'?null:next.v; applyTheme(); toast(`Theme ${ni+1}/${THEMES.length} · ${next.label}`); saveState(); }
@@ -738,10 +753,12 @@ function openGestureHelp(){ if(typeof openModal!=='function')return;
 { const ghBtn=document.getElementById('gestureHelp'); if(ghBtn)ghBtn.addEventListener('click',openGestureHelp); }
 
 /* ---------- buttons ---------- */
-document.getElementById('selAll').addEventListener('click',()=>{ setVisible(allIds); });
-document.getElementById('selNone').addEventListener('click',()=>setVisible([]));
-document.getElementById('selCore').addEventListener('click',()=>{ const cs=allIds.filter(id=>ENT[id].group!=='__std'); setVisible(cs.length?cs:allIds); forceLayout([...visible]); fit(); });
-document.getElementById('arrange').addEventListener('click',()=>{ forceLayout([...visible]); drawLinks(); fit(); });
+document.getElementById('selAll').addEventListener('click',()=>{ pushUndo(); setVisible(allIds); });
+document.getElementById('selNone').addEventListener('click',()=>{ pushUndo(); setVisible([]); });
+document.getElementById('selCore').addEventListener('click',()=>{ pushUndo(); const cs=allIds.filter(id=>ENT[id].group!=='__std'); setVisible(cs.length?cs:allIds); forceLayout([...visible]); fit(); });
+document.getElementById('arrange').addEventListener('click',()=>{ pushUndo(); forceLayout([...visible]); drawLinks(); fit(); });
+{ const ub=document.getElementById('undo'); if(ub)ub.addEventListener('click',applyUndo); }
+document.addEventListener('keydown',e=>{ if((e.ctrlKey||e.metaKey)&&!e.shiftKey&&(e.key==='z'||e.key==='Z')){ const t=e.target; if(t&&/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))return; if(undoSnap){ e.preventDefault(); applyUndo(); } } });
 document.getElementById('fit').addEventListener('click',fit);
 document.getElementById('expandAll').addEventListener('click',()=>{ visible.forEach(id=>cardState[id]='full'); visible.forEach(refreshNode); drawLinks(); saveState(); });
 document.getElementById('collapseAll').addEventListener('click',()=>{ visible.forEach(id=>{ if(defaultDetail==='keys')delete cardState[id]; else cardState[id]='keys'; }); visible.forEach(refreshNode); drawLinks(); saveState(); });

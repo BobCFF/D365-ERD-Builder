@@ -8,9 +8,9 @@
       <div class="ldrop-s">or click to choose a file</div>
     </div>
     <div id="landing-msg" class="landing-msg" hidden></div>
-    <div class="lnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6z"/></svg><span>Your file never leaves your browser — parsing and rendering happen entirely on this page. To get the XML: export a solution containing your tables from Power&nbsp;Apps, unzip it, and use the <span class="amono">customizations.xml</span> inside.</span></div>
+    <div class="lnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6z"/></svg><span>Your file never leaves your browser — parsing and rendering happen entirely on this page. To get the XML: export a solution containing your tables from Power&nbsp;Apps, unzip it, and use the <span class="amono">customizations.xml</span> inside. <a href="PRIVACY.md" target="_blank" rel="noopener">How your data is handled →</a></span></div>
     <a href="#" id="lsample" class="lsample">Explore a sample schema instead →</a>
-    <div class="lver">D365 ERD Builder v2.8.2</div>
+    <div class="lver">D365 ERD Builder v2.9.0</div>
   </div>
 </section>
 <input type="file" id="landing-file" accept=".xml,application/xml,text/xml" hidden>
@@ -25,7 +25,8 @@
     </nav>
     <div class="top-actions">
       <button class="tbtn" id="importBtn" title="Import a customizations.xml"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M8 7l4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span class="tbtn-lbl">Import XML</span></button>
-      <button class="themebtn" id="themebtn" aria-label="Toggle theme"></button>
+      <span class="theme-name" id="themeName" aria-hidden="true"></span>
+      <button class="themebtn" id="themebtn" aria-label="Cycle theme"></button>
     </div>
   </header>
   <input type="file" id="xmlfile" accept=".xml,application/xml,text/xml" hidden>
@@ -41,6 +42,7 @@
       <div class="ribbon">
         <div class="ribbon-group">
           <span class="ribbon-label">Arrange</span>
+          <button class="btn" id="undo" title="Undo the last move, hide, or arrange (Ctrl/⌘Z)" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 7 4 12l5 5M4 12h11a5 5 0 0 1 0 10h-1"/></svg>Undo</button>
           <button class="btn" id="arrange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 14h6v6h-6zM10 7h4M7 10v4"/></svg>Auto-arrange</button>
           <button class="btn" id="fit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5"/></svg>Fit</button>
           <button class="btn" id="expandAll"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>Expand all</button>
@@ -176,8 +178,9 @@
             <div class="about" id="aboutBox"></div>
             <div class="srow"><div class="slabel"><b>Load a different export</b><span>Import a <span class="amono">customizations.xml</span> from any environment. It's parsed here and kept in this browser across refreshes.</span></div>
               <button class="btn" id="importBtn2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12M8 7l4-4 4 4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>Import XML</button></div>
-            <div class="srow" id="revertRow" hidden><div class="slabel"><b>Built-in data</b><span>Discard the imported file and go back to the bundled TDPCRM_ERD export.</span></div>
-              <button class="btn" id="revertBtn">Revert to built-in</button></div>
+            <div class="srow" id="revertRow" hidden><div class="slabel"><b>Forget this file</b><span>Removes the imported schema and your layout from this browser (localStorage + IndexedDB) and returns to the upload screen. Do this on shared or public computers — the file otherwise stays available to the next person.</span></div>
+              <button class="btn danger-btn" id="revertBtn">Forget &amp; clear</button></div>
+            <div class="srow"><div class="slabel"><span class="amono" style="font-size:11px;color:var(--faint)">Everything is processed and stored locally in your browser — nothing is uploaded. <a href="PRIVACY.md" target="_blank" rel="noopener">Privacy</a>.</span></div></div>
           </div>
 
           <div class="scard danger">
