@@ -33,16 +33,14 @@ important · **P2** nice-to-have. IDs match `REVIEW.md`.
 - [ ] **P1-3 · Split restyle vs. rebuild in `drawLinks`** (BUG-2). On hover/
   select, toggle `dim/hot` classes on existing paths instead of rebuilding all
   edges + the minimap. Measure on a 50-table schema.
-- [ ] **P1-4 · Add a committed test suite + CI** (MAINT-2). Port the Playwright
-  smoke scripts into `tests/`; GitHub Action builds `index.html` and runs them on
-  every PR (parse, render, export CSV/XLSX, theme cycle, touch, no console
-  errors).
-- [ ] **P1-5 · LICENSE** (LEG-1) — add MIT (or chosen license).
-- [ ] **P1-6 · Font license attribution** (LEG-2) — add `THIRD_PARTY_LICENSES.md`
-  / `licenses/OFL.txt` for Archivo + IBM Plex Mono; keep font names unchanged.
-- [ ] **P1-7 · `PRIVACY.md` + louder privacy note** (LEG-4/MKT-2) — 100%
-  client-side, local storage only + user-clearable, host sees delivery logs
-  only, no analytics.
+- [x] **P1-4 · Committed test suite + CI** (MAINT-2). Done — `tests/{run,security,
+  smoke}.cjs` + `.github/workflows/ci.yml` (builds, checks `index.html` in sync
+  with `src/`, guards the self-contained invariant, runs the tests on every PR).
+- [x] **P1-5 · LICENSE** (LEG-1) — MIT added.
+- [x] **P1-6 · Font license attribution** (LEG-2) — `THIRD_PARTY_LICENSES.md` +
+  `licenses/OFL-1.1.txt` for Archivo + IBM Plex Mono (unmodified, names intact).
+- [x] **P1-7 (docs) · `PRIVACY.md`** (LEG-4/MKT-2) — added; README privacy
+  section links it. *(Louder in-app note ships with the app PR, P1-7-UI.)*
 - [ ] **P1-8 · SEO / social meta** (MKT-1) — `<meta description>`, Open Graph /
   Twitter tags, canonical URL, social preview image.
 - [ ] **P1-9 · Undo (single level)** (UX-2) — at least "restore previous layout"
@@ -64,7 +62,8 @@ important · **P2** nice-to-have. IDs match `REVIEW.md`.
   inlined file.
 - [ ] **P2-6 · Layout scale** (perf): Barnes-Hut or iteration cap in
   `forceLayout`; consider virtualizing offscreen nodes for very large schemas.
-- [ ] **P2-7 · Trademark disclaimer** (LEG-3): "Not affiliated with Microsoft."
+- [x] **P2-7 · Trademark disclaimer** (LEG-3): "Not affiliated with Microsoft."
+  Done — README *License & credits*.
 - [ ] **P2-8 · Remove/guard `window.__erd`** (SEC-5) in production.
 - [ ] **P2-9 · Shareable view state in URL hash** (MKT-3) — view/layout only,
   never the schema.

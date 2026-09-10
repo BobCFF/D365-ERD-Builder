@@ -4,9 +4,10 @@ Upload a Dynamics 365 / Dataverse solution **`customizations.xml`** and get an
 interactive entity-relationship diagram — drag tables around, follow lookups,
 toggle relationship categories, and export the result to PNG or SVG.
 
-It's a single, self-contained static page (`index.html`). There is no backend and
-no build step: **the XML is parsed and rendered entirely in your browser**, so your
-schema never leaves your machine.
+It ships as a single, self-contained static page (`index.html`) — no backend, no
+runtime dependencies, no network calls: **the XML is parsed and rendered entirely
+in your browser**, so your schema never leaves your machine. (The page is
+generated from `src/` by a small Python build — see *Develop & build* below.)
 
 ## New in 2.7.0
 
@@ -113,6 +114,46 @@ isn't included in the solution, it won't appear in the ERD.
 
 Tag casing is matched case-insensitively, so exports from different platform
 versions parse the same way.
+
+## Privacy
+
+Your schema **never leaves your browser** — parsing, rendering, and exports are
+100% client-side, with no network calls, no analytics, and no cookies. Imported
+files and preferences are stored locally (`localStorage` + `IndexedDB`) and are
+clearable from **Settings → Reset**. Full details in [`PRIVACY.md`](PRIVACY.md).
+
+## Develop & build
+
+`index.html` is **generated** from the files in `src/` — edit those, not the
+270 KB artifact:
+
+```bash
+python3 build-d365.py     # src/*  ->  index.html  (Python stdlib only)
+```
+
+The build also injects a strict Content-Security-Policy whose `script-src`
+carries the hash of the inlined bundle. Keep the app **self-contained** — no
+external scripts, styles, fonts, CDNs, or fetches. See `ARCHITECTURE.md` for the
+function map and `AGENTS.md` / `CLAUDE.md` for the working rules.
+
+### Test
+
+```bash
+npm install            # Playwright (dev only)
+npx playwright install chromium
+npm test               # serves the repo, runs tests/security.cjs + tests/smoke.cjs
+```
+
+CI (`.github/workflows/ci.yml`) builds, verifies `index.html` is in sync with
+`src/`, checks the self-contained invariant, and runs the tests on every PR.
+
+## License & credits
+
+- Code: **MIT** — see [`LICENSE`](LICENSE).
+- Bundled fonts **Archivo** and **IBM Plex Mono**: **SIL OFL 1.1** — see
+  [`THIRD_PARTY_LICENSES.md`](THIRD_PARTY_LICENSES.md).
+- Not affiliated with or endorsed by Microsoft. "Dynamics 365", "Dataverse", and
+  "Power Apps" are trademarks of Microsoft Corporation, used here nominatively.
 
 ## Acknowledgements
 
