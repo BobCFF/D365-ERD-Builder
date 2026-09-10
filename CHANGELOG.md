@@ -7,6 +7,24 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.13.0] — 2026-09-10
+
+### Added
+- **Connector weight control.** A new **Weight** dropdown in the diagram ribbon
+  (Thin / Normal / Thick) sets the thickness of the connection lines, and the
+  crow's-foot / one / IDEF1X markers scale with it. The choice persists and
+  applies to SVG/PNG exports too.
+
+### Changed
+- **IDEF1X now distinguishes identifying vs. non-identifying relationships by
+  line style.** A **mandatory** lookup is drawn as a **solid** line (treated as
+  identifying — the child depends on the parent); an **optional** lookup is
+  drawn **dashed** (non-identifying) with the hollow parent diamond. This
+  refines the earlier IDEF1X adaptation: in IDEF1X mode the dash carries the
+  identifying distinction rather than the relationship category. Crow's-foot and
+  UML modes are unchanged (dash still marks the audit / generic / ownership
+  categories).
+
 ## [2.12.0] — 2026-09-10
 
 ### Changed
