@@ -8,6 +8,15 @@ It's a single, self-contained static page (`index.html`). There is no backend an
 no build step: **the XML is parsed and rendered entirely in your browser**, so your
 schema never leaves your machine.
 
+## New in 2.3.0
+
+- **A ⋯ menu on every diagram table** — open a **data-dictionary dialog** for
+  that table, jump to the Data Dictionary tab filtered to it, switch its detail
+  level, or hide it.
+- **Export dialog** — choose format (**Excel `.xlsx`** or CSV), which columns to
+  include, and the row scope. Excel export can put **each table on its own
+  worksheet** (with an Overview sheet), generated entirely in the browser.
+
 ## New in 2.2.0
 
 - **Data Dictionary columns are now yours to arrange** — a per-column **⋯** menu

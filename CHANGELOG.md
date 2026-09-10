@@ -7,6 +7,23 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.3.0] — 2026-09-10
+
+### Added
+- **Table menu on diagram cards.** Each entity box has a **⋯** button (next to
+  the close button) opening a menu: **Data dictionary…** (a dialog listing that
+  table's columns — display name, type, required, PK/FK, references, description),
+  **Show in Data Dictionary tab** (jumps to the tab filtered to that table),
+  quick detail-level switches, and **Hide table**.
+- **Export dialog.** The Data Dictionary's Export button now opens a dialog to
+  choose the **format** (Excel `.xlsx` or CSV), which **columns** to include, and
+  the **row scope** (current filter or all tables).
+- **Excel workbook export.** Export an `.xlsx` with **one worksheet per table**
+  (plus an Overview sheet) or a single combined sheet. The workbook is generated
+  entirely in the browser — no libraries, no upload.
+- The per-table dialog has its own **Export table…** button (Excel/CSV scoped to
+  that one table).
+
 ## [2.2.0] — 2026-09-10
 
 ### Added

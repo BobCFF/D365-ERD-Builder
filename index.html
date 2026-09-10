@@ -307,6 +307,47 @@ body.col-resizing{cursor:col-resize;user-select:none}
 .dmenu .dm-clear:hover:not(:disabled){color:var(--ink);border-color:var(--border-strong)}
 .dmenu .dm-clear:disabled{opacity:.4;cursor:default}
 .btn.ghost{background:transparent}
+/* floating context menu (diagram card ⋯) */
+.floatmenu{position:fixed;z-index:60;min-width:200px;background:var(--surface);border:1px solid var(--border-strong);
+  border-radius:10px;box-shadow:0 14px 40px rgba(0,0,0,.32);padding:5px;font-size:12.5px}
+.floatmenu .fm-item{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:transparent;border:0;
+  color:var(--ink);padding:7px 9px;border-radius:6px;cursor:pointer;font:inherit;line-height:1.1}
+.floatmenu .fm-item:hover{background:var(--surface-2)}
+.floatmenu .fm-item svg{width:15px;height:15px;flex:none;opacity:.7}
+.floatmenu .fm-item.danger{color:var(--pk)}
+.floatmenu .fm-sep{height:1px;background:var(--border);margin:4px 6px}
+/* modal overlay + card */
+.modal{position:fixed;inset:0;z-index:80;background:rgba(15,18,24,.55);display:flex;align-items:center;justify-content:center;padding:24px}
+.modal-card{background:var(--surface);border:1px solid var(--border-strong);border-radius:14px;box-shadow:0 24px 70px rgba(0,0,0,.4);
+  width:100%;max-width:560px;max-height:86vh;display:flex;flex-direction:column;overflow:hidden}
+.modal-card.modal-wide{max-width:860px}
+.modal-h{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border)}
+.modal-t{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.modal-t .dot{width:11px;height:11px;border-radius:3px;flex:none}
+.modal-sub{font-size:11.5px;color:var(--muted);margin-top:3px}
+.modal-x{background:transparent;border:0;color:var(--muted);cursor:pointer;padding:2px;border-radius:6px;flex:none}
+.modal-x svg{width:18px;height:18px}
+.modal-x:hover{color:var(--ink);background:var(--surface-2)}
+.modal-body{padding:14px 18px;overflow:auto}
+.modal-foot{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{filter:brightness(1.06)}
+/* entity dictionary table */
+.edtable{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px}
+.edtable th{position:sticky;top:0;background:var(--surface-2);color:var(--muted);text-align:left;font-size:10px;
+  font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:8px 10px;border-bottom:1px solid var(--border-strong);white-space:nowrap}
+.edtable td{padding:6px 10px;border-bottom:1px solid var(--surface-2);vertical-align:top}
+.edtable .dt-desc{max-width:280px}
+/* export dialog */
+.ex-body .ex-sect{margin-bottom:16px}
+.ex-body .ex-sect:last-child{margin-bottom:0}
+.ex-lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:7px}
+.rl-group{display:flex;flex-direction:column;gap:4px}
+.rl{display:flex;align-items:center;gap:8px;padding:4px 2px;cursor:pointer;font-size:12.5px}
+.rl-note{color:var(--faint);font-size:11px}
+.ex-cols{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px}
+.modal .dm-chk{display:flex;align-items:center;gap:8px;padding:4px 2px;cursor:pointer;font-size:12.5px}
+.modal .dm-chk:hover{color:var(--ink)}
 .dt-ent{display:flex;align-items:center;gap:7px;white-space:nowrap}
 .dt-ent .dot{width:8px;height:8px;border-radius:2.5px;flex:none}
 .dt-ent .en{font-weight:600;color:var(--ink)}
@@ -400,7 +441,7 @@ body.col-resizing{cursor:col-resize;user-select:none}
     <div id="landing-msg" class="landing-msg" hidden></div>
     <div class="lnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6z"/></svg><span>Your file never leaves your browser — parsing and rendering happen entirely on this page. To get the XML: export a solution containing your tables from Power&nbsp;Apps, unzip it, and use the <span class="amono">customizations.xml</span> inside.</span></div>
     <a href="#" id="lsample" class="lsample">Explore a sample schema instead →</a>
-    <div class="lver">D365 ERD Builder v2.2.0</div>
+    <div class="lver">D365 ERD Builder v2.3.0</div>
   </div>
 </section>
 <input type="file" id="landing-file" accept=".xml,application/xml,text/xml" hidden>
@@ -813,7 +854,7 @@ body.col-resizing{cursor:col-resize;user-select:none}
           <label class="chip"><input type="checkbox" id="dVis"> Visible tables</label>
           <button class="btn ghost" id="dClearCols" title="Clear all column filters">Clear filters</button>
           <span class="dict-count" id="dCount"></span>
-          <button class="btn" id="expCsv" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v13M7 11l5 5 5-5"/></svg>Export CSV</button>
+          <button class="btn" id="expCsv" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v13M7 11l5 5 5-5"/></svg>Export…</button>
         </div>
         <div class="dict-hint">Click a column's <b>⋯</b> to filter · drag a heading to reorder · drag its right edge to resize.</div>
         <div class="dict-scroll">
@@ -881,6 +922,7 @@ body.col-resizing{cursor:col-resize;user-select:none}
     </section>
   </div>
 </div>
+<div id="modal" class="modal" hidden></div>
 
 <script>
 "use strict";
@@ -1167,7 +1209,7 @@ function cardHTML(id){
   return `<div class="card${st==='title'?' title-only':''}" style="--grp:var(${gv})">
     <div class="card-h" style="border-left-color:var(${gv})">
       <div class="tt"><div class="dn">${esc(e.display||id)}</div><div class="ln">${esc(id)}</div></div>
-      <div class="hbtns">${btn('full',IC_FULL,'Maximize — all columns')}${btn('keys',IC_KEYS,'Keys — PK & FK')}${btn('title',IC_TITLE,'Minimize — title only')}<button class="hbtn hide" data-hide="${id}" title="Hide table" aria-label="Hide">${IC_X}</button></div>
+      <div class="hbtns">${btn('full',IC_FULL,'Maximize — all columns')}${btn('keys',IC_KEYS,'Keys — PK & FK')}${btn('title',IC_TITLE,'Minimize — title only')}<button class="hbtn cmenu" data-menu="${id}" title="Table menu" aria-label="Table menu">${IC_DOTS}</button><button class="hbtn hide" data-hide="${id}" title="Hide table" aria-label="Hide">${IC_X}</button></div>
     </div>
     ${st==='title'?'':`<div class="fields">${rows}</div>`}
     <div class="rz" title="Drag to resize"></div>
@@ -1194,10 +1236,22 @@ function buildNode(id){
 function refreshNode(id){ const n=N[id], wrap=n.fo.firstChild; wrap.innerHTML=cardHTML(id); n.card=wrap.firstElementChild; wireNode(id); nodeMeasure(id); }
 function setDetail(id,st){ if(st==='keys'&&st===defaultDetail)delete cardState[id]; else cardState[id]=st; refreshNode(id); drawLinks(); saveState(); }
 function headerToggle(id){ setDetail(id, detailOf(id)==='full'?'keys':'full'); }
+function openCardMenu(id,x,y){ const e=ENT[id];
+  openFloatMenu(x,y,[
+    {label:'Data dictionary…', icon:IC_DOTS, fn:()=>openEntityDict(id)},
+    {label:'Show in Data Dictionary tab', fn:()=>{ dcolF=defaultDcolF(); dcolF.ent.q=id; document.getElementById('dq').value=''; document.getElementById('dVis').checked=false; setView('dict'); renderDict(); saveState(); }},
+    {sep:true},
+    {label:'Maximize — all columns', fn:()=>setDetail(id,'full')},
+    {label:'Keys — PK & FK', fn:()=>setDetail(id,'keys')},
+    {label:'Minimize — title only', fn:()=>setDetail(id,'title')},
+    {sep:true},
+    {label:'Hide table', danger:true, fn:()=>toggleEntity(id,false)}
+  ]); }
 function wireNode(id){
   const n=N[id];
   n.card.querySelector('[data-hide]').addEventListener('click',ev=>{ ev.stopPropagation(); toggleEntity(id,false); });
   n.card.querySelectorAll('[data-detail]').forEach(b=>b.addEventListener('click',ev=>{ ev.stopPropagation(); setDetail(id,b.dataset.detail); }));
+  const cm=n.card.querySelector('[data-menu]'); if(cm)cm.addEventListener('click',ev=>{ ev.stopPropagation(); openCardMenu(id,ev.clientX,ev.clientY); });
   n.g.addEventListener('mousedown',ev=>{ if(ev.button!==0)return; if(ev.target.closest('.hbtn')||ev.target.closest('.rz'))return; startDrag(id,ev); });
   n.g.addEventListener('mouseenter',()=>highlight(id));
   n.g.addEventListener('mouseleave',()=>highlight(null));
@@ -1420,7 +1474,7 @@ function svgToPng(svg,w,h,scale){ return new Promise((res,rej)=>{ const img=new 
   img.onload=()=>{ try{ const c=document.createElement('canvas'); c.width=Math.round(w*scale); c.height=Math.round(h*scale);
     const ctx=c.getContext('2d'); ctx.scale(scale,scale); ctx.drawImage(img,0,0); c.toBlob(b=>b?res(b):rej({message:'empty canvas'}),'image/png'); }catch(err){ rej(err); } };
   img.onerror=()=>rej({message:'SVG render failed'}); img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg); }); }
-const MIME={svg:'image/svg+xml',csv:'text/csv;charset=utf-8',png:'image/png',json:'application/json'};
+const MIME={svg:'image/svg+xml',csv:'text/csv;charset=utf-8',png:'image/png',json:'application/json',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'};
 // Save a generated file: use the claude.ai downloads capability when running
 // as an Artifact; fall back to a normal browser download when standalone (Vercel/static).
 async function saveFile(filename,data){
@@ -1444,7 +1498,7 @@ async function doExport(kind){
 }
 
 /* ---------- status / theme ---------- */
-const APP_VERSION='2.2.0';
+const APP_VERSION='2.3.0';
 function updateStatus(ec){ document.getElementById('status').textContent=`v${APP_VERSION} · ${visible.size} of ${allIds.length} tables · ${ec} relationships shown`; }
 const themebtn=document.getElementById('themebtn');
 const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
@@ -1683,17 +1737,149 @@ document.addEventListener('mousedown',e=>{ if(dmenuKey!=null && !e.target.closes
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&dmenuKey!=null)closeDMenu(); });
 const _dscroll=document.querySelector('#view-dict .dict-scroll'); if(_dscroll)_dscroll.addEventListener('scroll',()=>{ if(dmenuKey!=null)closeDMenu(); });
 function csvCell(v){ v=v==null?'':String(v); return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
-async function exportCsv(){
+/* export column definitions (superset of the on-screen columns) */
+const XCOLS=[
+  {id:'entdisp', label:'Table',                get:d=>d.entdisp, def:true},
+  {id:'ent',     label:'Table (logical)',      get:d=>d.ent,     def:true},
+  {id:'group',   label:'Group',                get:d=>GLABEL[d.group]||d.group, def:false},
+  {id:'name',    label:'Column',               get:d=>d.name,    def:true},
+  {id:'display', label:'Display name',         get:d=>d.display, def:true},
+  {id:'type',    label:'Type',                 get:d=>d.type,    def:true},
+  {id:'req',     label:'Required',             get:d=>d.req?'Yes':'', def:true},
+  {id:'key',     label:'Key',                  get:d=>d.pk?'PK':d.fk?'FK':'', def:true},
+  {id:'refs',    label:'References',           get:d=>d.refs,    def:true},
+  {id:'reflog',  label:'References (logical)', get:d=>d.reflog,  def:false},
+  {id:'desc',    label:'Description',          get:d=>d.desc,    def:true}
+];
+
+/* ---- minimal dependency-free .xlsx (ZIP/store + inlineStr worksheets) ---- */
+const _CRC=(()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1); t[n]=c>>>0; } return t; })();
+function crc32(buf){ let c=0xFFFFFFFF; for(let i=0;i<buf.length;i++)c=_CRC[(c^buf[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+function zipStore(files){ const parts=[],central=[]; let offset=0;
+  const u16=n=>[n&255,(n>>8)&255], u32=n=>[n&255,(n>>8)&255,(n>>16)&255,(n>>24)&255];
+  for(const f of files){ const nameB=new TextEncoder().encode(f.name), data=f.data, crc=crc32(data);
+    const lh=[].concat([0x50,0x4b,0x03,0x04],u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nameB.length),u16(0));
+    parts.push(new Uint8Array(lh),nameB,data); central.push({crc,len:data.length,nameB,offset}); offset+=lh.length+nameB.length+data.length; }
+  const cd=[]; let cdSize=0;
+  for(const c of central){ const h=[].concat([0x50,0x4b,0x01,0x02],u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),u32(c.crc),u32(c.len),u32(c.len),u16(c.nameB.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(c.offset));
+    const arr=new Uint8Array(h.length+c.nameB.length); arr.set(h,0); arr.set(c.nameB,h.length); cd.push(arr); cdSize+=arr.length; }
+  const end=[].concat([0x50,0x4b,0x05,0x06],u16(0),u16(0),u16(central.length),u16(central.length),u32(cdSize),u32(offset),u16(0));
+  const all=[...parts,...cd,new Uint8Array(end)]; let total=all.reduce((s,p)=>s+p.length,0);
+  const out=new Uint8Array(total); let o=0; for(const p of all){ out.set(p,o); o+=p.length; } return out; }
+function xmlEsc(s){ return String(s==null?'':s).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g,'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function colLetter(n){ let s=''; n++; while(n>0){ const m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=(n-m-1)/26|0; } return s; }
+function sheetXml(rows){ let body='';
+  rows.forEach((row,ri)=>{ const r=ri+1; let cells='';
+    row.forEach((val,ci)=>{ cells+=`<c r="${colLetter(ci)}${r}" t="inlineStr"${ri===0?' s="1"':''}><is><t xml:space="preserve">${xmlEsc(val)}</t></is></c>`; });
+    body+=`<row r="${r}">${cells}</row>`; });
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${body}</sheetData></worksheet>`; }
+function buildXlsx(sheets){ const enc=new TextEncoder(), files=[], P=(name,str)=>files.push({name,data:enc.encode(str)});
+  P('[Content_Types].xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>`+sheets.map((s,i)=>`<Override PartName="/xl/worksheets/sheet${i+1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('')+`</Types>`);
+  P('_rels/.rels',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`);
+  P('xl/workbook.xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>`+sheets.map((s,i)=>`<sheet name="${xmlEsc(s.name)}" sheetId="${i+1}" r:id="rId${i+1}"/>`).join('')+`</sheets></workbook>`);
+  P('xl/_rels/workbook.xml.rels',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">`+sheets.map((s,i)=>`<Relationship Id="rId${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i+1}.xml"/>`).join('')+`<Relationship Id="rId${sheets.length+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`);
+  P('xl/styles.xml',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="2"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/></cellXfs></styleSheet>`);
+  sheets.forEach((s,i)=>P(`xl/worksheets/sheet${i+1}.xml`,sheetXml(s.rows)));
+  return zipStore(files); }
+function xlsxSheetName(name,used){ let n=String(name||'Sheet').replace(/[\\\/\?\*\[\]:]/g,' ').trim().slice(0,31)||'Sheet';
+  let base=n,i=1; while(used.has(n.toLowerCase())){ const suf=' ('+(++i)+')'; n=base.slice(0,31-suf.length)+suf; } used.add(n.toLowerCase()); return n; }
+
+/* ---- generic modal + floating menu ---- */
+function openModal(html,cls){ const o=document.getElementById('modal'); o.innerHTML=`<div class="modal-card ${cls||''}">${html}</div>`; o.hidden=false;
+  o.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeModal)); return o.querySelector('.modal-card'); }
+function closeModal(){ const o=document.getElementById('modal'); o.hidden=true; o.innerHTML=''; }
+document.getElementById('modal').addEventListener('mousedown',e=>{ if(e.target.id==='modal')closeModal(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!document.getElementById('modal').hidden)closeModal(); });
+let _floatMenu=null;
+function closeFloatMenu(){ if(_floatMenu){ _floatMenu.remove(); _floatMenu=null; } }
+function openFloatMenu(x,y,items){ closeFloatMenu(); const m=document.createElement('div'); m.className='floatmenu';
+  m.innerHTML=items.map(it=>it.sep?'<div class="fm-sep"></div>':`<button class="fm-item${it.danger?' danger':''}">${it.icon||''}<span>${esc(it.label)}</span></button>`).join('');
+  document.body.appendChild(m); const bw=m.offsetWidth,bh=m.offsetHeight,vw=innerWidth,vh=innerHeight;
+  m.style.left=Math.min(x,vw-bw-8)+'px'; m.style.top=Math.min(y,vh-bh-8)+'px';
+  let bi=0; items.forEach(it=>{ if(it.sep)return; const btn=m.querySelectorAll('.fm-item')[bi++]; btn.addEventListener('click',()=>{ closeFloatMenu(); it.fn&&it.fn(); }); });
+  _floatMenu=m; }
+document.addEventListener('mousedown',e=>{ if(_floatMenu&&!e.target.closest('.floatmenu'))closeFloatMenu(); },true);
+window.addEventListener('blur',closeFloatMenu);
+
+/* ---- per-entity data dictionary dialog ---- */
+function entityRows(id){ return DICT.filter(d=>d.ent===id); }
+function openEntityDict(id){ if(!dictBuilt)buildDict(); const e=ENT[id], rows=entityRows(id);
+  const body=rows.length?rows.map(d=>{ const key=d.pk?'<span class="kpill pk">PK</span>':d.fk?'<span class="kpill fk">FK</span>':'';
+    return `<tr><td><span class="mono${(d.pk||d.fk)?'':' dim'}">${esc(d.name)}</span></td><td>${esc(d.display)}</td>`+
+      `<td><span class="dt-type">${esc(d.type)}</span></td><td>${d.req?'<span class="dt-req">●</span>':''}</td><td>${key}</td>`+
+      `<td><span class="dt-refs">${esc(d.refs)}</span></td><td><span class="dt-desc">${esc(d.desc)}</span></td></tr>`; }).join('')
+    :'<tr><td colspan="7"><div class="dict-empty">This table has no columns.</div></td></tr>';
+  openModal(`<div class="modal-h"><div><div class="modal-t"><span class="dot" style="background:var(${GVAR[e.group]})"></span>${esc(e.display||id)}</div><div class="modal-sub mono">${esc(id)} · ${rows.length} column${rows.length===1?'':'s'}</div></div><button class="modal-x" data-close aria-label="Close">${IC_X}</button></div>`+
+    `<div class="modal-body"><table class="edtable"><thead><tr><th>Column</th><th>Display name</th><th>Type</th><th>Req</th><th>Key</th><th>References</th><th>Description</th></tr></thead><tbody>${body}</tbody></table></div>`+
+    `<div class="modal-foot"><button class="btn" id="edExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v13M7 11l5 5 5-5"/></svg>Export table…</button><button class="btn primary" data-close>Close</button></div>`,'modal-wide');
+  document.getElementById('edExport').addEventListener('click',()=>{ closeModal(); openExportDialog(id); }); }
+
+/* ---- export dialog ---- */
+let exportOpts={fmt:'xlsx', layout:'multi', scope:'filter', cols:XCOLS.filter(c=>c.def).map(c=>c.id)};
+function openExportDialog(entityId){
   if(!dictBuilt)buildDict();
-  const rows=dictFiltered();
-  const head=['Table','Table (logical)','Group','Column','Display name','Type','Required','Key','References','References (logical)','Description'];
-  const lines=[head.map(csvCell).join(',')];
-  for(const d of rows)lines.push([d.entdisp,d.ent,GLABEL[d.group]||d.group,d.name,d.display,d.type,d.req?'Yes':'',d.pk?'PK':d.fk?'FK':'',d.refs,d.reflog,d.desc].map(csvCell).join(','));
-  const csv='﻿'+lines.join('\r\n');
-  try{ await saveFile(`d365-data-dictionary-${new Date().toISOString().slice(0,10)}.csv`,csv); toast(`CSV exported — ${rows.length} columns.`); }
+  const ent=entityId&&ENT[entityId]?entityId:null;
+  const nFilter=dictFiltered().length, nAll=DICT.length, nEnt=ent?entityRows(ent).length:0;
+  const scope = ent ? 'entity' : (['filter','all'].includes(exportOpts.scope)?exportOpts.scope:'filter');
+  const scopeRows = ent?`<label class="rl"><input type="radio" name="ex-scope" value="entity" checked><span>This table — <b>${esc(ENT[ent].display||ent)}</b> (${nEnt})</span></label>`
+    :`<label class="rl"><input type="radio" name="ex-scope" value="filter" ${scope==='filter'?'checked':''}><span>Current filter (${nFilter} column${nFilter===1?'':'s'})</span></label>`+
+     `<label class="rl"><input type="radio" name="ex-scope" value="all" ${scope==='all'?'checked':''}><span>All tables &amp; columns (${nAll})</span></label>`;
+  openModal(`<div class="modal-h"><div class="modal-t">Export data dictionary</div><button class="modal-x" data-close aria-label="Close">${IC_X}</button></div>`+
+    `<div class="modal-body ex-body">`+
+      `<div class="ex-sect"><div class="ex-lbl">Format</div><div class="seg" id="exFmt"><button data-v="xlsx"${exportOpts.fmt==='xlsx'?' class="on"':''}>Excel (.xlsx)</button><button data-v="csv"${exportOpts.fmt==='csv'?' class="on"':''}>CSV</button></div></div>`+
+      `<div class="ex-sect" id="exLayoutSect"><div class="ex-lbl">Excel layout</div><div class="rl-group">`+
+        `<label class="rl"><input type="radio" name="ex-layout" value="multi" ${exportOpts.layout!=='single'?'checked':''}><span>One worksheet per table <span class="rl-note">(+ an Overview sheet)</span></span></label>`+
+        `<label class="rl"><input type="radio" name="ex-layout" value="single" ${exportOpts.layout==='single'?'checked':''}><span>Single worksheet (all rows together)</span></label>`+
+      `</div></div>`+
+      `<div class="ex-sect"><div class="ex-lbl">Rows</div><div class="rl-group">${scopeRows}</div></div>`+
+      `<div class="ex-sect"><div class="ex-lbl">Columns</div><div class="ex-cols">`+XCOLS.map(c=>`<label class="dm-chk"><input type="checkbox" data-col="${c.id}" ${exportOpts.cols.includes(c.id)?'checked':''}>${esc(c.label)}</label>`).join('')+`</div></div>`+
+    `</div>`+
+    `<div class="modal-foot"><button class="btn" data-close>Cancel</button><button class="btn primary" id="exGo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v13M7 11l5 5 5-5"/></svg>Export</button></div>`,'modal-export');
+  const card=document.getElementById('modal');
+  const layoutSect=card.querySelector('#exLayoutSect');
+  const syncLayout=()=>{ layoutSect.style.display=(card.querySelector('#exFmt .on')?.dataset.v==='xlsx')?'':'none'; };
+  card.querySelectorAll('#exFmt button').forEach(b=>b.addEventListener('click',()=>{ card.querySelectorAll('#exFmt button').forEach(x=>x.classList.toggle('on',x===b)); syncLayout(); }));
+  syncLayout();
+  card.querySelector('#exGo').addEventListener('click',()=>runExport(ent));
+}
+function runExport(ent){
+  const card=document.getElementById('modal');
+  const fmt=card.querySelector('#exFmt .on')?.dataset.v||'xlsx';
+  const layout=(card.querySelector('input[name="ex-layout"]:checked')||{}).value||'multi';
+  const scope=(card.querySelector('input[name="ex-scope"]:checked')||{}).value||'filter';
+  const cols=XCOLS.filter(c=>card.querySelector(`input[data-col="${c.id}"]`)?.checked);
+  if(!cols.length){ toast('Pick at least one column.'); return; }
+  exportOpts={fmt,layout,scope:(scope==='entity'?exportOpts.scope:scope),cols:cols.map(c=>c.id)};
+  let rows = scope==='entity'?entityRows(ent) : scope==='all'?DICT.slice() : dictFiltered();
+  if(!rows.length){ toast('Nothing to export for this selection.'); return; }
+  const head=cols.map(c=>c.label);
+  const stamp=new Date().toISOString().slice(0,10);
+  const base = ent?`d365-dictionary-${ent}`:'d365-data-dictionary';
+  closeModal();
+  if(fmt==='csv'){
+    const lines=[head.map(csvCell).join(',')];
+    for(const d of rows)lines.push(cols.map(c=>csvCell(c.get(d))).join(','));
+    saveExport(`${base}-${stamp}.csv`, '﻿'+lines.join('\r\n'), `${rows.length} rows`);
+  } else {
+    let sheets;
+    if(layout==='single' || ent){ sheets=[{name: ent?xlsxSheetName(ENT[ent].display||ent,new Set()):'Data dictionary', rows:[head,...rows.map(d=>cols.map(c=>c.get(d)))]}]; }
+    else {
+      const used=new Set(), byEnt=new Map();
+      for(const d of rows){ if(!byEnt.has(d.ent))byEnt.set(d.ent,[]); byEnt.get(d.ent).push(d); }
+      const ohead=['Table','Table (logical)','Group','Columns'];
+      const orows=[...byEnt.entries()].map(([id,rs])=>[ (ENT[id]||{}).display||id, id, GLABEL[(ENT[id]||{}).group]||'', rs.length ]);
+      sheets=[{name:xlsxSheetName('Overview',used), rows:[ohead,...orows]}];
+      for(const [id,rs] of byEnt)sheets.push({name:xlsxSheetName((ENT[id]||{}).display||id,used), rows:[head,...rs.map(d=>cols.map(c=>c.get(d)))]});
+    }
+    let bytes; try{ bytes=buildXlsx(sheets); }catch(e){ toast('Excel build failed: '+(e&&e.message||e)); return; }
+    saveExport(`${base}-${stamp}.xlsx`, bytes, `${sheets.length} sheet${sheets.length===1?'':'s'}`);
+  }
+}
+async function saveExport(filename,data,note){
+  try{ await saveFile(filename,data); toast(`Exported ${filename.split('.').pop().toUpperCase()} — ${note}.`); }
   catch(e){ if(e&&e.code==='declined')return; toast('Export failed'+(e&&(e.message||e.code)?': '+(e.message||e.code):'')); }
 }
-document.getElementById('expCsv').addEventListener('click',exportCsv);
+document.getElementById('expCsv').addEventListener('click',()=>openExportDialog());
 
 /* ---------- settings ---------- */
 function setSeg(id,v){ const box=document.getElementById(id); if(box)box.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===String(v))); }
