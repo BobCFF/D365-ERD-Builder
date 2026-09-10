@@ -26,10 +26,8 @@ important · **P2** nice-to-have. IDs match `REVIEW.md`.
 - [x] **P1-1 · `vercel.json` security headers** (SEC-2). Done in v2.8.2:
   `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`/`frame-ancestors`,
   `Cross-Origin-Opener-Policy`, `Permissions-Policy`. (Confirm Vercel HSTS in prod.)
-- [ ] **P1-2 · "Forget this file" control + retention note** (SEC-3). Promote
-  `revertBuiltIn` to a clearly labelled button (e.g. on the landing and in the
-  header when a file is loaded), and note that imports persist locally until
-  cleared.
+- [x] **P1-2 · "Forget this file" control + retention note** (SEC-3). Done in
+  v2.9.0 — Settings → Data source, with a shared-computer note + PRIVACY link.
 - [ ] **P1-3 · Split restyle vs. rebuild in `drawLinks`** (BUG-2). On hover/
   select, toggle `dim/hot` classes on existing paths instead of rebuilding all
   edges + the minimap. Measure on a 50-table schema.
@@ -39,14 +37,15 @@ important · **P2** nice-to-have. IDs match `REVIEW.md`.
 - [x] **P1-5 · LICENSE** (LEG-1) — MIT added.
 - [x] **P1-6 · Font license attribution** (LEG-2) — `THIRD_PARTY_LICENSES.md` +
   `licenses/OFL-1.1.txt` for Archivo + IBM Plex Mono (unmodified, names intact).
-- [x] **P1-7 (docs) · `PRIVACY.md`** (LEG-4/MKT-2) — added; README privacy
-  section links it. *(Louder in-app note ships with the app PR, P1-7-UI.)*
-- [ ] **P1-8 · SEO / social meta** (MKT-1) — `<meta description>`, Open Graph /
-  Twitter tags, canonical URL, social preview image.
-- [ ] **P1-9 · Undo (single level)** (UX-2) — at least "restore previous layout"
-  after hide/move/reset.
-- [ ] **P1-10 · Theme name at rest** (UX-1) — show the active theme name/label
-  near the cycle button, not only in tooltip/toast.
+- [x] **P1-7 · `PRIVACY.md` + louder privacy note** (LEG-4/MKT-2) — doc added
+  (v2.8.x); v2.9.0 links it from the landing and Settings.
+- [x] **P1-8 · SEO / social meta** (MKT-1) — v2.9.0: description, OG + Twitter,
+  canonical, theme-color, inline SVG favicon. *(Follow-up P2: a raster
+  `og:image` social-preview card.)*
+- [x] **P1-9 · Undo (single level)** (UX-2) — v2.9.0: ribbon Undo + Ctrl/⌘Z for
+  last move / hide / arrange.
+- [x] **P1-10 · Theme name at rest** (UX-1) — v2.9.0: name shown beside the
+  cycle button.
 
 ## P2 — polish, scale, features
 

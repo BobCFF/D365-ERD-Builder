@@ -7,6 +7,20 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.9.0] — 2026-09-10
+
+### Added
+- **Undo** (single level) in the ribbon (and Ctrl/⌘Z) — reverts the last move,
+  hide/show, or auto-arrange.
+- **Active theme name** is shown next to the theme button (not just in the
+  tooltip); hidden on narrow screens.
+- **"Forget this file"** control in Settings → Data source — clears the imported
+  schema and layout from this browser (localStorage + IndexedDB) and returns to
+  the upload screen, with a note about shared/public computers.
+- **SEO / social metadata** — description, Open Graph + Twitter tags, canonical
+  URL, theme-color, and an inline SVG favicon.
+- Landing and Settings now link to `PRIVACY.md` ("how your data is handled").
+
 ## [2.8.2] — 2026-09-10
 
 ### Security

@@ -32,10 +32,24 @@ const URL = process.env.URL || 'http://127.0.0.1:8100/';
   // minimap present with node rects
   const mmRects = await p.$$eval('#mmnodes rect', r => r.length);
 
-  const ok = landing && nodes === 7 && edges > 0 && t0 === t7 && dictRows > 0 && mmRects === 7 && !errs.length;
+  // theme name shown at rest
+  const themeName = await p.$eval('#themeName', el => el.textContent.trim());
+
+  // undo: hide a table via the sidebar, then Undo restores the count
+  const statusN = () => p.$eval('#status', el => (el.textContent.match(/(\d+) of \d+ tables/) || [])[1]);
+  const before = await statusN();
+  await p.$eval('#entlist .ent input[type="checkbox"]', c => c.click()); await p.waitForTimeout(250);
+  const afterHide = await statusN();
+  const undoDisabled = await p.$eval('#undo', b => b.disabled);
+  await p.click('#undo'); await p.waitForTimeout(250);
+  const afterUndo = await statusN();
+
+  const ok = landing && nodes === 7 && edges > 0 && t0 === t7 && dictRows > 0 && mmRects === 7 &&
+    !!themeName && afterHide === String(+before - 1) && !undoDisabled && afterUndo === before && !errs.length;
   console.log('landing:', landing, '| nodes:', nodes, '| edges:', edges);
-  console.log('theme cycle back to start:', t0, '==', t7, '->', t0 === t7);
+  console.log('theme cycle back to start:', t0, '==', t7, '->', t0 === t7, '| themeName:', themeName);
   console.log('dict rows:', dictRows, '| minimap rects:', mmRects);
+  console.log('undo: before', before, '-> hide', afterHide, '-> undo', afterUndo, '| btn enabled after hide:', !undoDisabled);
   console.log('errors:', errs.length ? errs : 'none');
   console.log(ok ? 'PASS' : 'FAIL');
   await b.close();
