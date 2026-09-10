@@ -1,6 +1,28 @@
 "use strict";
 const NODE_W = 250;
 const XML_KEY='tdp-erd-xml', XML_META='tdp-erd-xml-meta';
+/* Optional per-attribute metadata columns for the Data Dictionary. Each is read
+   from the named child element of <attribute> when present in customizations.xml;
+   a column only appears if at least one attribute in the file carries a value.
+   kind drives display/sort/filter: num (numeric), text, bool (Yes/No). */
+const META_COLS=[
+  {key:'maxlen',    tag:'MaxLength',         label:'Max length', kind:'num',  w:100, min:64, on:true},
+  {key:'format',    tag:'Format',            label:'Format',     kind:'text', w:120, min:70, on:true},
+  {key:'precision', tag:'Precision',         label:'Precision',  kind:'num',  w:90,  min:60, on:true},
+  {key:'minval',    tag:'MinValue',          label:'Min',        kind:'num',  w:96,  min:60, on:true},
+  {key:'maxval',    tag:'MaxValue',          label:'Max',        kind:'num',  w:96,  min:60, on:true},
+  {key:'audit',     tag:'IsAuditEnabled',    label:'Audit',      kind:'bool', w:82,  min:56, on:true},
+  {key:'secured',   tag:'IsSecured',         label:'Secured',    kind:'bool', w:86,  min:56, on:true},
+  {key:'custom',    tag:'IsCustomField',     label:'Custom',     kind:'bool', w:82,  min:56, on:true},
+  {key:'version',   tag:'IntroducedVersion', label:'Version',    kind:'text', w:100, min:64, on:true},
+  {key:'source',    tag:'SourceType',        label:'Source',     kind:'text', w:104, min:64, on:true},
+  {key:'searchable',tag:'IsSearchable',      label:'Searchable', kind:'bool', w:100, min:56, on:false},
+  {key:'optionset', tag:'OptionSetName',     label:'Option set', kind:'text', w:160, min:80, on:false},
+];
+function metaValue(m,raw){ raw=(raw||'').trim(); if(raw==='')return '';
+  if(m.kind==='bool')return /^(1|true|yes)$/i.test(raw)?'Yes':/^(0|false|no)$/i.test(raw)?'No':raw;
+  if(m.key==='source')return ({'0':'Simple','1':'Calculated','2':'Rollup'})[raw]||raw;
+  return raw; }
 /* ---- in-browser parse of a Dataverse customizations.xml ---- */
 function catFn(name,referenced,referencing,attr){
   const n=(name||'').toLowerCase(), a=(attr||'').toLowerCase(), rd=(referenced||'').toLowerCase();
@@ -28,7 +50,9 @@ function parseCustomizationsXml(text){
     if(attrsEl)for(const a of attrsEl.children){ if(a.tagName!=='attribute')continue;
       const an=(ct(a,'LogicalName')||ct(a,'Name')||'').toLowerCase(); if(!an)continue;
       const dn=a.querySelector('displaynames > displayname'), de=a.querySelector('Descriptions > Description');
-      attrs.push({name:an,type:ct(a,'Type'),required:ct(a,'RequiredLevel'),display:dn?dn.getAttribute('description')||'':'',desc:de?de.getAttribute('description')||'':''});
+      const at={name:an,type:ct(a,'Type'),required:ct(a,'RequiredLevel'),display:dn?dn.getAttribute('description')||'':'',desc:de?de.getAttribute('description')||'':''};
+      for(const m of META_COLS){ const v=metaValue(m,ct(a,m.tag)); if(v!=='')at[m.key]=v; }
+      attrs.push(at);
     }
     if(entities[logical]){ const seen=new Set(entities[logical].attributes.map(x=>x.name)); for(const x of attrs)if(!seen.has(x.name)){entities[logical].attributes.push(x);seen.add(x.name);} }
     else entities[logical]={logical,display:disp,attributes:attrs};
@@ -141,7 +165,7 @@ function saveState(){ try{ localStorage.setItem(LS, JSON.stringify({
   vis:[...visible], cardState, cats:[...cats], gc:[...gcollapsed], theme:themeChoice, vp:[curT.x,curT.y,curT.k],
   sizes:Object.fromEntries(Object.entries(sizes).map(([k,v])=>[k,[Math.round(v.w),Math.round(v.h)]])),
   notation, lineMode, lineWeight, defaultDetail, labelsMode, pngScale, exportTitle, view, railW, railCollapsed,
-  ribbonCollapsed, minimapCollapsed, mmPos, gestureSeen, dcolOrder, dcolW, dcolF
+  ribbonCollapsed, minimapCollapsed, mmPos, gestureSeen, dcolOrder, dcolW, dcolF, dcolHidden:[...dcolHidden]
 })); }catch(e){} }
 const saved=loadState();
 let initVis = saved.vis&&saved.vis.length ? saved.vis.filter(id=>ENT[id]) : allIds.slice();
@@ -186,10 +210,20 @@ const DCOLDEF={
   refs:   {label:'References',   w:180, min:90,  sort:'refs',    filter:'textblank'},
   desc:   {label:'Description',  w:360, min:120, sort:'desc',    filter:'textblank'}
 };
-const DCOL_ALL=['ent','name','display','type','req','key','refs','desc'];
-function defaultDcolF(){ return {ent:{q:'',groups:[],tables:[]}, name:{q:''}, display:{q:'',has:''}, type:{sel:[]}, req:{mode:''}, key:{mode:''}, refs:{q:'',has:''}, desc:{q:'',has:''}}; }
-let dcolOrder=(Array.isArray(saved.dcolOrder)&&saved.dcolOrder.length===DCOL_ALL.length&&saved.dcolOrder.every(k=>DCOLDEF[k])&&new Set(saved.dcolOrder).size===DCOL_ALL.length)?saved.dcolOrder.slice():DCOL_ALL.slice();
+const BASE_COLS=['ent','name','display','type','req','key','refs','desc'];
+// fold the optional metadata columns into the column model (data-driven)
+for(const m of META_COLS)DCOLDEF[m.key]={label:m.label,w:m.w,min:m.min,sort:m.key,filter:m.kind==='bool'?'boolsel':'textblank',meta:true,kind:m.kind};
+const META_KEYS=META_COLS.map(m=>m.key), META_NUM=new Set(META_COLS.filter(m=>m.kind==='num').map(m=>m.key));
+const DCOL_ALL=BASE_COLS.concat(META_KEYS);
+function fState(filter){ switch(filter){ case 'group':return {q:'',groups:[],tables:[]}; case 'text':return {q:''};
+  case 'textblank':return {q:'',has:''}; case 'multi':return {sel:[]}; case 'tri':case 'keysel':case 'boolsel':return {mode:''}; } return {}; }
+function defaultDcolF(){ const o={}; for(const k of DCOL_ALL)o[k]=fState(DCOLDEF[k].filter); return o; }
+// order: keep any saved order (known keys), then append newcomers; base always renders
+let dcolOrder=(function(){ let o=Array.isArray(saved.dcolOrder)?saved.dcolOrder.filter(k=>DCOLDEF[k]):[]; o=[...new Set(o)];
+  for(const k of DCOL_ALL)if(!o.includes(k))o.push(k); return o.length?o:DCOL_ALL.slice(); })();
 let dcolW={}; DCOL_ALL.forEach(k=>{ const v=saved.dcolW&&typeof saved.dcolW[k]==='number'?saved.dcolW[k]:DCOLDEF[k].w; dcolW[k]=Math.max(DCOLDEF[k].min,Math.min(900,v)); });
+// hidden columns (meta only; base columns always shown). Default hides meta with on:false.
+let dcolHidden=Array.isArray(saved.dcolHidden)?new Set(saved.dcolHidden.filter(k=>DCOLDEF[k]&&DCOLDEF[k].meta)):new Set(META_COLS.filter(m=>!m.on).map(m=>m.key));
 let dcolF=defaultDcolF();
 if(saved.dcolF&&typeof saved.dcolF==='object'){ for(const k of DCOL_ALL){ const s=saved.dcolF[k]; if(s&&typeof s==='object')Object.assign(dcolF[k],s); if(dcolF[k].groups&&!Array.isArray(dcolF[k].groups))dcolF[k].groups=[]; if(dcolF[k].sel&&!Array.isArray(dcolF[k].sel))dcolF[k].sel=[]; } }
 if(!Array.isArray(dcolF.ent.tables))dcolF.ent.tables=[];
@@ -944,17 +978,21 @@ document.querySelectorAll('#tabs .tab').forEach(t=>t.addEventListener('click',()
 
 /* ---------- data dictionary ---------- */
 let DICT=[], dictBuilt=false, dsort={key:'ent',dir:1};
-let DTYPES=[];
+let DTYPES=[], DMETA_AVAIL=new Set();
 const IC_DOTS='<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>';
 function buildDict(){
   DICT=[];
   for(const id of allIds){ const e=ENT[id]; for(const a of e.attributes){
-    DICT.push({ent:id, entdisp:e.display||id, group:e.group, name:a.name, display:a.display||'', type:a.type||'',
+    const row={ent:id, entdisp:e.display||id, group:e.group, name:a.name, display:a.display||'', type:a.type||'',
       req:(a.required==='required'||a.required==='systemrequired')?1:0, pk:!!a.pk, fk:!!a.fk,
       refs:(a.fk&&a.targets)?a.targets.map(t=>(ENT[t]||{}).display||t).join(', '):'',
-      reflog:(a.fk&&a.targets)?a.targets.join(', '):'', desc:a.desc||''});
+      reflog:(a.fk&&a.targets)?a.targets.join(', '):'', desc:a.desc||''};
+    for(const m of META_COLS)if(a[m.key]!=null)row[m.key]=a[m.key];
+    DICT.push(row);
   }}
   DTYPES=[...new Set(DICT.map(d=>d.type).filter(Boolean))].sort();
+  // metadata columns are only offered if at least one attribute carries a value
+  DMETA_AVAIL=new Set(META_COLS.filter(m=>DICT.some(d=>d[m.key]!=null&&d[m.key]!=='')).map(m=>m.key));
   // drop stored type filters that no longer exist in this schema
   dcolF.type.sel=dcolF.type.sel.filter(t=>DTYPES.includes(t));
   dcolF.ent.groups=dcolF.ent.groups.filter(g=>GROUPS.some(x=>x[0]===g));
@@ -969,7 +1007,7 @@ function dcolActive(k){ const f=dcolF[k]; switch(DCOLDEF[k].filter){
   case 'text': return !!f.q;
   case 'textblank': return !!(f.q||f.has);
   case 'multi': return !!f.sel.length;
-  case 'tri': case 'keysel': return !!f.mode; } return false; }
+  case 'tri': case 'keysel': case 'boolsel': return !!f.mode; } return false; }
 function dictFiltered(){
   const q=document.getElementById('dq').value.trim().toLowerCase();
   const visOnly=document.getElementById('dVis').checked, F=dcolF;
@@ -985,11 +1023,15 @@ function dictFiltered(){
     if(!matchKey(F.key.mode,d))return false;
     if(!matchBlank(F.refs,d.refs))return false;
     if(!matchBlank(F.desc,d.desc))return false;
+    for(const mk of META_KEYS){ const ff=F[mk]; if(!ff)continue; const mv=d[mk]!=null?String(d[mk]):'';
+      if(DCOLDEF[mk].filter==='boolsel'){ if(ff.mode==='yes'&&mv!=='Yes')return false; if(ff.mode==='no'&&mv!=='No')return false; }
+      else if(!matchBlank(ff,mv))return false; }
     if(q&&!((d.ent+' '+d.entdisp+' '+d.name+' '+d.display+' '+d.desc+' '+d.reflog).toLowerCase().includes(q)))return false;
     return true;
   });
   const k=dsort.key,dir=dsort.dir;
-  const val=d=> k==='key'?(d.pk?0:d.fk?1:2) : k==='req'?(d.req?0:1) : k==='refs'?d.refs.toLowerCase() : String(d[k]!=null?d[k]:'').toLowerCase();
+  const val=d=> k==='key'?(d.pk?0:d.fk?1:2) : k==='req'?(d.req?0:1) : k==='refs'?d.refs.toLowerCase()
+    : META_NUM.has(k)?(d[k]!=null&&d[k]!==''?Number(d[k]):Infinity) : String(d[k]!=null?d[k]:'').toLowerCase();
   rows.sort((a,b)=>{ const va=val(a),vb=val(b); if(va<vb)return -dir; if(va>vb)return dir;
     if(a.entdisp!==b.entdisp)return a.entdisp<b.entdisp?-1:1; return a.name<b.name?-1:1; });
   return rows;
@@ -1002,21 +1044,25 @@ function dictCell(k,d){ switch(k){
   case 'req': return `<td>${d.req?'<span class="dt-req" title="required">●</span>':''}</td>`;
   case 'key': return `<td>${d.pk?'<span class="kpill pk">PK</span>':d.fk?'<span class="kpill fk">FK</span>':''}</td>`;
   case 'refs': return `<td><span class="dt-refs">${esc(d.refs)}</span></td>`;
-  case 'desc': return `<td><span class="dt-desc">${esc(d.desc)}</span></td>`; } return '<td></td>'; }
+  case 'desc': return `<td><span class="dt-desc">${esc(d.desc)}</span></td>`; }
+  if(DCOLDEF[k]&&DCOLDEF[k].meta)return `<td><span class="dt-meta">${esc(d[k]!=null?String(d[k]):'')}</span></td>`;
+  return '<td></td>'; }
+// visible column keys, in order: base columns always; meta columns only if shown and present in the file
+function visCols(){ return dcolOrder.filter(k=>DCOLDEF[k] && !dcolHidden.has(k) && (!DCOLDEF[k].meta || DMETA_AVAIL.has(k))); }
 function renderDict(){
   if(!dictBuilt)return;
-  const rows=dictFiltered(), table=document.getElementById('dicttable');
-  table.style.width=dcolOrder.reduce((s,k)=>s+dcolW[k],0)+'px';
-  table.querySelector('colgroup').innerHTML=dcolOrder.map(k=>`<col data-k="${k}" style="width:${dcolW[k]}px">`).join('');
-  table.querySelector('thead').innerHTML='<tr>'+dcolOrder.map(k=>{ const def=DCOLDEF[k];
+  const rows=dictFiltered(), table=document.getElementById('dicttable'), order=visCols();
+  table.style.width=order.reduce((s,k)=>s+dcolW[k],0)+'px';
+  table.querySelector('colgroup').innerHTML=order.map(k=>`<col data-k="${k}" style="width:${dcolW[k]}px">`).join('');
+  table.querySelector('thead').innerHTML='<tr>'+order.map(k=>{ const def=DCOLDEF[k];
     const arr=(def.sort===dsort.key)?`<span class="arr">${dsort.dir>0?'▲':'▼'}</span>`:'';
     return `<th data-k="${k}" class="dth${dcolActive(k)?' filtered':''}">`+
       `<span class="dth-l" draggable="true" data-sort="${def.sort}" title="Click to sort · drag to reorder">${esc(def.label)}${arr}</span>`+
       `<button class="dth-menu" title="Filter this column" aria-label="Filter ${esc(def.label)}">${IC_DOTS}</button>`+
       `<span class="dth-rz" title="Drag to resize · double-click to reset"></span></th>`; }).join('')+'</tr>';
   const body=document.getElementById('dictbody');
-  body.innerHTML = rows.length ? rows.map(d=>'<tr>'+dcolOrder.map(k=>dictCell(k,d)).join('')+'</tr>').join('')
-    : `<tr><td colspan="${dcolOrder.length}"><div class="dict-empty">No columns match these filters.</div></td></tr>`;
+  body.innerHTML = rows.length ? rows.map(d=>'<tr>'+order.map(k=>dictCell(k,d)).join('')+'</tr>').join('')
+    : `<tr><td colspan="${order.length}"><div class="dict-empty">No columns match these filters.</div></td></tr>`;
   document.getElementById('dCount').textContent=`${rows.length} column${rows.length===1?'':'s'}`;
 }
 /* ---- per-column filter menu ---- */
@@ -1040,6 +1086,8 @@ function dmenuHTML(k){ const def=DCOLDEF[k], f=dcolF[k]; let h=`<div class="dm-h
     h+=`<div class="dm-opts">`+radioRow('mode','',f.mode,'Any')+radioRow('mode','req',f.mode,'Required only')+radioRow('mode','opt',f.mode,'Optional only')+`</div>`;
   } else if(def.filter==='keysel'){
     h+=`<div class="dm-opts">`+radioRow('mode','',f.mode,'Any')+radioRow('mode','pk',f.mode,'Primary key')+radioRow('mode','fk',f.mode,'Foreign key')+radioRow('mode','any',f.mode,'Any key (PK or FK)')+radioRow('mode','none',f.mode,'No key')+`</div>`;
+  } else if(def.filter==='boolsel'){
+    h+=`<div class="dm-opts">`+radioRow('mode','',f.mode,'Any')+radioRow('mode','yes',f.mode,'Yes')+radioRow('mode','no',f.mode,'No')+`</div>`;
   }
   h+=`<div class="dm-foot"><button class="dm-clear" ${dcolActive(k)?'':'disabled'}>Clear column</button></div>`;
   return h; }
@@ -1065,10 +1113,7 @@ function wireDMenu(k){ const m=document.getElementById('dmenu'), f=dcolF[k], def
   m.querySelectorAll('input[name^="dm-"]').forEach(r=>r.addEventListener('change',()=>{ if(!r.checked)return; const field=r.getAttribute('name').slice(3); f[field]=r.dataset.v; dmApply(); }));
   const cb=m.querySelector('.dm-clear'); if(cb)cb.addEventListener('click',()=>{ resetDcol(k); m.innerHTML=dmenuHTML(k); wireDMenu(k); dmApply(); });
 }
-function resetDcol(k){ const def=DCOLDEF[k]; switch(def.filter){
-  case 'group': dcolF[k]={q:'',groups:[],tables:[]}; break; case 'text': dcolF[k]={q:''}; break;
-  case 'textblank': dcolF[k]={q:'',has:''}; break; case 'multi': dcolF[k]={sel:[]}; break;
-  case 'tri': case 'keysel': dcolF[k]={mode:''}; break; } }
+function resetDcol(k){ dcolF[k]=fState(DCOLDEF[k].filter); }
 function clearAllDcol(){ dcolF=defaultDcolF(); closeDMenu(); renderDict(); saveState(); }
 /* header interactions: sort / menu / resize / drag-reorder (delegated on the persistent thead) */
 (function wireDictHead(){ const table=document.getElementById('dicttable'), thead=table.querySelector('thead');
@@ -1118,8 +1163,23 @@ function clearAllDcol(){ dcolF=defaultDcolF(); closeDMenu(); renderDict(); saveS
 document.getElementById('dq').addEventListener('input',renderDict);
 document.getElementById('dVis').addEventListener('change',renderDict);
 document.getElementById('dClearCols').addEventListener('click',clearAllDcol);
+/* ---- metadata column chooser ---- */
+let colsMenuOpen=false;
+function closeColsMenu(){ const m=document.getElementById('dcolsmenu'); m.hidden=true; m.innerHTML=''; colsMenuOpen=false; }
+function openColsMenu(btn){ if(colsMenuOpen){ closeColsMenu(); return; } closeDMenu();
+  const m=document.getElementById('dcolsmenu'); const avail=META_COLS.filter(x=>DMETA_AVAIL.has(x.key));
+  let h=`<div class="dm-h">Metadata columns</div>`;
+  if(!avail.length){ h+=`<div class="dm-note">No optional metadata was found in this file. Export an unmanaged solution's <b>customizations.xml</b> for the richest set.</div>`; }
+  else { h+=`<div class="dm-list">`+avail.map(x=>`<label class="dm-chk"><input type="checkbox" data-col="${x.key}" ${dcolHidden.has(x.key)?'':'checked'}><span class="dt-tname">${esc(x.label)}</span></label>`).join('')+`</div>`; }
+  m.innerHTML=h; m.hidden=false; colsMenuOpen=true;
+  const panel=btn.closest('.panel'), pr=panel.getBoundingClientRect(), br=btn.getBoundingClientRect();
+  const mw=Math.max(m.offsetWidth,220); let left=br.left-pr.left; left=Math.max(6,Math.min(left, pr.width-mw-6));
+  m.style.left=left+'px'; m.style.top=(br.bottom-pr.top+3)+'px';
+  m.querySelectorAll('input[data-col]').forEach(c=>c.addEventListener('change',()=>{ const k=c.dataset.col; if(c.checked)dcolHidden.delete(k); else dcolHidden.add(k); renderDict(); saveState(); })); }
+document.getElementById('dCols').addEventListener('click',e=>{ e.stopPropagation(); openColsMenu(e.currentTarget); });
+document.addEventListener('mousedown',e=>{ if(colsMenuOpen && !e.target.closest('#dcolsmenu') && !e.target.closest('#dCols'))closeColsMenu(); });
 document.addEventListener('mousedown',e=>{ if(dmenuKey!=null && !e.target.closest('#dmenu') && !e.target.closest('.dth-menu'))closeDMenu(); });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&dmenuKey!=null)closeDMenu(); });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(dmenuKey!=null)closeDMenu(); if(colsMenuOpen)closeColsMenu(); } });
 const _dscroll=document.querySelector('#view-dict .dict-scroll'); if(_dscroll)_dscroll.addEventListener('scroll',()=>{ if(dmenuKey!=null)closeDMenu(); });
 function csvCell(v){ v=v==null?'':String(v); return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
 /* export column definitions (superset of the on-screen columns) */
@@ -1136,6 +1196,8 @@ const XCOLS=[
   {id:'reflog',  label:'References (logical)', get:d=>d.reflog,  def:false},
   {id:'desc',    label:'Description',          get:d=>d.desc,    def:true}
 ];
+// optional metadata columns join the export superset; each defaults on when the column is currently shown
+for(const m of META_COLS)XCOLS.push({id:m.key, label:m.label, get:d=>d[m.key]!=null?String(d[m.key]):'', def:false, meta:true});
 
 /* ---- minimal dependency-free .xlsx (ZIP/store + inlineStr worksheets) ---- */
 const _CRC=(()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1); t[n]=c>>>0; } return t; })();
@@ -1217,7 +1279,7 @@ function openExportDialog(entityId){
         `<label class="rl"><input type="radio" name="ex-layout" value="single" ${exportOpts.layout==='single'?'checked':''}><span>Single worksheet (all rows together)</span></label>`+
       `</div></div>`+
       `<div class="ex-sect"><div class="ex-lbl">Rows</div><div class="rl-group">${scopeRows}</div></div>`+
-      `<div class="ex-sect"><div class="ex-lbl">Columns</div><div class="ex-cols">`+XCOLS.map(c=>`<label class="dm-chk"><input type="checkbox" data-col="${c.id}" ${exportOpts.cols.includes(c.id)?'checked':''}>${esc(c.label)}</label>`).join('')+`</div></div>`+
+      `<div class="ex-sect"><div class="ex-lbl">Columns</div><div class="ex-cols">`+XCOLS.filter(c=>!c.meta||DMETA_AVAIL.has(c.id)).map(c=>`<label class="dm-chk"><input type="checkbox" data-col="${c.id}" ${exportOpts.cols.includes(c.id)?'checked':''}>${esc(c.label)}</label>`).join('')+`</div></div>`+
     `</div>`+
     `<div class="modal-foot"><button class="btn" data-close>Cancel</button><button class="btn primary" id="exGo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v13M7 11l5 5 5-5"/></svg>Export</button></div>`,'modal-export');
   const card=document.getElementById('modal');

@@ -7,6 +7,24 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.16.0] — 2026-09-10
+
+### Added
+- **Data Dictionary — optional metadata columns.** The dictionary now reads
+  extra per-attribute metadata from `customizations.xml` when present and can
+  show it as columns: **Max length, Format, Precision, Min, Max, Audit, Secured,
+  Custom, Version, Source (calculated/rollup), Searchable, Option set**. A new
+  **Columns** button opens a chooser to show/hide each column — only the ones
+  actually present in the loaded file are offered. The columns sort, filter
+  (text/blank or Yes/No), reorder, resize, persist, and are available in the
+  CSV/XLSX export. Max length, Format, Precision, Min/Max, Audit, Secured,
+  Custom, Version and Source are shown by default when present; Searchable and
+  Option set are off by default.
+
+  _Note:_ these populate from a real exported `customizations.xml` (an unmanaged
+  solution export is richest); the built-in sample carries only type and
+  required level, so the chooser reports no extra metadata for it.
+
 ## [2.15.1] — 2026-09-10
 
 ### Changed
