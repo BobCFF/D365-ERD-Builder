@@ -7,6 +7,14 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.15.1] — 2026-09-10
+
+### Changed
+- **Scrollbar tracks now match the field colour.** Scrollbars across the app use
+  the theme's `--field` background for their track (and corner) — the same colour
+  as inputs and checkboxes — with a `--border-strong` thumb, so they blend in
+  rather than showing the browser's default grey track. Applies in every theme.
+
 ## [2.15.0] — 2026-09-10
 
 ### Added
