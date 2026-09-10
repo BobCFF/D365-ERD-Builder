@@ -7,6 +7,15 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.16.2] — 2026-09-10
+
+### Changed
+- **Data Dictionary search now persists** across a refresh (alongside the other
+  dictionary settings).
+- **Table column filter lists only the tables in the dictionary.** The Tables
+  checklist in the Table column's filter now shows just the distinct tables
+  present in the current dictionary rows, rather than every table in the schema.
+
 ## [2.16.1] — 2026-09-10
 
 ### Fixed
