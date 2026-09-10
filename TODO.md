@@ -28,9 +28,9 @@ important · **P2** nice-to-have. IDs match `REVIEW.md`.
   `Cross-Origin-Opener-Policy`, `Permissions-Policy`. (Confirm Vercel HSTS in prod.)
 - [x] **P1-2 · "Forget this file" control + retention note** (SEC-3). Done in
   v2.9.0 — Settings → Data source, with a shared-computer note + PRIVACY link.
-- [ ] **P1-3 · Split restyle vs. rebuild in `drawLinks`** (BUG-2). On hover/
-  select, toggle `dim/hot` classes on existing paths instead of rebuilding all
-  edges + the minimap. Measure on a 50-table schema.
+- [x] **P1-3 · Split restyle vs. rebuild in `drawLinks`** (BUG-2). Done in v2.9.1
+  — `restyleLinks()` toggles classes on the cached edge elements on hover/select;
+  geometry rebuild + minimap redraw happen only on actual changes.
 - [x] **P1-4 · Committed test suite + CI** (MAINT-2). Done — `tests/{run,security,
   smoke}.cjs` + `.github/workflows/ci.yml` (builds, checks `index.html` in sync
   with `src/`, guards the self-contained invariant, runs the tests on every PR).
