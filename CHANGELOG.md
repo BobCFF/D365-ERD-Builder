@@ -7,6 +7,20 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.1.0] — 2026-09-10
+
+### Added
+- The side panel is now **resizable** (drag its right edge; double-click to
+  reset) and **collapsible** (a hide button in the panel; a show button appears
+  over the canvas).
+- Each table card has **detail controls** next to the close button: **maximize**
+  (all columns), **minimize** (PK & FK — the default), and **minimize again**
+  (table name only). The per-card choice overrides the default and is remembered.
+- **Settings → Table cards** sets the default card detail for the whole diagram.
+
+### Changed
+- Ribbon **Expand all / Collapse** now switch cards between all-columns and PK & FK.
+
 ## [2.0.1] — 2026-09-10
 
 ### Fixed
