@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Build index.html from src/
+        run: python3 build-d365.py
+
+      - name: Verify build is reproducible (index.html in sync with src/)
+        run: |
+          if ! git diff --quiet -- index.html; then
+            echo "::error::index.html is out of sync with src/. Run 'python3 build-d365.py' and commit the result."
+            git --no-pager diff --stat -- index.html
+            exit 1
+          fi
+
+      - name: Guard the self-contained invariant (no external resources)
+        run: |
+          if grep -Eiaq 'src=["'\'']https?:|href=["'\'']https?:[^"'\'' ]*\.(css|js)|@import|cdn\.|googleapis' index.html; then
+            echo "::error::index.html appears to reference an external resource; the app must stay self-contained."
+            exit 1
+          fi
+
+      - name: Install Playwright (chromium)
+        run: |
+          npm install --no-save playwright@1.47.0
+          npx playwright install --with-deps chromium
+
+      - name: Run tests
+        run: node tests/run.cjs
