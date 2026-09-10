@@ -7,6 +7,14 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.5.1] — 2026-09-10
+
+### Fixed
+- Hiding the side panel no longer collapses the canvas to the left edge (which
+  had dragged the minimap to the far left and made it hard to move). With the
+  panel hidden, the diagram now fills the full width and the minimap stays put
+  and fully draggable.
+
 ## [2.5.0] — 2026-09-10
 
 ### Added
