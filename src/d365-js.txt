@@ -166,7 +166,7 @@ function saveState(){ try{ localStorage.setItem(LS, JSON.stringify({
   sizes:Object.fromEntries(Object.entries(sizes).map(([k,v])=>[k,[Math.round(v.w),Math.round(v.h)]])),
   notation, lineMode, lineWeight, defaultDetail, labelsMode, pngScale, exportTitle, view, railW, railCollapsed,
   ribbonCollapsed, minimapCollapsed, mmPos, gestureSeen, dcolOrder, dcolW, dcolF, dcolHidden:[...dcolHidden],
-  dsort, exportOpts, dVis:!!(document.getElementById('dVis')||{}).checked
+  dsort, exportOpts, dVis:!!(document.getElementById('dVis')||{}).checked, dq:(document.getElementById('dq')||{}).value||''
 })); }catch(e){} }
 const saved=loadState();
 let initVis = saved.vis&&saved.vis.length ? saved.vis.filter(id=>ENT[id]) : allIds.slice();
@@ -980,7 +980,7 @@ document.querySelectorAll('#tabs .tab').forEach(t=>t.addEventListener('click',()
 /* ---------- data dictionary ---------- */
 let DICT=[], dictBuilt=false;
 let dsort=(saved.dsort&&DCOLDEF[saved.dsort.key])?{key:saved.dsort.key,dir:saved.dsort.dir===-1?-1:1}:{key:'ent',dir:1};
-let DTYPES=[], DMETA_AVAIL=new Set();
+let DTYPES=[], DTABLES=[], DMETA_AVAIL=new Set();
 const IC_DOTS='<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>';
 function buildDict(){
   DICT=[];
@@ -993,12 +993,14 @@ function buildDict(){
     DICT.push(row);
   }}
   DTYPES=[...new Set(DICT.map(d=>d.type).filter(Boolean))].sort();
+  // distinct tables actually present in the dictionary (display order — DICT follows allIds)
+  DTABLES=[...new Set(DICT.map(d=>d.ent))];
   // metadata columns are only offered if at least one attribute carries a value
   DMETA_AVAIL=new Set(META_COLS.filter(m=>DICT.some(d=>d[m.key]!=null&&d[m.key]!=='')).map(m=>m.key));
-  // drop stored type filters that no longer exist in this schema
+  // drop stored filters that no longer apply in this schema
   dcolF.type.sel=dcolF.type.sel.filter(t=>DTYPES.includes(t));
   dcolF.ent.groups=dcolF.ent.groups.filter(g=>GROUPS.some(x=>x[0]===g));
-  dcolF.ent.tables=dcolF.ent.tables.filter(id=>ENT[id]);
+  dcolF.ent.tables=dcolF.ent.tables.filter(id=>DTABLES.includes(id));
   dictBuilt=true;
 }
 function matchBlank(f,val){ val=val||''; if(f.has==='yes'&&!val)return false; if(f.has==='no'&&val)return false;
@@ -1075,7 +1077,7 @@ function dmenuHTML(k){ const def=DCOLDEF[k], f=dcolF[k]; let h=`<div class="dm-h
     h+=`<input class="dm-q" id="dm-q" type="search" placeholder="Table contains…" value="${esc(f.q)}">`;
     h+=`<div class="dm-sub">Groups</div><div class="dm-list">`+GROUPS.filter(g=>allIds.some(id=>ENT[id].group===g[0])).map(g=>
       `<label class="dm-chk"><input type="checkbox" data-g="${g[0]}" ${f.groups.includes(g[0])?'checked':''}><span class="dot" style="background:var(${g[2]})"></span>${esc(g[1])}</label>`).join('')+`</div>`;
-    h+=`<div class="dm-sub">Tables</div><div class="dm-list dm-tables">`+allIds.map(id=>
+    h+=`<div class="dm-sub">Tables</div><div class="dm-list dm-tables">`+DTABLES.map(id=>
       `<label class="dm-chk"><input type="checkbox" data-ent="${esc(id)}" ${f.tables.includes(id)?'checked':''}><span class="dot" style="background:var(${GVAR[ENT[id].group]})"></span><span class="dt-tname">${esc(ENT[id].display||id)}</span></label>`).join('')+`</div>`;
   } else if(def.filter==='text'){
     h+=`<input class="dm-q" id="dm-q" type="search" placeholder="Contains…" value="${esc(f.q)}">`;
@@ -1162,7 +1164,7 @@ function clearAllDcol(){ dcolF=defaultDcolF(); closeDMenu(); renderDict(); saveS
     dragK=null; clearDrop(); renderDict(); saveState(); });
   thead.addEventListener('dragend',()=>{ dragK=null; clearDrop(); });
 })();
-document.getElementById('dq').addEventListener('input',renderDict);
+document.getElementById('dq').addEventListener('input',()=>{ renderDict(); saveState(); });
 document.getElementById('dVis').addEventListener('change',()=>{ renderDict(); saveState(); });
 document.getElementById('dClearCols').addEventListener('click',clearAllDcol);
 /* ---- metadata column chooser ---- */
@@ -1359,7 +1361,8 @@ document.getElementById('reset2').addEventListener('click',()=>{ try{localStorag
 
 /* ---------- init ---------- */
 applyTheme(); applyRail(); applyRibbon(); applyLineWeight(); applyMinimap(); buildThemeSwatches(); buildSidebar();
-{ const _dv=document.getElementById('dVis'); if(_dv)_dv.checked=!!saved.dVis; }
+{ const _dv=document.getElementById('dVis'); if(_dv)_dv.checked=!!saved.dVis;
+  const _dq=document.getElementById('dq'); if(_dq&&typeof saved.dq==='string')_dq.value=saved.dq; }
 if(importMeta){ const env=document.querySelector('#topbar .env'); if(env){ env.textContent=(importMeta.filename||'schema').replace(/\.xml$/i,''); env.title=(isImported?'Imported':'Sample')+' schema — '+(importMeta.ents||allIds.length)+' tables'; } }
 for(const id of visible)buildNode(id);
 let needLayout=false;
