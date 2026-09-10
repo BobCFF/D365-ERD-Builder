@@ -10,7 +10,7 @@
     <div id="landing-msg" class="landing-msg" hidden></div>
     <div class="lnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6z"/></svg><span>Your file never leaves your browser — parsing and rendering happen entirely on this page. To get the XML: export a solution containing your tables from Power&nbsp;Apps, unzip it, and use the <span class="amono">customizations.xml</span> inside.</span></div>
     <a href="#" id="lsample" class="lsample">Explore a sample schema instead →</a>
-    <div class="lver">D365 ERD Builder v2.8.1</div>
+    <div class="lver">D365 ERD Builder v2.8.2</div>
   </div>
 </section>
 <input type="file" id="landing-file" accept=".xml,application/xml,text/xml" hidden>

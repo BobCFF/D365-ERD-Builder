@@ -7,6 +7,25 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.8.2] — 2026-09-10
+
+### Security
+- **Fixed an attribute-injection / DOM-XSS vector.** `esc()` now escapes quotes
+  (`"` and `'`) in addition to `& < >`, so a crafted table/column display name or
+  description in an imported `customizations.xml` can no longer break out of an
+  HTML attribute to inject an event handler.
+- **Added a strict Content-Security-Policy** (build-injected `<meta>`): scripts
+  run only via the hash of the app's own inline bundle — no external or injected
+  inline script/handlers — with `connect-src 'none'` (nothing is ever sent off
+  the page), `img-src data: blob:`, `font-src data:`, and `default-src 'none'`.
+- **Added transport security headers** via `vercel.json`:
+  `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`,
+  `X-Frame-Options: DENY` + `frame-ancestors 'none'`, `Cross-Origin-Opener-Policy`,
+  and a locked-down `Permissions-Policy`.
+
+_No user-facing behaviour change; the app still parses and renders entirely in
+your browser._
+
 ## [2.8.1] — 2026-09-10
 
 ### Fixed

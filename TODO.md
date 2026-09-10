@@ -12,26 +12,20 @@ important · **P2** nice-to-have. IDs match `REVIEW.md`.
 
 ## P0 — foundations & security (do first)
 
-- [ ] **P0-1 · Commit build sources to the repo** (MAINT-1). Add `src/`
-  (`d365-body.txt`, `d365-css.txt`, `d365-js.txt`, `fontface.css`, `sample.xml`)
-  and `build-d365.py`; document `python3 build-d365.py` in the README. Without
-  this, every change means editing a 270 KB generated file and the source can be
-  lost. *Everything below is cheaper once this is done.*
-- [ ] **P0-2 · Fix HTML attribute-injection XSS** (SEC-1/BUG-1). Escape `"` and
-  `'` in `esc()` (one-line change covering text + attribute contexts). Add a
-  regression test that loads a schema whose display name contains `">` and
-  `" onmouseover=` and asserts no attribute/handler injection.
-- [ ] **P0-3 · Add a strict Content-Security-Policy** (SEC-1/SEC-2).
-  `script-src 'self'` (+ whatever is needed for the inline bundle — hash the
-  inline `<script>`/`<style>` or externalize them in the build). Ship via
-  `vercel.json` `headers` and/or a `<meta http-equiv>` fallback. Verify the app
-  still runs (it makes no external requests, so this is low-risk).
+- [x] **P0-1 · Commit build sources to the repo** (MAINT-1). Done — `src/` +
+  `build-d365.py` committed; `build-d365.py` reproduces the deployed `index.html`.
+- [x] **P0-2 · Fix HTML attribute-injection XSS** (SEC-1/BUG-1). Done in v2.8.2 —
+  `esc()` now escapes `"`/`'`; regression covered by `tests/security.cjs`.
+- [x] **P0-3 · Add a strict Content-Security-Policy** (SEC-1/SEC-2). Done in
+  v2.8.2 — build-injected `<meta>` CSP with a `script-src` hash of the inline
+  bundle (no `unsafe-inline` for scripts), `connect-src 'none'`, `default-src
+  'none'`. Verified the app + exports still work.
 
 ## P1 — hardening, correctness, trust
 
-- [ ] **P1-1 · `vercel.json` security headers** (SEC-2): `X-Content-Type-Options:
-  nosniff`, `Referrer-Policy: no-referrer`, `frame-ancestors 'self'`,
-  `Permissions-Policy` (camera=(), microphone=(), geolocation=()). Confirm HSTS.
+- [x] **P1-1 · `vercel.json` security headers** (SEC-2). Done in v2.8.2:
+  `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`/`frame-ancestors`,
+  `Cross-Origin-Opener-Policy`, `Permissions-Policy`. (Confirm Vercel HSTS in prod.)
 - [ ] **P1-2 · "Forget this file" control + retention note** (SEC-3). Promote
   `revertBuiltIn` to a clearly labelled button (e.g. on the landing and in the
   header when a file is loaded), and note that imports persist locally until
