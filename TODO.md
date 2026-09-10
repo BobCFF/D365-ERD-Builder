@@ -51,11 +51,14 @@ important · **P2** nice-to-have. IDs match `REVIEW.md`.
 
 - [ ] **P2-1 · Canvas accessibility** (UX-3): focusable cards, ARIA roles for the
   diagram, modal focus trap; keep the Data Dictionary as the accessible view.
-- [ ] **P2-2 · Search → locate on canvas** (UX-4): center/flash the matched table.
+- [x] **P2-2 · Search → locate on canvas** (UX-4): center/flash the matched table.
+  Done in v2.10.0 — Enter in search locates the first match; double-click a
+  sidebar row locates that table (revealing it if hidden).
 - [ ] **P2-3 · Large-file UX** (UX-5/BUG-3): parse in a Web Worker; spinner during
   parse and PNG render; document a practical table ceiling.
-- [ ] **P2-4 · Version single-source** (MAINT-4): stamp `APP_VERSION` + `.lver`
-  from one value in `build-d365.py`.
+- [x] **P2-4 · Version single-source** (MAINT-4): stamp `APP_VERSION` + `.lver`
+  from one value in `build-d365.py`. Done in v2.10.0 — sources carry a
+  `__APP_VERSION__` placeholder; `VERSION` in `build-d365.py` is the one source.
 - [ ] **P2-5 · Lint/format (+ optional module split)** (MAINT-3): Biome or
   ESLint+Prettier once sources are committed; optionally esbuild-bundle to one
   inlined file.

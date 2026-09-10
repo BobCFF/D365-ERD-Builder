@@ -7,6 +7,26 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.10.0] — 2026-09-10
+
+### Added
+- **Connector tooltips.** Hovering a relationship line now shows a tooltip
+  describing it — child → parent tables, the relationship category and lookup
+  attribute, and the cardinality (many-to-one, required vs optional). The line
+  also thickens slightly on hover so it's easy to tell which connector you're
+  reading.
+- **Search → locate on the canvas.** Pressing **Enter** in the sidebar search
+  box centers the diagram on the first matching table and pulses it;
+  **double-clicking** any table in the sidebar list does the same (showing it
+  first if it was hidden).
+
+### Changed
+- Removed the "‖ mandatory · ○| optional" legend from the Notation ribbon group
+  — the connector tooltips (and UML `1` / `0..1`) now convey this, and the
+  ribbon is less cluttered.
+- **Version is now single-sourced** in `build-d365.py` (stamped into the page
+  and the script at build time), so a release bumps one value.
+
 ## [2.9.1] — 2026-09-10
 
 ### Changed
