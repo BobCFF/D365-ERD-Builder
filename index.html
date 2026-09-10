@@ -346,7 +346,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);
     <div id="landing-msg" class="landing-msg" hidden></div>
     <div class="lnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6z"/></svg><span>Your file never leaves your browser — parsing and rendering happen entirely on this page. To get the XML: export a solution containing your tables from Power&nbsp;Apps, unzip it, and use the <span class="amono">customizations.xml</span> inside.</span></div>
     <a href="#" id="lsample" class="lsample">Explore a sample schema instead →</a>
-    <div class="lver">D365 ERD Builder v2.0.0</div>
+    <div class="lver">D365 ERD Builder v2.0.1</div>
   </div>
 </section>
 <input type="file" id="landing-file" accept=".xml,application/xml,text/xml" hidden>
@@ -1158,39 +1158,46 @@ const DASHED=new Set(['audit','generic','ownership']);
 function qpt(p1,c,p2,t){ const u=1-t; return [u*u*p1[0]+2*u*t*c[0]+t*t*p2[0], u*u*p1[1]+2*u*t*c[1]+t*t*p2[1]]; }
 function cpt(p1,c1,c2,p2,t){ const u=1-t; return [u*u*u*p1[0]+3*u*u*t*c1[0]+3*u*t*t*c2[0]+t*t*t*p2[0], u*u*u*p1[1]+3*u*u*t*c1[1]+3*u*t*t*c2[1]+t*t*t*p2[1]]; }
 function buildEdges(edges){
-  const pairTot={},seen={},out=[];
-  for(const r of edges){ const k=[r.referenced,r.referencing].sort().join('|'); pairTot[k]=(pairTot[k]||0)+1; }
-  for(const r of edges){
-    const a=N[r.referencing], b=N[r.referenced];  // a = child (many), b = parent (one)
-    const k=[r.referenced,r.referencing].sort().join('|'); const idx=(seen[k]=(seen[k]||0)+1)-1, tot=pairTot[k];
-    let d,p1,p2,star,one,mid;
-    if(r.referenced===r.referencing){ const x=a.x+a.w,y=a.y+a.h*0.5,off=30+idx*18;
-      p1=[x,y-11]; p2=[x,y+11];
-      d=`M${p1[0]},${p1[1]} C${x+off},${y-off} ${x+off},${y+off} ${p2[0]},${p2[1]}`;
-      star=[x+off*0.7,y-off*0.35]; one=[x+off*0.7,y+off*0.35]; mid=[x+off*0.78,y];
-    } else if(lineMode==='s'){
-      const acx=a.x+a.w/2, bcx=b.x+b.w/2;
-      const yo=(idx-(tot-1)/2)*14;
-      const childRight = bcx>=acx;                         // child exits toward the parent side
-      p1=[childRight? a.x+a.w : a.x, a.y+a.h/2+yo];        // child anchor on its L/R edge
-      p2=[childRight? b.x : b.x+b.w, b.y+b.h/2+yo];        // parent anchor facing back
-      const dir=childRight?1:-1, kk=clamp(Math.abs(p2[0]-p1[0])*0.5,44,200);
-      const c1=[p1[0]+dir*kk, p1[1]], c2=[p2[0]-dir*kk, p2[1]];
-      d=`M${p1[0]},${p1[1]} C${c1[0]},${c1[1]} ${c2[0]},${c2[1]} ${p2[0]},${p2[1]}`;
-      star=cpt(p1,c1,c2,p2,0.12); one=cpt(p1,c1,c2,p2,0.88); mid=cpt(p1,c1,c2,p2,0.5);
-    } else {
+  const out=[];
+  const nonSelf=edges.filter(r=>r.referenced!==r.referencing);
+  const selfs=edges.filter(r=>r.referenced===r.referencing);
+  if(lineMode==='s'){
+    // Give every connector its own slot along a box's left/right edge so they
+    // don't overlap where they meet the box. Two passes: collect, then place.
+    const slots={}; // nodeId -> {L:[],R:[]}
+    const recs=nonSelf.map(r=>{ const a=N[r.referencing], b=N[r.referenced];
+      const childRight=(b.x+b.w/2)>=(a.x+a.w/2);
+      const rec={r,a,b,childRight,aSide:childRight?'R':'L',bSide:childRight?'L':'R'};
+      (slots[r.referencing]=slots[r.referencing]||{L:[],R:[]})[rec.aSide].push({rec,end:'a',oy:b.y+b.h/2});
+      (slots[r.referenced]=slots[r.referenced]||{L:[],R:[]})[rec.bSide].push({rec,end:'b',oy:a.y+a.h/2});
+      return rec; });
+    for(const id in slots){ const n=N[id]; for(const side of ['L','R']){ const L=slots[id][side]; if(!L.length)continue;
+      L.sort((p,q)=>p.oy-q.oy);                                  // order by the far end to reduce crossings
+      const pad=Math.min(16,n.h*0.22), span=Math.max(0,n.h-2*pad), m=L.length, x=side==='R'?n.x+n.w:n.x;
+      L.forEach((it,i)=>{ const y=m===1?n.y+n.h/2:n.y+pad+span*((i+0.5)/m); it.rec[it.end==='a'?'p1':'p2']=[x,y]; }); } }
+    for(const rec of recs){ const p1=rec.p1,p2=rec.p2, dir=rec.childRight?1:-1, kk=clamp(Math.abs(p2[0]-p1[0])*0.5,44,200);
+      const c1=[p1[0]+dir*kk,p1[1]], c2=[p2[0]-dir*kk,p2[1]];
+      const d=`M${p1[0]},${p1[1]} C${c1[0]},${c1[1]} ${c2[0]},${c2[1]} ${p2[0]},${p2[1]}`;
+      out.push({r:rec.r,d,p1,p2,star:cpt(p1,c1,c2,p2,0.12),one:cpt(p1,c1,c2,p2,0.88),mid:cpt(p1,c1,c2,p2,0.5)}); }
+  } else {
+    const pairTot={},seen={};
+    for(const r of nonSelf){ const k=[r.referenced,r.referencing].sort().join('|'); pairTot[k]=(pairTot[k]||0)+1; }
+    for(const r of nonSelf){ const a=N[r.referencing],b=N[r.referenced];
+      const k=[r.referenced,r.referencing].sort().join('|'); const idx=(seen[k]=(seen[k]||0)+1)-1, tot=pairTot[k];
       const acx=a.x+a.w/2,acy=a.y+a.h/2,bcx=b.x+b.w/2,bcy=b.y+b.h/2;
-      p1=anchor(a,bcx,bcy); p2=anchor(b,acx,acy);
+      const p1=anchor(a,bcx,bcy),p2=anchor(b,acx,acy);
       const midx=(p1[0]+p2[0])/2,midy=(p1[1]+p2[1])/2;
       let nx=-(p2[1]-p1[1]),ny=(p2[0]-p1[0]); const len=Math.hypot(nx,ny)||1; nx/=len;ny/=len;
-      let off=(idx-(tot-1)/2)*26;
-      if(lineMode==='curved') off+=clamp(len*0.16,22,110);
+      let off=(idx-(tot-1)/2)*26; if(lineMode==='curved') off+=clamp(len*0.16,22,110);
       const c=[midx+nx*off, midy+ny*off];
-      d=`M${p1[0]},${p1[1]} Q${c[0]},${c[1]} ${p2[0]},${p2[1]}`;
-      star=qpt(p1,c,p2,0.14); one=qpt(p1,c,p2,0.86); mid=qpt(p1,c,p2,0.5);
-    }
-    out.push({r,d,p1,p2,star,one,mid});
+      const d=`M${p1[0]},${p1[1]} Q${c[0]},${c[1]} ${p2[0]},${p2[1]}`;
+      out.push({r,d,p1,p2,star:qpt(p1,c,p2,0.14),one:qpt(p1,c,p2,0.86),mid:qpt(p1,c,p2,0.5)}); }
   }
+  const selfSeen={};
+  for(const r of selfs){ const a=N[r.referencing]; const idx=(selfSeen[r.referenced]=(selfSeen[r.referenced]||0)+1)-1;
+    const x=a.x+a.w,y=a.y+a.h*0.5,off=30+idx*18, p1=[x,y-11],p2=[x,y+11];
+    const d=`M${p1[0]},${p1[1]} C${x+off},${y-off} ${x+off},${y+off} ${p2[0]},${p2[1]}`;
+    out.push({r,d,p1,p2,star:[x+off*0.7,y-off*0.35],one:[x+off*0.7,y+off*0.35],mid:[x+off*0.78,y]}); }
   return out;
 }
 function drawLinks(){
@@ -1375,7 +1382,7 @@ async function doExport(kind){
 }
 
 /* ---------- status / theme ---------- */
-const APP_VERSION='2.0.0';
+const APP_VERSION='2.0.1';
 function updateStatus(ec){ document.getElementById('status').textContent=`v${APP_VERSION} · ${visible.size} of ${allIds.length} tables · ${ec} relationships shown`; }
 const themebtn=document.getElementById('themebtn');
 const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';

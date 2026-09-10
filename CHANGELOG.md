@@ -7,6 +7,13 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.0.1] — 2026-09-10
+
+### Fixed
+- Connectors no longer overlap where they meet a table. With S-curve routing,
+  each connection is distributed into its own slot along the box's left/right
+  edge (ordered to reduce crossings), instead of all attaching at the mid-edge.
+
 ## [2.0.0] — 2026-09-10
 
 Major upgrade — same in-browser, upload-first tool, rebuilt on a more capable
