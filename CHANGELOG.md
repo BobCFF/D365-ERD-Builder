@@ -7,6 +7,14 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.5.2] — 2026-09-10
+
+### Changed
+- Decluttered the table-card header: the detail (maximize / keys / title) icons
+  and the close **✕** are gone, leaving just the **⋯** menu — which already
+  offers those detail levels plus *Hide table*, so nothing is lost. (Clicking a
+  card's header still toggles between all-columns and PK & FK.)
+
 ## [2.5.1] — 2026-09-10
 
 ### Fixed
