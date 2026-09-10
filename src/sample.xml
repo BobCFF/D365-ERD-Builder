@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ImportExportXml version="9.2.0.0" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Entities>
+    <Entity>
+      <Name LocalizedName="Company" OriginalName="Account">account</Name>
+      <EntityInfo>
+        <entity Name="account">
+          <LocalizedNames>
+            <LocalizedName description="Company" languagecode="1033" />
+          </LocalizedNames>
+          <attributes>
+            <attribute PhysicalName="AccountId">
+              <Type>primarykey</Type>
+              <LogicalName>accountid</LogicalName>
+              <RequiredLevel>systemrequired</RequiredLevel>
+              <displaynames>
+                <displayname description="Account" languagecode="1033" />
+              </displaynames>
+              <Descriptions>
+                <Description description="Unique identifier of the account." languagecode="1033" />
+              </Descriptions>
+            </attribute>
+            <attribute PhysicalName="Name">
+              <Type>nvarchar</Type>
+              <LogicalName>name</LogicalName>
+              <RequiredLevel>applicationrequired</RequiredLevel>
+              <displaynames>
+                <displayname description="Account Name" languagecode="1033" />
+              </displaynames>
+            </attribute>
+            <attribute PhysicalName="PrimaryContactId">
+              <Type>lookup</Type>
+              <LogicalName>primarycontactid</LogicalName>
+              <RequiredLevel>none</RequiredLevel>
+              <displaynames>
+                <displayname description="Primary Contact" languagecode="1033" />
+              </displaynames>
+            </attribute>
+            <attribute PhysicalName="cff_IndustryId">
+              <Type>lookup</Type>
+              <LogicalName>cff_industryid</LogicalName>
+              <RequiredLevel>recommended</RequiredLevel>
+              <displaynames>
+                <displayname description="Industry" languagecode="1033" />
+              </displaynames>
+              <Descriptions>
+                <Description description="Industry classification for the company." languagecode="1033" />
+              </Descriptions>
+            </attribute>
+            <attribute PhysicalName="OwnerId">
+              <Type>owner</Type>
+              <LogicalName>ownerid</LogicalName>
+              <RequiredLevel>systemrequired</RequiredLevel>
+              <displaynames>
+                <displayname description="Owner" languagecode="1033" />
+              </displaynames>
+            </attribute>
+            <attribute PhysicalName="CreatedBy">
+              <Type>lookup</Type>
+              <LogicalName>createdby</LogicalName>
+              <RequiredLevel>none</RequiredLevel>
+              <displaynames>
+                <displayname description="Created By" languagecode="1033" />
+              </displaynames>
+            </attribute>
+          </attributes>
+        </entity>
+      </EntityInfo>
+      <EntityRelationships>
+        <EntityRelationship Name="contact_customer_accounts">
+          <EntityRelationshipType>OneToMany</EntityRelationshipType>
+          <ReferencingEntityName>contact</ReferencingEntityName>
+          <ReferencedEntityName>account</ReferencedEntityName>
+          <ReferencingAttributeName>parentcustomerid</ReferencingAttributeName>
+        </EntityRelationship>
+        <EntityRelationship Name="account_cff_projects">
+          <EntityRelationshipType>OneToMany</EntityRelationshipType>
+          <ReferencingEntityName>cff_project</ReferencingEntityName>
+          <ReferencedEntityName>account</ReferencedEntityName>
+          <ReferencingAttributeName>cff_companyid</ReferencingAttributeName>
+        </EntityRelationship>
+      </EntityRelationships>
+    </Entity>
+
+    <Entity>
+      <Name LocalizedName="Contact" OriginalName="Contact">contact</Name>
+      <EntityInfo>
+        <entity Name="contact">
+          <attributes>
+            <attribute PhysicalName="ContactId">
+              <Type>primarykey</Type>
+              <LogicalName>contactid</LogicalName>
+              <RequiredLevel>systemrequired</RequiredLevel>
+              <displaynames><displayname description="Contact" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="FullName">
+              <Type>nvarchar</Type>
+              <LogicalName>fullname</LogicalName>
+              <RequiredLevel>none</RequiredLevel>
+              <displaynames><displayname description="Full Name" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="ParentCustomerId">
+              <Type>customer</Type>
+              <LogicalName>parentcustomerid</LogicalName>
+              <RequiredLevel>none</RequiredLevel>
+              <displaynames><displayname description="Company Name" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="OwnerId">
+              <Type>owner</Type>
+              <LogicalName>ownerid</LogicalName>
+              <RequiredLevel>systemrequired</RequiredLevel>
+              <displaynames><displayname description="Owner" languagecode="1033" /></displaynames>
+            </attribute>
+          </attributes>
+        </entity>
+      </EntityInfo>
+    </Entity>
+
+    <Entity>
+      <Name LocalizedName="User" OriginalName="User">systemuser</Name>
+      <EntityInfo>
+        <entity Name="systemuser">
+          <attributes>
+            <attribute PhysicalName="SystemUserId">
+              <Type>primarykey</Type>
+              <LogicalName>systemuserid</LogicalName>
+              <RequiredLevel>systemrequired</RequiredLevel>
+              <displaynames><displayname description="User" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="FullName">
+              <Type>nvarchar</Type>
+              <LogicalName>fullname</LogicalName>
+              <RequiredLevel>none</RequiredLevel>
+              <displaynames><displayname description="Full Name" languagecode="1033" /></displaynames>
+            </attribute>
+          </attributes>
+        </entity>
+      </EntityInfo>
+    </Entity>
+
+    <Entity>
+      <Name LocalizedName="Project" OriginalName="cff_project">cff_project</Name>
+      <EntityInfo>
+        <entity Name="cff_project">
+          <attributes>
+            <attribute PhysicalName="cff_projectId">
+              <Type>primarykey</Type>
+              <LogicalName>cff_projectid</LogicalName>
+              <RequiredLevel>systemrequired</RequiredLevel>
+              <displaynames><displayname description="Project" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="cff_name">
+              <Type>nvarchar</Type>
+              <LogicalName>cff_name</LogicalName>
+              <RequiredLevel>applicationrequired</RequiredLevel>
+              <displaynames><displayname description="Project Name" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="cff_CompanyId">
+              <Type>lookup</Type>
+              <LogicalName>cff_companyid</LogicalName>
+              <RequiredLevel>applicationrequired</RequiredLevel>
+              <displaynames><displayname description="Company" languagecode="1033" /></displaynames>
+              <Descriptions><Description description="The company this project belongs to." languagecode="1033" /></Descriptions>
+            </attribute>
+            <attribute PhysicalName="cff_LeadContactId">
+              <Type>lookup</Type>
+              <LogicalName>cff_leadcontactid</LogicalName>
+              <RequiredLevel>none</RequiredLevel>
+              <displaynames><displayname description="Lead Contact" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="cff_StageId">
+              <Type>lookup</Type>
+              <LogicalName>cff_stageid</LogicalName>
+              <RequiredLevel>none</RequiredLevel>
+              <displaynames><displayname description="Stage" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="OwnerId">
+              <Type>owner</Type>
+              <LogicalName>ownerid</LogicalName>
+              <RequiredLevel>systemrequired</RequiredLevel>
+              <displaynames><displayname description="Owner" languagecode="1033" /></displaynames>
+            </attribute>
+          </attributes>
+        </entity>
+      </EntityInfo>
+      <EntityRelationships>
+        <EntityRelationship Name="contact_cff_project_lead">
+          <EntityRelationshipType>OneToMany</EntityRelationshipType>
+          <ReferencingEntityName>cff_project</ReferencingEntityName>
+          <ReferencedEntityName>contact</ReferencedEntityName>
+          <ReferencingAttributeName>cff_leadcontactid</ReferencingAttributeName>
+        </EntityRelationship>
+        <EntityRelationship Name="cff_stage_cff_project">
+          <EntityRelationshipType>OneToMany</EntityRelationshipType>
+          <ReferencingEntityName>cff_project</ReferencingEntityName>
+          <ReferencedEntityName>cff_stage</ReferencedEntityName>
+          <ReferencingAttributeName>cff_stageid</ReferencingAttributeName>
+        </EntityRelationship>
+        <EntityRelationship Name="user_owns_cff_project">
+          <EntityRelationshipType>OneToMany</EntityRelationshipType>
+          <ReferencingEntityName>cff_project</ReferencingEntityName>
+          <ReferencedEntityName>systemuser</ReferencedEntityName>
+          <ReferencingAttributeName>ownerid</ReferencingAttributeName>
+        </EntityRelationship>
+        <EntityRelationship Name="cff_project_cff_projecttask">
+          <EntityRelationshipType>OneToMany</EntityRelationshipType>
+          <ReferencingEntityName>cff_projecttask</ReferencingEntityName>
+          <ReferencedEntityName>cff_project</ReferencedEntityName>
+          <ReferencingAttributeName>cff_projectid</ReferencingAttributeName>
+        </EntityRelationship>
+      </EntityRelationships>
+    </Entity>
+
+    <Entity>
+      <Name LocalizedName="Project Task" OriginalName="cff_projecttask">cff_projecttask</Name>
+      <EntityInfo>
+        <entity Name="cff_projecttask">
+          <attributes>
+            <attribute PhysicalName="cff_projecttaskId">
+              <Type>primarykey</Type>
+              <LogicalName>cff_projecttaskid</LogicalName>
+              <RequiredLevel>systemrequired</RequiredLevel>
+              <displaynames><displayname description="Project Task" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="cff_subject">
+              <Type>nvarchar</Type>
+              <LogicalName>cff_subject</LogicalName>
+              <RequiredLevel>applicationrequired</RequiredLevel>
+              <displaynames><displayname description="Subject" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="cff_ProjectId">
+              <Type>lookup</Type>
+              <LogicalName>cff_projectid</LogicalName>
+              <RequiredLevel>applicationrequired</RequiredLevel>
+              <displaynames><displayname description="Project" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="cff_AssignedToId">
+              <Type>lookup</Type>
+              <LogicalName>cff_assignedtoid</LogicalName>
+              <RequiredLevel>none</RequiredLevel>
+              <displaynames><displayname description="Assigned To" languagecode="1033" /></displaynames>
+            </attribute>
+          </attributes>
+        </entity>
+      </EntityInfo>
+      <EntityRelationships>
+        <EntityRelationship Name="user_cff_projecttask_assignee">
+          <EntityRelationshipType>OneToMany</EntityRelationshipType>
+          <ReferencingEntityName>cff_projecttask</ReferencingEntityName>
+          <ReferencedEntityName>systemuser</ReferencedEntityName>
+          <ReferencingAttributeName>cff_assignedtoid</ReferencingAttributeName>
+        </EntityRelationship>
+      </EntityRelationships>
+    </Entity>
+
+    <Entity>
+      <Name LocalizedName="Stage" OriginalName="cff_stage">cff_stage</Name>
+      <EntityInfo>
+        <entity Name="cff_stage">
+          <attributes>
+            <attribute PhysicalName="cff_stageId">
+              <Type>primarykey</Type>
+              <LogicalName>cff_stageid</LogicalName>
+              <RequiredLevel>systemrequired</RequiredLevel>
+              <displaynames><displayname description="Stage" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="cff_name">
+              <Type>nvarchar</Type>
+              <LogicalName>cff_name</LogicalName>
+              <RequiredLevel>applicationrequired</RequiredLevel>
+              <displaynames><displayname description="Name" languagecode="1033" /></displaynames>
+            </attribute>
+          </attributes>
+        </entity>
+      </EntityInfo>
+    </Entity>
+
+    <Entity>
+      <Name LocalizedName="Industry" OriginalName="cff_industry">cff_industry</Name>
+      <EntityInfo>
+        <entity Name="cff_industry">
+          <attributes>
+            <attribute PhysicalName="cff_industryId">
+              <Type>primarykey</Type>
+              <LogicalName>cff_industryid</LogicalName>
+              <RequiredLevel>systemrequired</RequiredLevel>
+              <displaynames><displayname description="Industry" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="cff_name">
+              <Type>nvarchar</Type>
+              <LogicalName>cff_name</LogicalName>
+              <RequiredLevel>applicationrequired</RequiredLevel>
+              <displaynames><displayname description="Name" languagecode="1033" /></displaynames>
+            </attribute>
+          </attributes>
+        </entity>
+      </EntityInfo>
+      <EntityRelationships>
+        <EntityRelationship Name="cff_industry_account">
+          <EntityRelationshipType>OneToMany</EntityRelationshipType>
+          <ReferencingEntityName>account</ReferencingEntityName>
+          <ReferencedEntityName>cff_industry</ReferencedEntityName>
+          <ReferencingAttributeName>cff_industryid</ReferencingAttributeName>
+        </EntityRelationship>
+      </EntityRelationships>
+    </Entity>
+  </Entities>
+</ImportExportXml>
