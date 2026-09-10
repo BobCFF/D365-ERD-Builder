@@ -7,6 +7,19 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.5.0] — 2026-09-10
+
+### Added
+- The minimap can be **dragged to any corner** by its header (double-click the
+  header to snap it back to the default position); its position is remembered.
+
+### Fixed
+- The minimap now keeps the whole view in frame at every zoom level — the
+  viewport rectangle no longer disappears past the edge when zoomed out.
+- **Mobile / narrow browser:** the hamburger is replaced by the **">" open-panel
+  button**, and the panel's **"<" Hide** button now closes the overlay instead of
+  collapsing the layout — the ERD boxes no longer disappear when hiding the panel.
+
 ## [2.4.0] — 2026-09-10
 
 ### Added
