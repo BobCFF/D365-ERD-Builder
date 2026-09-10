@@ -8,6 +8,13 @@ It's a single, self-contained static page (`index.html`). There is no backend an
 no build step: **the XML is parsed and rendered entirely in your browser**, so your
 schema never leaves your machine.
 
+## New in 2.5.0
+
+- The **minimap is draggable** (drag its header; double-click to reset) and keeps
+  the view in frame at any zoom.
+- **Mobile fixes** — the "> " open-panel button replaces the hamburger, and hiding
+  the panel no longer makes the diagram disappear.
+
 ## New in 2.4.0
 
 - **Minimap** — a collapsible **Overview** panel with a live viewport rectangle;
