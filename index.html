@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-nyjnoqF7ISOhl8fRArqBrI/gZeQ0HTYeja5EQO1imGQ='; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-W1J2fMYJePvz4oPOg/7toPShj/SJHYhnKIwzQQ4pd5Q='; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <title>D365 ERD Builder</title>
 <meta name="description" content="Turn a Dynamics 365 / Dataverse customizations.xml into an interactive entity-relationship diagram — entirely in your browser. Explore tables and lookups, then export to PNG, SVG, CSV, or Excel. Nothing is uploaded.">
 <link rel="canonical" href="https://d365-erd-builder-five.vercel.app/">
@@ -247,6 +247,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);
 .link.hot{stroke-width:2.4px}
 .linklabel{font-family:var(--font-mono);font-size:9.5px;fill:var(--muted);pointer-events:none;
   paint-order:stroke;stroke:var(--bg);stroke-width:3px}
+.linklabel.hidden{display:none}
 .mult{font-family:var(--font-mono);font-size:11px;font-weight:600;fill:var(--ink-2);pointer-events:none;
   paint-order:stroke;stroke:var(--bg);stroke-width:3.5px}
 .mult.dim{opacity:.14}
@@ -549,7 +550,7 @@ body.col-resizing{cursor:col-resize;user-select:none}
     <div id="landing-msg" class="landing-msg" hidden></div>
     <div class="lnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6z"/></svg><span>Your file never leaves your browser — parsing and rendering happen entirely on this page. To get the XML: export a solution containing your tables from Power&nbsp;Apps, unzip it, and use the <span class="amono">customizations.xml</span> inside. <a href="PRIVACY.md" target="_blank" rel="noopener">How your data is handled →</a></span></div>
     <a href="#" id="lsample" class="lsample">Explore a sample schema instead →</a>
-    <div class="lver">D365 ERD Builder v2.9.0</div>
+    <div class="lver">D365 ERD Builder v2.9.1</div>
   </div>
 </section>
 <input type="file" id="landing-file" accept=".xml,application/xml,text/xml" hidden>
@@ -1497,35 +1498,41 @@ function buildEdges(edges){
     out.push({r,d,p1:s1,p2:s2,star:cpt(s1,c1,c2,s2,0.22),one:cpt(s1,c1,c2,s2,0.78),mid:cpt(s1,c1,c2,s2,0.5)}); }
   return out;
 }
+// Edges are REBUILT (geometry) only when positions/visibility/notation/lines/
+// detail change; hover & selection only RESTYLE (class toggles on the existing
+// elements) — no SVG rebuild, no minimap rebuild. This keeps hovering cheap on
+// large schemas. `builtEdges` caches the created elements for restyleLinks().
+let builtEdges=[];
+function edgeLabelText(r){ return (r.label && r.label.length<26) ? r.label : r.attr; }
+function styleEdge(en, focus){ const r=en.r, lit=!!(focus&&(r.referenced===focus||r.referencing===focus)), dim=!!(focus&&!lit);
+  en.path.classList.toggle('hot', lit && !!focus); en.path.classList.toggle('dim', dim);
+  if(en.label){ const vis=(labelsMode==='always'&&!(focus&&!lit))||(labelsMode!=='never'&&lit); en.label.classList.toggle('hidden', !vis); }
+  if(en.mult)for(const m of en.mult)m.classList.toggle('dim', dim); }
 function drawLinks(){
   const edges=edgeList(), built=buildEdges(edges);
-  gLinks.textContent=''; gLabels.textContent='';
+  gLinks.textContent=''; gLabels.textContent=''; builtEdges=[];
   const focus=hotId||selId, uml=notation==='uml';
-  for(const e of built){
-    const r=e.r;
+  for(const e of built){ const r=e.r;
     const path=document.createElementNS(SVGNS,'path'); path.setAttribute('d',e.d);
-    let cls='link'; if(focus)cls+=(r.referenced===focus||r.referencing===focus)?' hot':' dim';
-    path.setAttribute('class',cls); path.setAttribute('stroke',`var(${CATVAR[r.cat]})`);
+    path.setAttribute('class','link'); path.setAttribute('stroke',`var(${CATVAR[r.cat]})`);
     if(DASHED.has(r.cat))path.setAttribute('stroke-dasharray','4 3');
     if(!uml){ path.setAttribute('marker-start',`url(#arr-cf-${r.cat})`); path.setAttribute('marker-end',`url(#arr-${r.mandatory?'onem':'oneo'}-${r.cat})`); }
     gLinks.appendChild(path);
-    const lit=focus&&(r.referenced===focus||r.referencing===focus);
-    if(uml){ mult(e.star,'*',cls); mult(e.one,r.mandatory?'1':'0..1',cls); }
-    const showLabel = (labelsMode==='always' && !(focus&&!lit)) || (labelsMode!=='never' && lit);
-    if(showLabel&&(r.label||r.attr)){
-      const t=document.createElementNS(SVGNS,'text'); t.setAttribute('class','linklabel'); t.setAttribute('x',e.mid[0]); t.setAttribute('y',e.mid[1]); t.setAttribute('text-anchor','middle');
-      t.textContent=(r.label&&r.label.length<26)?r.label:r.attr; gLabels.appendChild(t);
-    }
+    const en={r,path,label:null,mult:null};
+    if(uml){ en.mult=[mult(e.star,'*'),mult(e.one,r.mandatory?'1':'0..1')]; }
+    if(labelsMode!=='never'&&(r.label||r.attr)){ const t=document.createElementNS(SVGNS,'text'); t.setAttribute('class','linklabel'); t.setAttribute('x',e.mid[0]); t.setAttribute('y',e.mid[1]); t.setAttribute('text-anchor','middle'); t.textContent=edgeLabelText(r); gLabels.appendChild(t); en.label=t; }
+    styleEdge(en,focus); builtEdges.push(en);
   }
   updateStatus(edges.length);
   mmRenderNodes();
 }
-function mult(pt,txt,cls){ const t=document.createElementNS(SVGNS,'text');
-  t.setAttribute('class','mult'+(cls.includes('dim')?' dim':'')); t.setAttribute('x',pt[0]); t.setAttribute('y',pt[1]); t.setAttribute('text-anchor','middle'); t.setAttribute('dominant-baseline','central');
-  t.textContent=txt; gLabels.appendChild(t); }
-function highlight(id){ hotId=id; applyDim(); drawLinks(); }
-function selectNode(id){ selId=id; document.querySelectorAll('.node').forEach(g=>g.classList.toggle('sel',g.dataset.id===id)); applyDim(); drawLinks(); }
-function deselect(){ selId=null; document.querySelectorAll('.node.sel').forEach(g=>g.classList.remove('sel')); applyDim(); drawLinks(); }
+function restyleLinks(){ const focus=hotId||selId; for(const en of builtEdges)styleEdge(en,focus); }
+function mult(pt,txt){ const t=document.createElementNS(SVGNS,'text');
+  t.setAttribute('class','mult'); t.setAttribute('x',pt[0]); t.setAttribute('y',pt[1]); t.setAttribute('text-anchor','middle'); t.setAttribute('dominant-baseline','central');
+  t.textContent=txt; gLabels.appendChild(t); return t; }
+function highlight(id){ hotId=id; applyDim(); restyleLinks(); }
+function selectNode(id){ selId=id; document.querySelectorAll('.node').forEach(g=>g.classList.toggle('sel',g.dataset.id===id)); applyDim(); restyleLinks(); }
+function deselect(){ selId=null; document.querySelectorAll('.node.sel').forEach(g=>g.classList.remove('sel')); applyDim(); restyleLinks(); }
 function applyDim(){ const f=hotId||selId;
   if(!f){ document.querySelectorAll('.node').forEach(g=>g.classList.remove('dim','hot')); return; }
   const nbr=new Set([f]); for(const r of edgeList()){ if(r.referenced===f)nbr.add(r.referencing); if(r.referencing===f)nbr.add(r.referenced); }
@@ -1737,7 +1744,7 @@ async function doExport(kind){
 }
 
 /* ---------- status / theme ---------- */
-const APP_VERSION='2.9.0';
+const APP_VERSION='2.9.1';
 function updateStatus(ec){ document.getElementById('status').textContent=`v${APP_VERSION} · ${visible.size} of ${allIds.length} tables · ${ec} relationships shown`; }
 const themebtn=document.getElementById('themebtn');
 const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';

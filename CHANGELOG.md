@@ -7,6 +7,15 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.9.1] — 2026-09-10
+
+### Changed
+- **Hovering/selecting a table no longer rebuilds the diagram.** Connectors are
+  now rebuilt only when geometry actually changes (move, show/hide, arrange,
+  resize, notation/line/detail change); hover and selection just toggle
+  highlight/dim classes on the existing SVG elements, and the minimap is no
+  longer redrawn on hover. Smoother on large schemas.
+
 ## [2.9.0] — 2026-09-10
 
 ### Added

@@ -237,6 +237,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);
 .link.hot{stroke-width:2.4px}
 .linklabel{font-family:var(--font-mono);font-size:9.5px;fill:var(--muted);pointer-events:none;
   paint-order:stroke;stroke:var(--bg);stroke-width:3px}
+.linklabel.hidden{display:none}
 .mult{font-family:var(--font-mono);font-size:11px;font-weight:600;fill:var(--ink-2);pointer-events:none;
   paint-order:stroke;stroke:var(--bg);stroke-width:3.5px}
 .mult.dim{opacity:.14}
