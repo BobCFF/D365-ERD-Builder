@@ -132,6 +132,7 @@
             <input id="dq" type="search" placeholder="Search columns, tables, descriptions…" autocomplete="off">
           </div>
           <label class="chip"><input type="checkbox" id="dVis"> Visible tables</label>
+          <button class="btn ghost" id="dCols" title="Show or hide metadata columns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg>Columns</button>
           <button class="btn ghost" id="dClearCols" title="Clear all column filters">Clear filters</button>
           <span class="dict-count" id="dCount"></span>
           <button class="btn" id="expCsv" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v13M7 11l5 5 5-5"/></svg>Export…</button>
@@ -141,6 +142,7 @@
           <table id="dicttable"><colgroup></colgroup><thead></thead><tbody id="dictbody"></tbody></table>
         </div>
         <div id="dmenu" class="dmenu" hidden></div>
+        <div id="dcolsmenu" class="dmenu" hidden></div>
       </div>
     </section>
 
