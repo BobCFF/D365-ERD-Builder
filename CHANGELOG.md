@@ -7,6 +7,14 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.16.3] — 2026-09-10
+
+### Changed
+- **Table column filter respects "Visible tables".** When the **Visible tables**
+  toggle is on, the Table column's filter now lists only the distinct **visible**
+  tables (labelled "visible only"); otherwise it lists all tables in the
+  dictionary.
+
 ## [2.16.2] — 2026-09-10
 
 ### Changed

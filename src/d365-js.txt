@@ -1077,7 +1077,9 @@ function dmenuHTML(k){ const def=DCOLDEF[k], f=dcolF[k]; let h=`<div class="dm-h
     h+=`<input class="dm-q" id="dm-q" type="search" placeholder="Table contains…" value="${esc(f.q)}">`;
     h+=`<div class="dm-sub">Groups</div><div class="dm-list">`+GROUPS.filter(g=>allIds.some(id=>ENT[id].group===g[0])).map(g=>
       `<label class="dm-chk"><input type="checkbox" data-g="${g[0]}" ${f.groups.includes(g[0])?'checked':''}><span class="dot" style="background:var(${g[2]})"></span>${esc(g[1])}</label>`).join('')+`</div>`;
-    h+=`<div class="dm-sub">Tables</div><div class="dm-list dm-tables">`+DTABLES.map(id=>
+    // when "Visible tables" is on, offer only the visible tables among those in the dictionary
+    const visOnly=!!(document.getElementById('dVis')||{}).checked, tlist=visOnly?DTABLES.filter(id=>visible.has(id)):DTABLES;
+    h+=`<div class="dm-sub">Tables${visOnly?' <span class="dm-note-inline">(visible only)</span>':''}</div><div class="dm-list dm-tables">`+tlist.map(id=>
       `<label class="dm-chk"><input type="checkbox" data-ent="${esc(id)}" ${f.tables.includes(id)?'checked':''}><span class="dot" style="background:var(${GVAR[ENT[id].group]})"></span><span class="dt-tname">${esc(ENT[id].display||id)}</span></label>`).join('')+`</div>`;
   } else if(def.filter==='text'){
     h+=`<input class="dm-q" id="dm-q" type="search" placeholder="Contains…" value="${esc(f.q)}">`;

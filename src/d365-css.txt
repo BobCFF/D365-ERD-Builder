@@ -481,6 +481,7 @@ body.col-resizing{cursor:col-resize;user-select:none}
 .dt-refs{font-family:var(--font-mono);font-size:10.5px;color:var(--accent);white-space:nowrap}
 .dt-meta{font-family:var(--font-mono);font-size:10.5px;color:var(--muted);white-space:nowrap}
 .dmenu .dm-note{font-size:11.5px;color:var(--muted);line-height:1.45;padding:2px 2px 4px}
+.dmenu .dm-sub .dm-note-inline{font-weight:600;text-transform:none;letter-spacing:0;color:var(--faint)}
 .kpill{display:inline-block;font-family:var(--font-mono);font-size:8.5px;font-weight:700;padding:1px 4px;border-radius:3px}
 .kpill.pk{background:var(--pk);color:#fff}
 .kpill.fk{border:1px solid var(--fk);color:var(--fk)}
