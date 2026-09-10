@@ -7,6 +7,15 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.15.0] — 2026-09-10
+
+### Added
+- **Data Dictionary — pick individual tables in the Table column filter.** The
+  Table column's filter menu now lists **every table** (with its group colour)
+  as a checklist, so you can select one or more specific tables to show —
+  alongside the existing "Table contains…" search and the Groups picker (all
+  combine). The selection persists and is included in the filtered/export scope.
+
 ## [2.14.0] — 2026-09-10
 
 ### Changed

@@ -414,6 +414,7 @@ body.col-resizing{cursor:col-resize;user-select:none}
 .dmenu .dm-chk,.dmenu .dm-opt{display:flex;align-items:center;gap:7px;padding:3px 4px;border-radius:5px;cursor:pointer;color:var(--ink);text-transform:none;font-weight:400;letter-spacing:0}
 .dmenu .dm-chk:hover,.dmenu .dm-opt:hover{background:var(--surface-2)}
 .dmenu .dm-chk .dot{width:9px;height:9px;border-radius:2.5px;flex:none}
+.dmenu .dm-chk .dt-tname{min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dmenu .dm-opts{display:flex;flex-direction:column;gap:1px}
 .dmenu .dm-foot{margin-top:9px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:flex-end}
 .dmenu .dm-clear{font:inherit;font-size:11px;background:transparent;border:1px solid var(--border);color:var(--muted);padding:3px 9px;border-radius:6px;cursor:pointer}
