@@ -165,7 +165,8 @@ function saveState(){ try{ localStorage.setItem(LS, JSON.stringify({
   vis:[...visible], cardState, cats:[...cats], gc:[...gcollapsed], theme:themeChoice, vp:[curT.x,curT.y,curT.k],
   sizes:Object.fromEntries(Object.entries(sizes).map(([k,v])=>[k,[Math.round(v.w),Math.round(v.h)]])),
   notation, lineMode, lineWeight, defaultDetail, labelsMode, pngScale, exportTitle, view, railW, railCollapsed,
-  ribbonCollapsed, minimapCollapsed, mmPos, gestureSeen, dcolOrder, dcolW, dcolF, dcolHidden:[...dcolHidden]
+  ribbonCollapsed, minimapCollapsed, mmPos, gestureSeen, dcolOrder, dcolW, dcolF, dcolHidden:[...dcolHidden],
+  dsort, exportOpts, dVis:!!(document.getElementById('dVis')||{}).checked
 })); }catch(e){} }
 const saved=loadState();
 let initVis = saved.vis&&saved.vis.length ? saved.vis.filter(id=>ENT[id]) : allIds.slice();
@@ -977,7 +978,8 @@ function setView(v){ view=v;
 document.querySelectorAll('#tabs .tab').forEach(t=>t.addEventListener('click',()=>setView(t.dataset.view)));
 
 /* ---------- data dictionary ---------- */
-let DICT=[], dictBuilt=false, dsort={key:'ent',dir:1};
+let DICT=[], dictBuilt=false;
+let dsort=(saved.dsort&&DCOLDEF[saved.dsort.key])?{key:saved.dsort.key,dir:saved.dsort.dir===-1?-1:1}:{key:'ent',dir:1};
 let DTYPES=[], DMETA_AVAIL=new Set();
 const IC_DOTS='<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>';
 function buildDict(){
@@ -1161,7 +1163,7 @@ function clearAllDcol(){ dcolF=defaultDcolF(); closeDMenu(); renderDict(); saveS
   thead.addEventListener('dragend',()=>{ dragK=null; clearDrop(); });
 })();
 document.getElementById('dq').addEventListener('input',renderDict);
-document.getElementById('dVis').addEventListener('change',renderDict);
+document.getElementById('dVis').addEventListener('change',()=>{ renderDict(); saveState(); });
 document.getElementById('dClearCols').addEventListener('click',clearAllDcol);
 /* ---- metadata column chooser ---- */
 let colsMenuOpen=false;
@@ -1262,7 +1264,11 @@ function openEntityDict(id){ if(!dictBuilt)buildDict(); const e=ENT[id], rows=en
   document.getElementById('edExport').addEventListener('click',()=>{ closeModal(); openExportDialog(id); }); }
 
 /* ---- export dialog ---- */
-let exportOpts={fmt:'xlsx', layout:'multi', scope:'filter', cols:XCOLS.filter(c=>c.def).map(c=>c.id)};
+let exportOpts=(function(){ const d={fmt:'xlsx', layout:'multi', scope:'filter', cols:XCOLS.filter(c=>c.def).map(c=>c.id)}, s=saved.exportOpts;
+  if(!s||typeof s!=='object')return d;
+  const cols=Array.isArray(s.cols)?s.cols.filter(id=>XCOLS.some(c=>c.id===id)):[];
+  return { fmt:['xlsx','csv'].includes(s.fmt)?s.fmt:d.fmt, layout:['multi','single'].includes(s.layout)?s.layout:d.layout,
+    scope:['filter','all'].includes(s.scope)?s.scope:d.scope, cols:cols.length?cols:d.cols }; })();
 function openExportDialog(entityId){
   if(!dictBuilt)buildDict();
   const ent=entityId&&ENT[entityId]?entityId:null;
@@ -1296,7 +1302,7 @@ function runExport(ent){
   const scope=(card.querySelector('input[name="ex-scope"]:checked')||{}).value||'filter';
   const cols=XCOLS.filter(c=>card.querySelector(`input[data-col="${c.id}"]`)?.checked);
   if(!cols.length){ toast('Pick at least one column.'); return; }
-  exportOpts={fmt,layout,scope:(scope==='entity'?exportOpts.scope:scope),cols:cols.map(c=>c.id)};
+  exportOpts={fmt,layout,scope:(scope==='entity'?exportOpts.scope:scope),cols:cols.map(c=>c.id)}; saveState();
   let rows = scope==='entity'?entityRows(ent) : scope==='all'?DICT.slice() : dictFiltered();
   if(!rows.length){ toast('Nothing to export for this selection.'); return; }
   const head=cols.map(c=>c.label);
@@ -1353,6 +1359,7 @@ document.getElementById('reset2').addEventListener('click',()=>{ try{localStorag
 
 /* ---------- init ---------- */
 applyTheme(); applyRail(); applyRibbon(); applyLineWeight(); applyMinimap(); buildThemeSwatches(); buildSidebar();
+{ const _dv=document.getElementById('dVis'); if(_dv)_dv.checked=!!saved.dVis; }
 if(importMeta){ const env=document.querySelector('#topbar .env'); if(env){ env.textContent=(importMeta.filename||'schema').replace(/\.xml$/i,''); env.title=(isImported?'Imported':'Sample')+' schema — '+(importMeta.ents||allIds.length)+' tables'; } }
 for(const id of visible)buildNode(id);
 let needLayout=false;

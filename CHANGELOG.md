@@ -7,6 +7,16 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.16.1] — 2026-09-10
+
+### Fixed
+- **More Data Dictionary settings now persist across a refresh.** The **sort**
+  column/direction, the **"Visible tables"** toggle, and the **Export dialog**
+  choices (format, Excel layout, row scope, selected columns) are now saved to
+  the browser alongside the column order, widths, filters and metadata-column
+  visibility that already persisted. (The dictionary search box stays transient
+  by design.)
+
 ## [2.16.0] — 2026-09-10
 
 ### Added
