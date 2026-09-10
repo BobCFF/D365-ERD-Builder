@@ -140,7 +140,7 @@ function saveState(){ try{ localStorage.setItem(LS, JSON.stringify({
   pos:Object.fromEntries(Object.keys(N).filter(k=>visible.has(k)).map(k=>[k,[Math.round(N[k].x),Math.round(N[k].y)]])),
   vis:[...visible], cardState, cats:[...cats], gc:[...gcollapsed], theme:themeChoice, vp:[curT.x,curT.y,curT.k],
   sizes:Object.fromEntries(Object.entries(sizes).map(([k,v])=>[k,[Math.round(v.w),Math.round(v.h)]])),
-  notation, lineMode, defaultDetail, labelsMode, pngScale, exportTitle, view, railW, railCollapsed,
+  notation, lineMode, lineWeight, defaultDetail, labelsMode, pngScale, exportTitle, view, railW, railCollapsed,
   ribbonCollapsed, minimapCollapsed, mmPos, gestureSeen, dcolOrder, dcolW, dcolF
 })); }catch(e){} }
 const saved=loadState();
@@ -155,6 +155,10 @@ const _THEME_IDS=['light','dark','contrast','mono','lowlight','rainbow'];
 let themeChoice=_THEME_IDS.includes(saved.theme)?saved.theme:null;
 let notation=(saved.notation==='uml'||saved.notation==='idef1x')?saved.notation:'crow';
 let lineMode=['straight','curved','s'].includes(saved.lineMode)?saved.lineMode:(saved.curved===false?'straight':'s');
+// connector line weight — base stroke width in px for links; markers scale with it
+const LINE_W={thin:1.0, normal:1.4, thick:2.2};
+let lineWeight=['thin','normal','thick'].includes(saved.lineWeight)?saved.lineWeight:'normal';
+function lwPx(){ return LINE_W[lineWeight]||1.4; }
 // per-card detail level: 'full' (all columns) | 'keys' (PK & FK) | 'title' (name only)
 let defaultDetail=['full','keys','title'].includes(saved.defaultDetail)?saved.defaultDetail:(saved.density==='all'?'full':'keys');
 function detailOf(id){ return cardState[id]||defaultDetail; }
@@ -249,17 +253,19 @@ let viewTimer=null; function saveViewSoon(){ clearTimeout(viewTimer); viewTimer=
 const MK_CF=13, MK_ONEM=12, MK_ONEO=14, MK_DOT=12, MK_DIA=15;
 function markerDefs(prefix, colf, bg){
   let s='';
+  // scale marker line-work with the active connector weight so glyphs stay proportional
+  const w=n=>(n*(lwPx()/1.4)).toFixed(2);
   for(const [cat,,v] of REL_CATS){ const c=colf(v,cat);
     // crow's foot (many) at the child end — feet toward the box (-x), apex at the endpoint
-    s+=`<marker id="${prefix}-cf-${cat}" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="-13 -7 14 14" refX="0" refY="0" orient="auto"><path d="M-12,-5 L0,0 M-12,5 L0,0 M-12,0 L0,0" fill="none" stroke="${c}" stroke-width="1.3"/></marker>`;
+    s+=`<marker id="${prefix}-cf-${cat}" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="-13 -7 14 14" refX="0" refY="0" orient="auto"><path d="M-12,-5 L0,0 M-12,5 L0,0 M-12,0 L0,0" fill="none" stroke="${c}" stroke-width="${w(1.3)}"/></marker>`;
     // mandatory one (exactly one): double bar toward the box (+x)
-    s+=`<marker id="${prefix}-onem-${cat}" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="14" viewBox="0 -7 13 14" refX="0" refY="0" orient="auto"><path d="M5,-5.5 L5,5.5 M9,-5.5 L9,5.5" stroke="${c}" stroke-width="1.6" fill="none"/></marker>`;
+    s+=`<marker id="${prefix}-onem-${cat}" markerUnits="userSpaceOnUse" markerWidth="13" markerHeight="14" viewBox="0 -7 13 14" refX="0" refY="0" orient="auto"><path d="M5,-5.5 L5,5.5 M9,-5.5 L9,5.5" stroke="${c}" stroke-width="${w(1.6)}" fill="none"/></marker>`;
     // optional one (zero or one): bar + circle toward the box (+x)
-    s+=`<marker id="${prefix}-oneo-${cat}" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="14" viewBox="0 -7 15 14" refX="0" refY="0" orient="auto"><path d="M4,-5.5 L4,5.5" stroke="${c}" stroke-width="1.6" fill="none"/><circle cx="10" cy="0" r="3.1" fill="${bg}" stroke="${c}" stroke-width="1.3"/></marker>`;
+    s+=`<marker id="${prefix}-oneo-${cat}" markerUnits="userSpaceOnUse" markerWidth="15" markerHeight="14" viewBox="0 -7 15 14" refX="0" refY="0" orient="auto"><path d="M4,-5.5 L4,5.5" stroke="${c}" stroke-width="${w(1.6)}" fill="none"/><circle cx="10" cy="0" r="3.1" fill="${bg}" stroke="${c}" stroke-width="${w(1.3)}"/></marker>`;
     // IDEF1X: filled dot (the "many"/child cardinality) at the child end, toward the box (-x)
     s+=`<marker id="${prefix}-dot-${cat}" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" viewBox="-13 -7 14 14" refX="0" refY="0" orient="auto"><circle cx="-6" cy="0" r="3.4" fill="${c}" stroke="none"/></marker>`;
     // IDEF1X: hollow diamond at the parent end (only for an OPTIONAL/nullable relationship), toward the box (+x)
-    s+=`<marker id="${prefix}-dia-${cat}" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="14" viewBox="0 -7 16 14" refX="0" refY="0" orient="auto"><path d="M2.5,0 L7.5,-4.6 L12.5,0 L7.5,4.6 Z" fill="${bg}" stroke="${c}" stroke-width="1.3"/></marker>`;
+    s+=`<marker id="${prefix}-dia-${cat}" markerUnits="userSpaceOnUse" markerWidth="16" markerHeight="14" viewBox="0 -7 16 14" refX="0" refY="0" orient="auto"><path d="M2.5,0 L7.5,-4.6 L12.5,0 L7.5,4.6 Z" fill="${bg}" stroke="${c}" stroke-width="${w(1.3)}"/></marker>`;
   }
   return s;
 }
@@ -400,6 +406,11 @@ function anchor(n,tx,ty){ const cx=n.x+n.w/2,cy=n.y+n.h/2; let dx=tx-cx,dy=ty-cy
 let hotId=null, selId=null, rafPending=false;
 function scheduleLinks(){ if(rafPending)return; rafPending=true; requestAnimationFrame(()=>{rafPending=false;drawLinks();}); }
 const DASHED=new Set(['audit','generic','ownership']);
+// Whether a connector is drawn dashed. In IDEF1X the line style carries the
+// identifying/non-identifying distinction: a MANDATORY lookup is treated as
+// identifying (solid), an OPTIONAL one as non-identifying (dashed). In the
+// other notations the dash is the category cue (audit / generic / ownership).
+function isDashed(r){ return notation==='idef1x' ? !r.mandatory : DASHED.has(r.cat); }
 // a point on a quadratic at parameter t
 function qpt(p1,c,p2,t){ const u=1-t; return [u*u*p1[0]+2*u*t*c[0]+t*t*p2[0], u*u*p1[1]+2*u*t*c[1]+t*t*p2[1]]; }
 function cpt(p1,c1,c2,p2,t){ const u=1-t; return [u*u*u*p1[0]+3*u*u*t*c1[0]+3*u*t*t*c2[0]+t*t*t*p2[0], u*u*u*p1[1]+3*u*u*t*c1[1]+3*u*t*t*c2[1]+t*t*t*p2[1]]; }
@@ -490,7 +501,7 @@ function drawLinks(){
   for(const e of built){ const r=e.r;
     const path=document.createElementNS(SVGNS,'path'); path.setAttribute('d',e.d);
     path.setAttribute('class','link'); path.setAttribute('stroke',`var(${CATVAR[r.cat]})`);
-    if(DASHED.has(r.cat))path.setAttribute('stroke-dasharray','4 3');
+    if(isDashed(r))path.setAttribute('stroke-dasharray','4 3');
     if(idef){ path.setAttribute('marker-start',`url(#arr-dot-${r.cat})`); if(!r.mandatory)path.setAttribute('marker-end',`url(#arr-dia-${r.cat})`); }
     else if(!uml){ path.setAttribute('marker-start',`url(#arr-cf-${r.cat})`); path.setAttribute('marker-end',`url(#arr-${r.mandatory?'onem':'oneo'}-${r.cat})`); }
     gLinks.appendChild(path);
@@ -689,16 +700,16 @@ function exportSVG(){
     s.push(`<text x="${pad}" y="54" font-family="'IBM Plex Mono',monospace" font-size="11.5" fill="${col.muted}">${esc((importMeta&&importMeta.filename)||'schema')} · ${ids.length} tables · ${relN} relationships · ${notaLabel} notation</text>`);
     let lx=pad;
     for(const [cat,label] of activeCats){ const cc=C(CATVAR[cat]);
-      s.push(`<line x1="${lx}" y1="70" x2="${lx+22}" y2="70" stroke="${cc}" stroke-width="2"${DASHED.has(cat)?' stroke-dasharray="4 3"':''}/>`);
+      s.push(`<line x1="${lx}" y1="70" x2="${lx+22}" y2="70" stroke="${cc}" stroke-width="2"${(!idef&&DASHED.has(cat))?' stroke-dasharray="4 3"':''}/>`);
       s.push(`<text x="${lx+28}" y="73.5" font-size="11" fill="${col.ink2}">${esc(label)}</text>`);
       lx+=42+label.length*6.2;
     }
   }
-  s.push(`<g transform="translate(${ox},${oy})" fill="none" stroke-width="1.4">`);
+  s.push(`<g transform="translate(${ox},${oy})" fill="none" stroke-width="${lwPx()}">`);
   const built=buildEdges(edgeList());
   for(const e of built){ const r=e.r;
     const deco=uml?'' : idef?(` marker-start="url(#e-dot-${r.cat})"`+(r.mandatory?'':` marker-end="url(#e-dia-${r.cat})"`)) : ` marker-start="url(#e-cf-${r.cat})" marker-end="url(#e-${r.mandatory?'onem':'oneo'}-${r.cat})"`;
-    s.push(`<path d="${e.d}" stroke="${C(CATVAR[r.cat])}"${DASHED.has(r.cat)?' stroke-dasharray="4 3"':''}${deco}/>`); }
+    s.push(`<path d="${e.d}" stroke="${C(CATVAR[r.cat])}"${isDashed(r)?' stroke-dasharray="4 3"':''}${deco}/>`); }
   s.push('</g>');
   if(uml){ s.push(`<g transform="translate(${ox},${oy})" font-family="'IBM Plex Mono',monospace" font-size="11" font-weight="600" fill="${col.ink2}" text-anchor="middle">`);
     for(const e of built){ s.push(`<text x="${e.star[0]}" y="${e.star[1]}" dy="0.35em" paint-order="stroke" stroke="${col.bg}" stroke-width="3.5">*</text>`);
@@ -829,6 +840,11 @@ function applyRibbon(){ const rb=document.getElementById('ribbon'), tg=document.
   if(tg){ tg.title=ribbonCollapsed?'Show toolbar':'Collapse toolbar'; tg.setAttribute('aria-label',tg.title); tg.setAttribute('aria-expanded',String(!ribbonCollapsed)); } }
 { const tg=document.getElementById('ribbonToggle'); if(tg)tg.addEventListener('click',()=>{ ribbonCollapsed=!ribbonCollapsed; applyRibbon();
   requestAnimationFrame(()=>{ visible.forEach(id=>{ if(N[id])nodeMeasure(id); }); mmApplyDock(); mmSchedule(); }); saveState(); }); }
+// Connector line weight: sets the link stroke width (CSS var) and rebuilds the
+// markers so their line-work scales with it.
+function applyLineWeight(){ document.documentElement.style.setProperty('--link-w', lwPx()+'px'); recolorMarkers(); }
+{ const sel=document.getElementById('selWeight'); if(sel){ sel.value=lineWeight;
+  sel.addEventListener('change',()=>{ lineWeight=['thin','normal','thick'].includes(sel.value)?sel.value:'normal'; applyLineWeight(); saveState(); }); } }
 { const rz=document.getElementById('railResizer'), rail=document.getElementById('rail');
   const railSet=cx=>{ railW=Math.round(clamp(cx-rail.getBoundingClientRect().left,200,560)); document.documentElement.style.setProperty('--railw',railW+'px'); };
   if(rz)rz.addEventListener('mousedown',e=>{ e.preventDefault();
@@ -1265,7 +1281,7 @@ document.getElementById('reset2').addEventListener('click',()=>{ try{localStorag
   const rb=document.getElementById('revertBtn'); if(rb)rb.addEventListener('click',revertBuiltIn); }
 
 /* ---------- init ---------- */
-applyTheme(); applyRail(); applyRibbon(); applyMinimap(); buildThemeSwatches(); buildSidebar();
+applyTheme(); applyRail(); applyRibbon(); applyLineWeight(); applyMinimap(); buildThemeSwatches(); buildSidebar();
 if(importMeta){ const env=document.querySelector('#topbar .env'); if(env){ env.textContent=(importMeta.filename||'schema').replace(/\.xml$/i,''); env.title=(isImported?'Imported':'Sample')+' schema — '+(importMeta.ents||allIds.length)+' tables'; } }
 for(const id of visible)buildNode(id);
 let needLayout=false;
