@@ -7,6 +7,15 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.8.1] — 2026-09-10
+
+### Fixed
+- Connector lines no longer run underneath the crow's-foot / one markers. Each
+  connector's endpoints are inset by the marker length so the line begins at the
+  crow's-foot apex and ends before the one-marker, with the markers seated
+  cleanly against the box edge (applies to straight, curved and S-curve routing,
+  and to exports).
+
 ## [2.8.0] — 2026-09-10
 
 ### Added
