@@ -7,6 +7,14 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.4.0] — 2026-09-10
+
+### Added
+- **Minimap.** A bottom-right **Overview** panel shows the whole diagram in
+  miniature, with a live rectangle marking the current view. **Click or drag**
+  inside it to pan the diagram. It can be **minimized** to a small button (and
+  reopened), and that state is remembered.
+
 ## [2.3.0] — 2026-09-10
 
 ### Added
