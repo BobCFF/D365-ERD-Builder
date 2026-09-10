@@ -7,6 +7,17 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.12.0] — 2026-09-10
+
+### Changed
+- **Reworked the diagram toolbar into a ribbon bar.** Commands are now
+  grouped, icon-over-label buttons with a caption under each group (Arrange,
+  Notation, Lines), so the same controls take **less horizontal width** and
+  degrade gracefully — the bar scrolls horizontally only when truly narrow.
+- **Collapsible toolbar.** A chevron at the right edge **minimizes the ribbon**
+  to a slim strip (and restores it); the state persists across refreshes, so
+  you can reclaim vertical space for the diagram.
+
 ## [2.11.0] — 2026-09-10
 
 ### Added

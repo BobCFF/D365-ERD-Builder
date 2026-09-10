@@ -141,7 +141,7 @@ function saveState(){ try{ localStorage.setItem(LS, JSON.stringify({
   vis:[...visible], cardState, cats:[...cats], gc:[...gcollapsed], theme:themeChoice, vp:[curT.x,curT.y,curT.k],
   sizes:Object.fromEntries(Object.entries(sizes).map(([k,v])=>[k,[Math.round(v.w),Math.round(v.h)]])),
   notation, lineMode, defaultDetail, labelsMode, pngScale, exportTitle, view, railW, railCollapsed,
-  minimapCollapsed, mmPos, gestureSeen, dcolOrder, dcolW, dcolF
+  ribbonCollapsed, minimapCollapsed, mmPos, gestureSeen, dcolOrder, dcolW, dcolF
 })); }catch(e){} }
 const saved=loadState();
 let initVis = saved.vis&&saved.vis.length ? saved.vis.filter(id=>ENT[id]) : allIds.slice();
@@ -160,6 +160,7 @@ let defaultDetail=['full','keys','title'].includes(saved.defaultDetail)?saved.de
 function detailOf(id){ return cardState[id]||defaultDetail; }
 let railW=Math.min(560,Math.max(200, saved.railW||288));
 let railCollapsed=!!saved.railCollapsed;
+let ribbonCollapsed=!!saved.ribbonCollapsed;
 let minimapCollapsed=!!saved.minimapCollapsed;
 let gestureSeen=!!saved.gestureSeen;
 let labelsMode=['hover','always','never'].includes(saved.labelsMode)?saved.labelsMode:'hover';
@@ -822,6 +823,12 @@ const isMobile=()=>window.matchMedia('(max-width:820px)').matches;
 document.getElementById('railtoggle').addEventListener('click',()=>document.getElementById('rail').classList.toggle('open'));
 /* ---------- rail: resizable + collapsible ---------- */
 function applyRail(){ document.documentElement.style.setProperty('--railw', railW+'px'); document.getElementById('app').classList.toggle('rail-collapsed', railCollapsed); }
+// Ribbon bar collapse/expand (Office-style "minimize the ribbon").
+function applyRibbon(){ const rb=document.getElementById('ribbon'), tg=document.getElementById('ribbonToggle');
+  if(rb)rb.classList.toggle('collapsed', ribbonCollapsed);
+  if(tg){ tg.title=ribbonCollapsed?'Show toolbar':'Collapse toolbar'; tg.setAttribute('aria-label',tg.title); tg.setAttribute('aria-expanded',String(!ribbonCollapsed)); } }
+{ const tg=document.getElementById('ribbonToggle'); if(tg)tg.addEventListener('click',()=>{ ribbonCollapsed=!ribbonCollapsed; applyRibbon();
+  requestAnimationFrame(()=>{ visible.forEach(id=>{ if(N[id])nodeMeasure(id); }); mmApplyDock(); mmSchedule(); }); saveState(); }); }
 { const rz=document.getElementById('railResizer'), rail=document.getElementById('rail');
   const railSet=cx=>{ railW=Math.round(clamp(cx-rail.getBoundingClientRect().left,200,560)); document.documentElement.style.setProperty('--railw',railW+'px'); };
   if(rz)rz.addEventListener('mousedown',e=>{ e.preventDefault();
@@ -1258,7 +1265,7 @@ document.getElementById('reset2').addEventListener('click',()=>{ try{localStorag
   const rb=document.getElementById('revertBtn'); if(rb)rb.addEventListener('click',revertBuiltIn); }
 
 /* ---------- init ---------- */
-applyTheme(); applyRail(); applyMinimap(); buildThemeSwatches(); buildSidebar();
+applyTheme(); applyRail(); applyRibbon(); applyMinimap(); buildThemeSwatches(); buildSidebar();
 if(importMeta){ const env=document.querySelector('#topbar .env'); if(env){ env.textContent=(importMeta.filename||'schema').replace(/\.xml$/i,''); env.title=(isImported?'Imported':'Sample')+' schema — '+(importMeta.ents||allIds.length)+' tables'; } }
 for(const id of visible)buildNode(id);
 let needLayout=false;
