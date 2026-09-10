@@ -187,11 +187,12 @@ const DCOLDEF={
   desc:   {label:'Description',  w:360, min:120, sort:'desc',    filter:'textblank'}
 };
 const DCOL_ALL=['ent','name','display','type','req','key','refs','desc'];
-function defaultDcolF(){ return {ent:{q:'',groups:[]}, name:{q:''}, display:{q:'',has:''}, type:{sel:[]}, req:{mode:''}, key:{mode:''}, refs:{q:'',has:''}, desc:{q:'',has:''}}; }
+function defaultDcolF(){ return {ent:{q:'',groups:[],tables:[]}, name:{q:''}, display:{q:'',has:''}, type:{sel:[]}, req:{mode:''}, key:{mode:''}, refs:{q:'',has:''}, desc:{q:'',has:''}}; }
 let dcolOrder=(Array.isArray(saved.dcolOrder)&&saved.dcolOrder.length===DCOL_ALL.length&&saved.dcolOrder.every(k=>DCOLDEF[k])&&new Set(saved.dcolOrder).size===DCOL_ALL.length)?saved.dcolOrder.slice():DCOL_ALL.slice();
 let dcolW={}; DCOL_ALL.forEach(k=>{ const v=saved.dcolW&&typeof saved.dcolW[k]==='number'?saved.dcolW[k]:DCOLDEF[k].w; dcolW[k]=Math.max(DCOLDEF[k].min,Math.min(900,v)); });
 let dcolF=defaultDcolF();
 if(saved.dcolF&&typeof saved.dcolF==='object'){ for(const k of DCOL_ALL){ const s=saved.dcolF[k]; if(s&&typeof s==='object')Object.assign(dcolF[k],s); if(dcolF[k].groups&&!Array.isArray(dcolF[k].groups))dcolF[k].groups=[]; if(dcolF[k].sel&&!Array.isArray(dcolF[k].sel))dcolF[k].sel=[]; } }
+if(!Array.isArray(dcolF.ent.tables))dcolF.ent.tables=[];
 
 /* ---------- svg / transform ---------- */
 const svg=document.getElementById('stage'), viewport=document.getElementById('viewport');
@@ -957,13 +958,14 @@ function buildDict(){
   // drop stored type filters that no longer exist in this schema
   dcolF.type.sel=dcolF.type.sel.filter(t=>DTYPES.includes(t));
   dcolF.ent.groups=dcolF.ent.groups.filter(g=>GROUPS.some(x=>x[0]===g));
+  dcolF.ent.tables=dcolF.ent.tables.filter(id=>ENT[id]);
   dictBuilt=true;
 }
 function matchBlank(f,val){ val=val||''; if(f.has==='yes'&&!val)return false; if(f.has==='no'&&val)return false;
   if(f.q&&!val.toLowerCase().includes(f.q.toLowerCase()))return false; return true; }
 function matchKey(mode,d){ if(mode==='pk')return d.pk; if(mode==='fk')return d.fk; if(mode==='any')return d.pk||d.fk; if(mode==='none')return !(d.pk||d.fk); return true; }
 function dcolActive(k){ const f=dcolF[k]; switch(DCOLDEF[k].filter){
-  case 'group': return !!(f.q||f.groups.length);
+  case 'group': return !!(f.q||f.groups.length||f.tables.length);
   case 'text': return !!f.q;
   case 'textblank': return !!(f.q||f.has);
   case 'multi': return !!f.sel.length;
@@ -974,6 +976,7 @@ function dictFiltered(){
   const rows=DICT.filter(d=>{
     if(visOnly&&!visible.has(d.ent))return false;
     if(F.ent.groups.length&&!F.ent.groups.includes(d.group))return false;
+    if(F.ent.tables.length&&!F.ent.tables.includes(d.ent))return false;
     if(F.ent.q&&!((d.entdisp+' '+d.ent).toLowerCase().includes(F.ent.q.toLowerCase())))return false;
     if(F.name.q&&!d.name.toLowerCase().includes(F.name.q.toLowerCase()))return false;
     if(!matchBlank(F.display,d.display))return false;
@@ -1024,6 +1027,8 @@ function dmenuHTML(k){ const def=DCOLDEF[k], f=dcolF[k]; let h=`<div class="dm-h
     h+=`<input class="dm-q" id="dm-q" type="search" placeholder="Table contains…" value="${esc(f.q)}">`;
     h+=`<div class="dm-sub">Groups</div><div class="dm-list">`+GROUPS.filter(g=>allIds.some(id=>ENT[id].group===g[0])).map(g=>
       `<label class="dm-chk"><input type="checkbox" data-g="${g[0]}" ${f.groups.includes(g[0])?'checked':''}><span class="dot" style="background:var(${g[2]})"></span>${esc(g[1])}</label>`).join('')+`</div>`;
+    h+=`<div class="dm-sub">Tables</div><div class="dm-list dm-tables">`+allIds.map(id=>
+      `<label class="dm-chk"><input type="checkbox" data-ent="${esc(id)}" ${f.tables.includes(id)?'checked':''}><span class="dot" style="background:var(${GVAR[ENT[id].group]})"></span><span class="dt-tname">${esc(ENT[id].display||id)}</span></label>`).join('')+`</div>`;
   } else if(def.filter==='text'){
     h+=`<input class="dm-q" id="dm-q" type="search" placeholder="Contains…" value="${esc(f.q)}">`;
   } else if(def.filter==='textblank'){
@@ -1055,12 +1060,13 @@ function dmApply(){ renderDict(); clearTimeout(dmTimer); dmTimer=setTimeout(save
 function wireDMenu(k){ const m=document.getElementById('dmenu'), f=dcolF[k], def=DCOLDEF[k];
   const q=m.querySelector('#dm-q'); if(q)q.addEventListener('input',()=>{ f.q=q.value; dmApply(); });
   m.querySelectorAll('input[data-g]').forEach(c=>c.addEventListener('change',()=>{ const g=c.dataset.g; f.groups=f.groups.filter(x=>x!==g); if(c.checked)f.groups.push(g); dmApply(); }));
+  m.querySelectorAll('input[data-ent]').forEach(c=>c.addEventListener('change',()=>{ const id=c.dataset.ent; f.tables=f.tables.filter(x=>x!==id); if(c.checked)f.tables.push(id); dmApply(); }));
   m.querySelectorAll('input[data-t]').forEach(c=>c.addEventListener('change',()=>{ const t=c.dataset.t; f.sel=f.sel.filter(x=>x!==t); if(c.checked)f.sel.push(t); dmApply(); }));
   m.querySelectorAll('input[name^="dm-"]').forEach(r=>r.addEventListener('change',()=>{ if(!r.checked)return; const field=r.getAttribute('name').slice(3); f[field]=r.dataset.v; dmApply(); }));
   const cb=m.querySelector('.dm-clear'); if(cb)cb.addEventListener('click',()=>{ resetDcol(k); m.innerHTML=dmenuHTML(k); wireDMenu(k); dmApply(); });
 }
 function resetDcol(k){ const def=DCOLDEF[k]; switch(def.filter){
-  case 'group': dcolF[k]={q:'',groups:[]}; break; case 'text': dcolF[k]={q:''}; break;
+  case 'group': dcolF[k]={q:'',groups:[],tables:[]}; break; case 'text': dcolF[k]={q:''}; break;
   case 'textblank': dcolF[k]={q:'',has:''}; break; case 'multi': dcolF[k]={sel:[]}; break;
   case 'tri': case 'keysel': dcolF[k]={mode:''}; break; } }
 function clearAllDcol(){ dcolF=defaultDcolF(); closeDMenu(); renderDict(); saveState(); }
