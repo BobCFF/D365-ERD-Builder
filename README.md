@@ -8,6 +8,19 @@ It's a single, self-contained static page (`index.html`). There is no backend an
 no build step: **the XML is parsed and rendered entirely in your browser**, so your
 schema never leaves your machine.
 
+## New in 2.0.0
+
+- **Data Dictionary** — a searchable, sortable table of every column, with CSV export.
+- **Settings** — theme, card density, edge-label mode, PNG scale, and an optional
+  title + legend block on exports.
+- **S-curve** connectors and **mandatory / optional** cardinality on the one-end
+  (double bar vs circle; `1` vs `0..1` in UML mode).
+- **Persistent imports** via IndexedDB — a loaded schema reopens on refresh.
+- Resizable tables, a top ribbon for arrange/style controls, and embedded fonts
+  in PNG / SVG exports.
+
+See [CHANGELOG.md](CHANGELOG.md) for the full list.
+
 ## Use it
 
 - **Locally:** open `index.html` in any modern browser (or serve the folder with

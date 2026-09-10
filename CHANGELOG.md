@@ -7,6 +7,34 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.0.0] — 2026-09-10
+
+Major upgrade — same in-browser, upload-first tool, rebuilt on a more capable
+engine with a richer feature set.
+
+### Added
+- **Data Dictionary** tab — searchable, sortable table of every column (table,
+  column, display name, type, required, PK/FK, lookup target, description) with
+  **CSV export**.
+- **Settings** page — theme (light / dark / system), collapsed-card column
+  density, edge-label mode, PNG export scale (2× / 3× / 4×), and an optional
+  title + colour-legend block on exported images.
+- **S-curve** connector routing (alongside straight / curved) so crow's-foot
+  markers read clearly against the sides of tables.
+- **Mandatory vs optional** cardinality on the "one" end — double bar vs
+  circle, derived from the lookup's required level; UML mode shows `1` vs `0..1`.
+- **IndexedDB** persistence for an imported schema (replaces the localStorage
+  size limit) — a loaded file reopens automatically on refresh.
+- Embedded fonts so exported PNG / SVG carry the correct typography; export via
+  a normal browser download.
+- Top **ribbon** for Arrange and diagram-style controls; **resizable** table
+  cards with persisted sizes.
+
+### Changed
+- Table grouping is dynamic by publisher prefix (e.g. `CFF_ tables`) plus a
+  Standard / System group.
+- The version shown on the page is now 2.0.0.
+
 ## [1.0.0] — 2026-09-09
 
 First public release.
