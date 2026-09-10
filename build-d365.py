@@ -21,7 +21,7 @@ import os
 # the literal `__APP_VERSION__` placeholder (in `APP_VERSION` and `.lver`); the
 # build stamps this value into both, so the version lives in exactly one place.
 # Bump this + add a CHANGELOG.md entry for each release.
-VERSION = "2.11.0"
+VERSION = "2.12.0"
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(ROOT, "src")

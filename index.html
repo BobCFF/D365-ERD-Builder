@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-bS0TyG/2v3AffC+YwBZKvDk5ejxAxN4p+B2zhw0biqY='; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Sd08dJSQzjuckiv2V91vMp6tTGlu1+K2Mz7jkbTVzRU='; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <title>D365 ERD Builder</title>
 <meta name="description" content="Turn a Dynamics 365 / Dataverse customizations.xml into an interactive entity-relationship diagram — entirely in your browser. Explore tables and lookups, then export to PNG, SVG, CSV, or Excel. Nothing is uploaded.">
 <link rel="canonical" href="https://d365-erd-builder-five.vercel.app/">
@@ -145,15 +145,27 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);
 .view:not(.on){display:none}
 #view-diagram{display:flex;flex-direction:column}
 #view-diagram:not(.on){display:none}
-.ribbon{flex:none;display:flex;align-items:center;gap:14px;padding:8px 14px;overflow-x:auto;
-  background:var(--surface);border-bottom:1px solid var(--border)}
-.ribbon::-webkit-scrollbar{height:7px}
-.ribbon::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:6px}
-.ribbon-group{display:flex;align-items:center;gap:8px;flex:none}
-.ribbon-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
-.ribbon-div{width:1px;height:26px;background:var(--border);flex:none}
-.ribbon .btn{padding:6px 11px;flex:none}
+/* Ribbon bar (Office-style): grouped, icon-over-label buttons with a centered
+   group caption below, and a right-edge chevron to collapse/expand the bar. */
+.ribbon{flex:none;display:flex;align-items:stretch;background:var(--surface);border-bottom:1px solid var(--border)}
+.ribbon-scroll{flex:1;min-width:0;display:flex;align-items:stretch;gap:10px;padding:7px 12px 5px;overflow-x:auto}
+.ribbon-scroll::-webkit-scrollbar{height:7px}
+.ribbon-scroll::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:6px}
+.ribbon-group{display:flex;flex-direction:column;align-items:center;gap:4px;flex:none}
+.ribbon-row{display:flex;align-items:center;gap:6px;min-height:48px}
+.ribbon-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--faint)}
+.ribbon-div{width:1px;align-self:stretch;margin:6px 2px;background:var(--border);flex:none}
+.ribbon .btn{flex-direction:column;gap:4px;padding:6px 9px;min-width:52px;font-size:10.5px;font-weight:600;flex:none}
+.ribbon .btn svg{width:19px;height:19px}
+.ribbon .btn span{white-space:nowrap}
 .ribbon .seg{margin:0;width:auto;flex:none}
+.ribbon-toggle{flex:none;align-self:stretch;display:flex;align-items:center;justify-content:center;width:34px;
+  border:none;border-left:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer}
+.ribbon-toggle:hover{background:var(--surface-2);color:var(--ink)}
+.ribbon-toggle svg{width:18px;height:18px;transition:transform .2s}
+.ribbon.collapsed .ribbon-scroll{display:none}
+.ribbon.collapsed .ribbon-toggle{flex:1;justify-content:flex-end;padding:2px 12px;border-left:none;height:22px}
+.ribbon.collapsed .ribbon-toggle svg{transform:rotate(180deg)}
 #diagram-grid{flex:1;min-height:0;display:grid;grid-template-columns:var(--railw,288px) 1fr}
 /* rail is display:none when collapsed, so the stage is the only grid item —
    give it a single full-width column so it can't land in a zero-width track */
@@ -553,7 +565,7 @@ body.col-resizing{cursor:col-resize;user-select:none}
     <div id="landing-msg" class="landing-msg" hidden></div>
     <div class="lnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6z"/></svg><span>Your file never leaves your browser — parsing and rendering happen entirely on this page. To get the XML: export a solution containing your tables from Power&nbsp;Apps, unzip it, and use the <span class="amono">customizations.xml</span> inside. <a href="PRIVACY.md" target="_blank" rel="noopener">How your data is handled →</a></span></div>
     <a href="#" id="lsample" class="lsample">Explore a sample schema instead →</a>
-    <div class="lver">D365 ERD Builder v2.11.0</div>
+    <div class="lver">D365 ERD Builder v2.12.0</div>
   </div>
 </section>
 <input type="file" id="landing-file" accept=".xml,application/xml,text/xml" hidden>
@@ -890,25 +902,30 @@ body.col-resizing{cursor:col-resize;user-select:none}
   <div id="views">
     <!-- ============ DIAGRAM ============ -->
     <section id="view-diagram" class="view on">
-      <div class="ribbon">
-        <div class="ribbon-group">
-          <span class="ribbon-label">Arrange</span>
-          <button class="btn" id="undo" title="Undo the last move, hide, or arrange (Ctrl/⌘Z)" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 7 4 12l5 5M4 12h11a5 5 0 0 1 0 10h-1"/></svg>Undo</button>
-          <button class="btn" id="arrange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 14h6v6h-6zM10 7h4M7 10v4"/></svg>Auto-arrange</button>
-          <button class="btn" id="fit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5"/></svg>Fit</button>
-          <button class="btn" id="expandAll"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>Expand all</button>
-          <button class="btn" id="collapseAll"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 11l-5-5-5 5M17 18l-5-5-5 5"/></svg>Collapse</button>
+      <div class="ribbon" id="ribbon">
+        <div class="ribbon-scroll">
+          <div class="ribbon-group">
+            <div class="ribbon-row">
+              <button class="btn" id="undo" title="Undo the last move, hide, or arrange (Ctrl/⌘Z)" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 7 4 12l5 5M4 12h11a5 5 0 0 1 0 10h-1"/></svg><span>Undo</span></button>
+              <button class="btn" id="arrange" title="Auto-arrange tables"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 14h6v6h-6zM10 7h4M7 10v4"/></svg><span>Arrange</span></button>
+              <button class="btn" id="fit" title="Fit all tables to view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5"/></svg><span>Fit</span></button>
+              <button class="btn" id="expandAll" title="Expand all cards to full columns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg><span>Expand</span></button>
+              <button class="btn" id="collapseAll" title="Collapse all cards to PK &amp; FK"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 11l-5-5-5 5M17 18l-5-5-5 5"/></svg><span>Collapse</span></button>
+            </div>
+            <span class="ribbon-label">Arrange</span>
+          </div>
+          <div class="ribbon-div"></div>
+          <div class="ribbon-group">
+            <div class="ribbon-row"><div class="seg" id="segNotation"><button data-v="crow">Crow's foot</button><button data-v="uml">UML</button><button data-v="idef1x">IDEF1X</button></div></div>
+            <span class="ribbon-label">Notation</span>
+          </div>
+          <div class="ribbon-div"></div>
+          <div class="ribbon-group">
+            <div class="ribbon-row"><div class="seg" id="segLines"><button data-v="straight">Straight</button><button data-v="curved">Curved</button><button data-v="s">S-curve</button></div></div>
+            <span class="ribbon-label">Lines</span>
+          </div>
         </div>
-        <div class="ribbon-div"></div>
-        <div class="ribbon-group">
-          <span class="ribbon-label">Notation</span>
-          <div class="seg" id="segNotation"><button data-v="crow">Crow's foot</button><button data-v="uml">UML</button><button data-v="idef1x">IDEF1X</button></div>
-        </div>
-        <div class="ribbon-div"></div>
-        <div class="ribbon-group">
-          <span class="ribbon-label">Lines</span>
-          <div class="seg" id="segLines"><button data-v="straight">Straight</button><button data-v="curved">Curved</button><button data-v="s">S-curve</button></div>
-        </div>
+        <button class="ribbon-toggle" id="ribbonToggle" title="Collapse toolbar" aria-label="Collapse toolbar" aria-expanded="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 15l6-6 6 6"/></svg></button>
       </div>
       <div id="diagram-grid">
         <aside id="rail">
@@ -1190,7 +1207,7 @@ function saveState(){ try{ localStorage.setItem(LS, JSON.stringify({
   vis:[...visible], cardState, cats:[...cats], gc:[...gcollapsed], theme:themeChoice, vp:[curT.x,curT.y,curT.k],
   sizes:Object.fromEntries(Object.entries(sizes).map(([k,v])=>[k,[Math.round(v.w),Math.round(v.h)]])),
   notation, lineMode, defaultDetail, labelsMode, pngScale, exportTitle, view, railW, railCollapsed,
-  minimapCollapsed, mmPos, gestureSeen, dcolOrder, dcolW, dcolF
+  ribbonCollapsed, minimapCollapsed, mmPos, gestureSeen, dcolOrder, dcolW, dcolF
 })); }catch(e){} }
 const saved=loadState();
 let initVis = saved.vis&&saved.vis.length ? saved.vis.filter(id=>ENT[id]) : allIds.slice();
@@ -1209,6 +1226,7 @@ let defaultDetail=['full','keys','title'].includes(saved.defaultDetail)?saved.de
 function detailOf(id){ return cardState[id]||defaultDetail; }
 let railW=Math.min(560,Math.max(200, saved.railW||288));
 let railCollapsed=!!saved.railCollapsed;
+let ribbonCollapsed=!!saved.ribbonCollapsed;
 let minimapCollapsed=!!saved.minimapCollapsed;
 let gestureSeen=!!saved.gestureSeen;
 let labelsMode=['hover','always','never'].includes(saved.labelsMode)?saved.labelsMode:'hover';
@@ -1785,7 +1803,7 @@ async function doExport(kind){
 }
 
 /* ---------- status / theme ---------- */
-const APP_VERSION='2.11.0';
+const APP_VERSION='2.12.0';
 function updateStatus(ec){ document.getElementById('status').textContent=`v${APP_VERSION} · ${visible.size} of ${allIds.length} tables · ${ec} relationships shown`; }
 const themebtn=document.getElementById('themebtn');
 const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
@@ -1871,6 +1889,12 @@ const isMobile=()=>window.matchMedia('(max-width:820px)').matches;
 document.getElementById('railtoggle').addEventListener('click',()=>document.getElementById('rail').classList.toggle('open'));
 /* ---------- rail: resizable + collapsible ---------- */
 function applyRail(){ document.documentElement.style.setProperty('--railw', railW+'px'); document.getElementById('app').classList.toggle('rail-collapsed', railCollapsed); }
+// Ribbon bar collapse/expand (Office-style "minimize the ribbon").
+function applyRibbon(){ const rb=document.getElementById('ribbon'), tg=document.getElementById('ribbonToggle');
+  if(rb)rb.classList.toggle('collapsed', ribbonCollapsed);
+  if(tg){ tg.title=ribbonCollapsed?'Show toolbar':'Collapse toolbar'; tg.setAttribute('aria-label',tg.title); tg.setAttribute('aria-expanded',String(!ribbonCollapsed)); } }
+{ const tg=document.getElementById('ribbonToggle'); if(tg)tg.addEventListener('click',()=>{ ribbonCollapsed=!ribbonCollapsed; applyRibbon();
+  requestAnimationFrame(()=>{ visible.forEach(id=>{ if(N[id])nodeMeasure(id); }); mmApplyDock(); mmSchedule(); }); saveState(); }); }
 { const rz=document.getElementById('railResizer'), rail=document.getElementById('rail');
   const railSet=cx=>{ railW=Math.round(clamp(cx-rail.getBoundingClientRect().left,200,560)); document.documentElement.style.setProperty('--railw',railW+'px'); };
   if(rz)rz.addEventListener('mousedown',e=>{ e.preventDefault();
@@ -2307,7 +2331,7 @@ document.getElementById('reset2').addEventListener('click',()=>{ try{localStorag
   const rb=document.getElementById('revertBtn'); if(rb)rb.addEventListener('click',revertBuiltIn); }
 
 /* ---------- init ---------- */
-applyTheme(); applyRail(); applyMinimap(); buildThemeSwatches(); buildSidebar();
+applyTheme(); applyRail(); applyRibbon(); applyMinimap(); buildThemeSwatches(); buildSidebar();
 if(importMeta){ const env=document.querySelector('#topbar .env'); if(env){ env.textContent=(importMeta.filename||'schema').replace(/\.xml$/i,''); env.title=(isImported?'Imported':'Sample')+' schema — '+(importMeta.ents||allIds.length)+' tables'; } }
 for(const id of visible)buildNode(id);
 let needLayout=false;

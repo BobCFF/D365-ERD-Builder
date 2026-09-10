@@ -39,25 +39,30 @@
   <div id="views">
     <!-- ============ DIAGRAM ============ -->
     <section id="view-diagram" class="view on">
-      <div class="ribbon">
-        <div class="ribbon-group">
-          <span class="ribbon-label">Arrange</span>
-          <button class="btn" id="undo" title="Undo the last move, hide, or arrange (Ctrl/⌘Z)" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 7 4 12l5 5M4 12h11a5 5 0 0 1 0 10h-1"/></svg>Undo</button>
-          <button class="btn" id="arrange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 14h6v6h-6zM10 7h4M7 10v4"/></svg>Auto-arrange</button>
-          <button class="btn" id="fit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5"/></svg>Fit</button>
-          <button class="btn" id="expandAll"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg>Expand all</button>
-          <button class="btn" id="collapseAll"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 11l-5-5-5 5M17 18l-5-5-5 5"/></svg>Collapse</button>
+      <div class="ribbon" id="ribbon">
+        <div class="ribbon-scroll">
+          <div class="ribbon-group">
+            <div class="ribbon-row">
+              <button class="btn" id="undo" title="Undo the last move, hide, or arrange (Ctrl/⌘Z)" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 7 4 12l5 5M4 12h11a5 5 0 0 1 0 10h-1"/></svg><span>Undo</span></button>
+              <button class="btn" id="arrange" title="Auto-arrange tables"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h6v6H4zM14 14h6v6h-6zM10 7h4M7 10v4"/></svg><span>Arrange</span></button>
+              <button class="btn" id="fit" title="Fit all tables to view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5"/></svg><span>Fit</span></button>
+              <button class="btn" id="expandAll" title="Expand all cards to full columns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 13l5 5 5-5M7 6l5 5 5-5"/></svg><span>Expand</span></button>
+              <button class="btn" id="collapseAll" title="Collapse all cards to PK &amp; FK"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 11l-5-5-5 5M17 18l-5-5-5 5"/></svg><span>Collapse</span></button>
+            </div>
+            <span class="ribbon-label">Arrange</span>
+          </div>
+          <div class="ribbon-div"></div>
+          <div class="ribbon-group">
+            <div class="ribbon-row"><div class="seg" id="segNotation"><button data-v="crow">Crow's foot</button><button data-v="uml">UML</button><button data-v="idef1x">IDEF1X</button></div></div>
+            <span class="ribbon-label">Notation</span>
+          </div>
+          <div class="ribbon-div"></div>
+          <div class="ribbon-group">
+            <div class="ribbon-row"><div class="seg" id="segLines"><button data-v="straight">Straight</button><button data-v="curved">Curved</button><button data-v="s">S-curve</button></div></div>
+            <span class="ribbon-label">Lines</span>
+          </div>
         </div>
-        <div class="ribbon-div"></div>
-        <div class="ribbon-group">
-          <span class="ribbon-label">Notation</span>
-          <div class="seg" id="segNotation"><button data-v="crow">Crow's foot</button><button data-v="uml">UML</button><button data-v="idef1x">IDEF1X</button></div>
-        </div>
-        <div class="ribbon-div"></div>
-        <div class="ribbon-group">
-          <span class="ribbon-label">Lines</span>
-          <div class="seg" id="segLines"><button data-v="straight">Straight</button><button data-v="curved">Curved</button><button data-v="s">S-curve</button></div>
-        </div>
+        <button class="ribbon-toggle" id="ribbonToggle" title="Collapse toolbar" aria-label="Collapse toolbar" aria-expanded="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 15l6-6 6 6"/></svg></button>
       </div>
       <div id="diagram-grid">
         <aside id="rail">

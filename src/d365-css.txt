@@ -135,15 +135,27 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-ui);
 .view:not(.on){display:none}
 #view-diagram{display:flex;flex-direction:column}
 #view-diagram:not(.on){display:none}
-.ribbon{flex:none;display:flex;align-items:center;gap:14px;padding:8px 14px;overflow-x:auto;
-  background:var(--surface);border-bottom:1px solid var(--border)}
-.ribbon::-webkit-scrollbar{height:7px}
-.ribbon::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:6px}
-.ribbon-group{display:flex;align-items:center;gap:8px;flex:none}
-.ribbon-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--faint)}
-.ribbon-div{width:1px;height:26px;background:var(--border);flex:none}
-.ribbon .btn{padding:6px 11px;flex:none}
+/* Ribbon bar (Office-style): grouped, icon-over-label buttons with a centered
+   group caption below, and a right-edge chevron to collapse/expand the bar. */
+.ribbon{flex:none;display:flex;align-items:stretch;background:var(--surface);border-bottom:1px solid var(--border)}
+.ribbon-scroll{flex:1;min-width:0;display:flex;align-items:stretch;gap:10px;padding:7px 12px 5px;overflow-x:auto}
+.ribbon-scroll::-webkit-scrollbar{height:7px}
+.ribbon-scroll::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:6px}
+.ribbon-group{display:flex;flex-direction:column;align-items:center;gap:4px;flex:none}
+.ribbon-row{display:flex;align-items:center;gap:6px;min-height:48px}
+.ribbon-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.09em;color:var(--faint)}
+.ribbon-div{width:1px;align-self:stretch;margin:6px 2px;background:var(--border);flex:none}
+.ribbon .btn{flex-direction:column;gap:4px;padding:6px 9px;min-width:52px;font-size:10.5px;font-weight:600;flex:none}
+.ribbon .btn svg{width:19px;height:19px}
+.ribbon .btn span{white-space:nowrap}
 .ribbon .seg{margin:0;width:auto;flex:none}
+.ribbon-toggle{flex:none;align-self:stretch;display:flex;align-items:center;justify-content:center;width:34px;
+  border:none;border-left:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer}
+.ribbon-toggle:hover{background:var(--surface-2);color:var(--ink)}
+.ribbon-toggle svg{width:18px;height:18px;transition:transform .2s}
+.ribbon.collapsed .ribbon-scroll{display:none}
+.ribbon.collapsed .ribbon-toggle{flex:1;justify-content:flex-end;padding:2px 12px;border-left:none;height:22px}
+.ribbon.collapsed .ribbon-toggle svg{transform:rotate(180deg)}
 #diagram-grid{flex:1;min-height:0;display:grid;grid-template-columns:var(--railw,288px) 1fr}
 /* rail is display:none when collapsed, so the stage is the only grid item —
    give it a single full-width column so it can't land in a zero-width track */
