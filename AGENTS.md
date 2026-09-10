@@ -62,6 +62,12 @@ Do **not** read all of `index.html` into context to make a small change. Use
 - Minimap/edges rebuild on hover today (BUG-2) — don't add more per-hover work.
 - `xmlEsc` in the XLSX writer must strip invalid XML control chars; don't paste
   raw control characters into source (it corrupted the file once).
+- **Vercel is static-only.** The repo has a `package.json` (dev tooling) but the
+  site is prebuilt — `vercel.json` sets `framework:null`, no-op install/build
+  commands, and `outputDirectory:"."` so Vercel just serves the committed files.
+  Do NOT remove those keys or add a real Vercel build step: adding a build made
+  Vercel look for an output dir and fail the deploy (production went stale).
+  Keep committing the prebuilt `index.html`.
 
 ## What "done" looks like
 
