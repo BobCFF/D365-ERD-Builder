@@ -156,8 +156,11 @@ let themeChoice=_THEME_IDS.includes(saved.theme)?saved.theme:null;
 let notation=(saved.notation==='uml'||saved.notation==='idef1x')?saved.notation:'crow';
 let lineMode=['straight','curved','s'].includes(saved.lineMode)?saved.lineMode:(saved.curved===false?'straight':'s');
 // connector line weight — base stroke width in px for links; markers scale with it
-const LINE_W={thin:1.0, normal:1.4, thick:2.2};
-let lineWeight=['thin','normal','thick'].includes(saved.lineWeight)?saved.lineWeight:'normal';
+// numbered 1–5; level 2 (1.4px) is the default and the anchor the markers scale from
+const LINE_W={'1':1.0, '2':1.4, '3':1.9, '4':2.5, '5':3.2};
+// migrate the earlier named levels (thin/normal/thick) to numbers
+const _LW_MIGRATE={thin:'1', normal:'2', thick:'4'};
+let lineWeight=(function(w){ w=_LW_MIGRATE[w]||w; return LINE_W[w]?w:'2'; })(saved.lineWeight);
 function lwPx(){ return LINE_W[lineWeight]||1.4; }
 // per-card detail level: 'full' (all columns) | 'keys' (PK & FK) | 'title' (name only)
 let defaultDetail=['full','keys','title'].includes(saved.defaultDetail)?saved.defaultDetail:(saved.density==='all'?'full':'keys');
@@ -844,7 +847,7 @@ function applyRibbon(){ const rb=document.getElementById('ribbon'), tg=document.
 // markers so their line-work scales with it.
 function applyLineWeight(){ document.documentElement.style.setProperty('--link-w', lwPx()+'px'); recolorMarkers(); }
 { const sel=document.getElementById('selWeight'); if(sel){ sel.value=lineWeight;
-  sel.addEventListener('change',()=>{ lineWeight=['thin','normal','thick'].includes(sel.value)?sel.value:'normal'; applyLineWeight(); saveState(); }); } }
+  sel.addEventListener('change',()=>{ lineWeight=LINE_W[sel.value]?sel.value:'2'; applyLineWeight(); saveState(); }); } }
 { const rz=document.getElementById('railResizer'), rail=document.getElementById('rail');
   const railSet=cx=>{ railW=Math.round(clamp(cx-rail.getBoundingClientRect().left,200,560)); document.documentElement.style.setProperty('--railw',railW+'px'); };
   if(rz)rz.addEventListener('mousedown',e=>{ e.preventDefault();
