@@ -7,6 +7,17 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.14.0] — 2026-09-10
+
+### Changed
+- **Lighter fields and checkboxes in every theme.** Text inputs, the search
+  boxes, the weight dropdown, checkboxes and radio buttons now share a new
+  theme-relative `--field` background that's lighter than the surrounding
+  surface — so they read as clearly lighter, filled boxes rather than dark
+  wells. Checkboxes and radios are now custom-drawn (accent fill with a white
+  check/dot when selected) so their color follows the active theme instead of
+  the browser's dark form palette.
+
 ## [2.13.3] — 2026-09-10
 
 ### Changed
