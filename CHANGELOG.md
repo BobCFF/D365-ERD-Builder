@@ -7,6 +7,13 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.13.1] — 2026-09-10
+
+### Changed
+- The **Weight** dropdown now uses numbered levels **1–5** (1 = thinnest,
+  5 = thickest; 2 is the default) instead of Thin / Normal / Thick. Existing
+  saved preferences migrate automatically (thin→1, normal→2, thick→4).
+
 ## [2.13.0] — 2026-09-10
 
 ### Added

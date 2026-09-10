@@ -63,7 +63,7 @@
           </div>
           <div class="ribbon-div"></div>
           <div class="ribbon-group">
-            <div class="ribbon-row"><select class="ribbon-select" id="selWeight" title="Connector line &amp; marker thickness"><option value="thin">Thin</option><option value="normal">Normal</option><option value="thick">Thick</option></select></div>
+            <div class="ribbon-row"><select class="ribbon-select" id="selWeight" title="Connector line &amp; marker thickness (1–5)"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
             <span class="ribbon-label">Weight</span>
           </div>
         </div>
