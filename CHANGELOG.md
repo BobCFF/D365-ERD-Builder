@@ -7,6 +7,15 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.16.4] — 2026-09-10
+
+### Fixed
+- **Active tab stands out on dark themes.** On Dark, High Contrast (and Low
+  Light) the selected top-bar tab (Diagram / Data Dictionary / Settings) was a
+  surface pill nearly identical to the tab bar; it's now filled with the theme
+  accent so the current page is clearly visible. Light / Monochrome / Rainbow
+  keep the existing pill.
+
 ## [2.16.3] — 2026-09-10
 
 ### Changed
