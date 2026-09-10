@@ -7,6 +7,26 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.2.0] — 2026-09-10
+
+### Added
+- **Data Dictionary — per-column filters.** Each column heading has a **⋯**
+  menu with filters suited to that column's data: text-contains on Table,
+  Column, Display name, References and Description (with Any / Has value /
+  Blank); a group picker on Table; a multi-select of the data types present on
+  Type; Required / Optional on Req; and PK / FK / Any key / No key on Key. A
+  filtered column is badged, and **Clear filters** resets them all.
+- **Data Dictionary — adjustable column widths.** Drag a heading's right edge
+  to resize a column; double-click that edge to reset it. Widths persist across
+  refreshes.
+- **Data Dictionary — drag-and-drop column order.** Drag a heading to reorder
+  the columns; the order persists across refreshes.
+
+### Changed
+- The Data Dictionary toolbar's per-field group / type / keys / required /
+  description controls moved into the new per-column menus; global search and
+  the *Visible tables* toggle remain.
+
 ## [2.1.0] — 2026-09-10
 
 ### Added
