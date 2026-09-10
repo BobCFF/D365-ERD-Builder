@@ -7,6 +7,15 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.13.2] — 2026-09-10
+
+### Fixed
+- **Data Dictionary column filter — "Contains…" field readability.** The text
+  input in a column's filter menu had no explicit colors, so on a system in
+  dark mode it rendered as a dark field on the light popover. It now uses the
+  app's own field styling (light ground, themed text, accent focus ring) in
+  every theme.
+
 ## [2.13.1] — 2026-09-10
 
 ### Changed
