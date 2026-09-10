@@ -7,6 +7,15 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.8.0] — 2026-09-10
+
+### Added
+- **Touch-gesture help on mobile.** A **?** button (top-right of the diagram on
+  narrow screens) opens a card explaining the touch gestures — pinch to zoom,
+  drag to pan, drag/resize cards, tap ⋯, open the panel, and resize/reorder Data
+  Dictionary columns. It appears automatically the first time on a touch device
+  and is dismissible; it won't reappear once seen.
+
 ## [2.7.0] — 2026-09-10
 
 ### Added
