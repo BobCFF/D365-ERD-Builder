@@ -8,6 +8,11 @@ It's a single, self-contained static page (`index.html`). There is no backend an
 no build step: **the XML is parsed and rendered entirely in your browser**, so your
 schema never leaves your machine.
 
+## New in 2.4.0
+
+- **Minimap** — a collapsible **Overview** panel with a live viewport rectangle;
+  click or drag inside it to pan the diagram.
+
 ## New in 2.3.0
 
 - **A ⋯ menu on every diagram table** — open a **data-dictionary dialog** for
