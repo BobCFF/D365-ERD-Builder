@@ -7,6 +7,22 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.11.0] — 2026-09-10
+
+### Added
+- **IDEF1X notation.** The Notation ribbon now offers a third style alongside
+  Crow's-foot and UML. It draws the IDEF1X **filled dot** at the child (many)
+  end of every relationship, and a **hollow diamond** at the parent end for
+  **optional** (nullable-lookup) relationships — a mandatory relationship shows
+  no parent glyph. Applies on the canvas and in SVG/PNG exports, and the choice
+  persists like the other notations.
+
+  _Adaptation note:_ classic IDEF1X also uses solid vs. dashed lines for
+  identifying vs. non-identifying relationships. Dataverse primary keys are
+  always a single system GUID, so lookups are never truly identifying; the tool
+  therefore keeps its category-colored line styling rather than dashing every
+  connector, and conveys required vs. optional through the diamond.
+
 ## [2.10.0] — 2026-09-10
 
 ### Added

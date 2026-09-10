@@ -51,7 +51,7 @@
         <div class="ribbon-div"></div>
         <div class="ribbon-group">
           <span class="ribbon-label">Notation</span>
-          <div class="seg" id="segNotation"><button data-v="crow">Crow's foot</button><button data-v="uml">UML</button></div>
+          <div class="seg" id="segNotation"><button data-v="crow">Crow's foot</button><button data-v="uml">UML</button><button data-v="idef1x">IDEF1X</button></div>
         </div>
         <div class="ribbon-div"></div>
         <div class="ribbon-group">
