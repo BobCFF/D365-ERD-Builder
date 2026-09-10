@@ -7,6 +7,18 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.7.0] — 2026-09-10
+
+### Added
+- **Theme swatches.** Each theme button in Settings → Appearance now shows a
+  small colour preview of that theme (ground, accent and two group hues).
+- **Touch gestures for mobile / touchscreens.** The diagram supports
+  **pinch-to-zoom** and **one-finger pan**, and **drag** moves and **corner-drag**
+  resizes table cards. The **side panel** resizes by touch, and in the Data
+  Dictionary you can **drag a column edge to resize** and **drag a heading to
+  reorder** (a tap still sorts). The minimap can be panned and repositioned by
+  touch too.
+
 ## [2.6.0] — 2026-09-10
 
 ### Added

@@ -8,6 +8,12 @@ It's a single, self-contained static page (`index.html`). There is no backend an
 no build step: **the XML is parsed and rendered entirely in your browser**, so your
 schema never leaves your machine.
 
+## New in 2.7.0
+
+- **Theme swatches** in Settings, and **touch gestures** on mobile — pinch-zoom,
+  one-finger pan, drag/resize cards, resize the side panel, and resize/reorder
+  Data Dictionary columns.
+
 ## New in 2.6.0
 
 - **Seven color themes** — System, Light, Dark, High Contrast, Monochrome, Low
