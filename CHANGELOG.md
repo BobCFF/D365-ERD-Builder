@@ -7,6 +7,16 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.18.0] — 2026-09-11
+
+### Changed
+- **Sample schema now uses standard Dynamics 365 entities.** Replaced the
+  custom `cff_*` demo tables (Project, Project Task, Stage, Industry) with
+  out-of-the-box entities — **Account, Contact, User, Business Unit, Lead,
+  Opportunity, Opportunity Product, Product, Case** — and removed the custom
+  `cff_industryid` lookup from Account. The bundled demo now shows a familiar
+  Sales/Service model (9 tables, all Standard / System, no custom prefix).
+
 ## [2.17.4] — 2026-09-11
 
 ### Changed

@@ -44,7 +44,7 @@ const URL = process.env.URL || 'http://127.0.0.1:8100/';
   await p.click('#undo'); await p.waitForTimeout(250);
   const afterUndo = await statusN();
 
-  const ok = landing && nodes === 7 && edges > 0 && t0 === t7 && dictRows > 0 && mmRects === 7 &&
+  const ok = landing && nodes === 9 && edges > 0 && t0 === t7 && dictRows > 0 && mmRects === 9 &&
     !!themeName && afterHide === String(+before - 1) && !undoDisabled && afterUndo === before && !errs.length;
   console.log('landing:', landing, '| nodes:', nodes, '| edges:', edges);
   console.log('theme cycle back to start:', t0, '==', t7, '->', t0 === t7, '| themeName:', themeName);
