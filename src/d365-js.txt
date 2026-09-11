@@ -241,7 +241,7 @@ function saveState(){ try{ localStorage.setItem(LS, JSON.stringify({
   dsort, exportOpts, dVis:!!(document.getElementById('dVis')||{}).checked, dq:(document.getElementById('dq')||{}).value||'',
   secRole:(document.getElementById('secRole')||{}).value||'', secOnly:!(document.getElementById('secOnly'))||!!document.getElementById('secOnly').checked,
   secSort, secFilter, secIcons, secEntFilter, secExportOpts, secMode, secVerb, secCompareRoles, secSection, secFsProfile,
-  secQ:(document.getElementById('secQ')||{}).value||''
+  secQ:(document.getElementById('secQ')||{}).value||'', q:(document.getElementById('q')||{}).value||''
 })); }catch(e){} }
 const saved=loadState();
 // security page state (declared here so saveState — defined above — never hits their TDZ)
@@ -1025,9 +1025,12 @@ function applyLineWeight(){ document.documentElement.style.setProperty('--link-w
   window.addEventListener('resize',()=>{ mmApplyDock(); mmSchedule(); });
 }
 const q=document.getElementById('q');
-q.addEventListener('input',()=>{ const s=q.value.trim().toLowerCase();
+function applyRailFilter(){ const s=q.value.trim().toLowerCase();
   document.querySelectorAll('.ent').forEach(row=>{ const id=row.dataset.id,e=ENT[id]; const hit=!s||id.includes(s)||(e.display||'').toLowerCase().includes(s); row.style.display=hit?'':'none'; });
-  document.querySelectorAll('.grp').forEach(grp=>{ const any=[...grp.querySelectorAll('.ent')].some(r=>r.style.display!=='none'); grp.style.display=any?'':'none'; }); });
+  document.querySelectorAll('.grp').forEach(grp=>{ const any=[...grp.querySelectorAll('.ent')].some(r=>r.style.display!=='none'); grp.style.display=any?'':'none'; }); }
+if(typeof saved.q==='string')q.value=saved.q;
+q.addEventListener('input',()=>{ applyRailFilter(); saveState(); });
+applyRailFilter();
 // Enter in the search box locates the first matching table on the canvas.
 q.addEventListener('keydown',e=>{ if(e.key!=='Enter')return; e.preventDefault();
   const s=q.value.trim().toLowerCase(); if(!s)return;
@@ -1085,7 +1088,7 @@ function openSecMenu(k,thEl){ if(secMenuKey===k){ closeSecMenu(); return; }
      `<label class="dm-opt"><input type="radio" name="secsort" data-dir="-1" ${secSort.key===k&&secSort.dir<0?'checked':''}><span>Sort descending</span></label></div>`;
   if(k!=='ent'&&!isRole){ const sel=new Set(secFilter[k]||SEC_LEVELS);
     h+=`<div class="dm-sub">Access level</div><div class="dm-list">`+SEC_LEVELS.map(l=>
-      `<label class="dm-chk"><input type="checkbox" data-lv="${l}" ${sel.has(l)?'checked':''}><span class="slvl ${l}">${esc(SEC_LEVEL_LABEL[l])}</span> ${esc(l==='none'?'No access':SEC_LEVEL_FULL[l].replace(/ \(.*/,''))}</label>`).join('')+`</div>`;
+      `<label class="dm-chk"><input type="checkbox" data-lv="${l}" ${sel.has(l)?'checked':''}>${secIcons?secPie(l):`<span class="slvl ${l}">${esc(SEC_LEVEL_LABEL[l])}</span>`} ${esc(l==='none'?'No access':SEC_LEVEL_FULL[l].replace(/ \(.*/,''))}</label>`).join('')+`</div>`;
     h+=`<div class="dm-foot"><button class="dm-clear" ${secColActive(k)?'':'disabled'}>Clear filter</button></div>`;
   } else if(k==='ent'){ // the Table column offers a checklist of tables to include (empty = all)
     h+=`<div class="dm-sub">Tables</div><input class="dm-q" id="sec-tq" type="search" placeholder="Filter list…">`+
@@ -1746,7 +1749,7 @@ document.getElementById('reset2').addEventListener('click',()=>{ try{localStorag
   const rb=document.getElementById('revertBtn'); if(rb)rb.addEventListener('click',revertBuiltIn); }
 
 /* ---------- init ---------- */
-applyTheme(); applyRail(); applyRibbon(); applyLineWeight(); applyMinimap(); buildThemeSwatches(); buildSidebar();
+applyTheme(); applyRail(); applyRibbon(); applyLineWeight(); applyMinimap(); buildThemeSwatches(); buildSidebar(); applyRailFilter();
 { const _dv=document.getElementById('dVis'); if(_dv)_dv.checked=!!saved.dVis;
   const _dq=document.getElementById('dq'); if(_dq&&typeof saved.dq==='string')_dq.value=saved.dq; }
 if(importMeta){ const env=document.querySelector('#topbar .env'); if(env){ env.textContent=(importMeta.filename||'schema').replace(/\.xml$/i,''); env.title=(isImported?'Imported':'Sample')+' schema — '+(importMeta.ents||allIds.length)+' tables'; } }
