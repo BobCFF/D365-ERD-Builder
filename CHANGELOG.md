@@ -7,6 +7,17 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.24.1] — 2026-09-11
+
+### Fixed
+- **Security page fully persists.** The Security **table filter text** is now
+  saved and restored like the rest of the page's settings (it was the only
+  control that didn't persist). Everything on the page — section (Table
+  privileges / Field security), role, privilege, compared roles, field-security
+  profile, "with access only", classic icons, search, sort, and column/level/
+  table filters — is stored in the browser (`localStorage`) and restored when
+  the schema re-opens.
+
 ## [2.24.0] — 2026-09-11
 
 ### Added
