@@ -7,6 +7,21 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.19.0] — 2026-09-11
+
+### Added
+- **Security page.** When the imported `customizations.xml` includes security
+  role metadata (a `<Roles>` block), a new **Security** tab appears. Pick a
+  role and see its **table privileges** as a grid — one row per table, columns
+  for **Create / Read / Write / Delete / Append / Append To / Assign / Share**,
+  each cell showing the access level (**User / BU / Deep / Org**) as a
+  colour-coded pill; blank means no privilege. Includes a role picker, a table
+  filter, a "with access only" toggle, a level legend, and a table count.
+  Privileges are matched to tables in the model (miscellaneous / non-entity
+  privileges are ignored); levels accept both the word form
+  (Basic/Local/Deep/Global) and the numeric depth mask (1/2/4/8). The tab stays
+  hidden for files without role metadata (including the bundled sample).
+
 ## [2.18.0] — 2026-09-11
 
 ### Changed

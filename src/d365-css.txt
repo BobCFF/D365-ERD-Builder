@@ -413,6 +413,25 @@ input[type=checkbox]:focus-visible,input[type=radio]:focus-visible{outline:2px s
 body.col-resizing{cursor:col-resize;user-select:none}
 .dgrid td{padding:7px 12px;border-bottom:1px solid var(--surface-2);vertical-align:top;overflow:hidden;text-overflow:ellipsis}
 .dgrid tbody tr:hover{background:var(--surface-2)}
+/* security roles page */
+.sec-toolbar{align-items:center}
+.sec-pick{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);font-weight:600}
+.sec-pick select{font:inherit;font-size:12.5px;color:var(--ink);background:var(--field);border:1px solid var(--border-strong);border-radius:7px;padding:6px 8px;max-width:280px}
+.sec-pick select:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+.sec-legend{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto;font-size:10.5px;color:var(--muted)}
+.sec-legend .lg{display:inline-flex;align-items:center;gap:4px}
+#sectable{table-layout:auto}
+#sectable thead th{text-align:center;padding:8px 10px}
+#sectable thead th:first-child{text-align:left;min-width:220px}
+#sectable td{text-align:center}
+#sectable td:first-child{text-align:left}
+.slvl{display:inline-block;min-width:38px;text-align:center;font-size:10px;font-weight:700;letter-spacing:.02em;padding:2px 7px;border-radius:5px;border:1px solid transparent;text-transform:uppercase}
+.slvl.none{color:var(--faint);font-weight:400}
+.slvl.user{background:color-mix(in srgb,var(--accent) 14%,var(--surface));color:var(--accent);border-color:color-mix(in srgb,var(--accent) 24%,transparent)}
+.slvl.bu{background:color-mix(in srgb,var(--accent) 30%,var(--surface));color:var(--accent);border-color:color-mix(in srgb,var(--accent) 42%,transparent)}
+.slvl.deep{background:color-mix(in srgb,var(--accent) 52%,var(--surface));color:#fff;border-color:transparent}
+.slvl.org{background:var(--accent);color:#fff;border-color:transparent}
+.sec-tname{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* per-column filter popover */
 .dmenu{position:absolute;z-index:40;min-width:212px;max-width:280px;background:var(--surface);
   border:1px solid var(--border-strong);border-radius:10px;box-shadow:0 12px 34px rgba(0,0,0,.28);padding:10px;font-size:12px}

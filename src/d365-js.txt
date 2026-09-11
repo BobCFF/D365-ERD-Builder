@@ -35,6 +35,29 @@ function catFn(name,referenced,referencing,attr){
   if(/^(activity_pointer_|transactioncurrency_|fileattachment_|processstage_|sla|bulkdelete|duplicate|principalobjectattribute|import)/.test(n))return 'generic';
   return 'business';
 }
+/* ---- security roles ---- */
+// verbs in match order — AppendTo must be tested before Append (shared prefix)
+const SEC_VERBS=[['appendto','AppendTo'],['append','Append'],['create','Create'],['read','Read'],['write','Write'],['delete','Delete'],['assign','Assign'],['share','Share']];
+const SEC_VERB_KEYS=SEC_VERBS.map(v=>v[0]);
+// display order for the grid columns (CRUD first; parsing still uses SEC_VERBS' match order)
+const SEC_VERB_ORDER=['create','read','write','delete','append','appendto','assign','share'];
+const SEC_VERB_LABEL={create:'Create',read:'Read',write:'Write',delete:'Delete',append:'Append',appendto:'Append To',assign:'Assign',share:'Share'};
+// access levels, weakest→strongest; rank drives colour + "max" merge of duplicate privileges
+const SEC_LEVELS=['none','user','bu','deep','org'];
+const SEC_LEVEL_RANK=Object.fromEntries(SEC_LEVELS.map((l,i)=>[l,i]));
+const SEC_LEVEL_LABEL={none:'—',user:'User',bu:'BU',deep:'Deep',org:'Org'};
+const SEC_LEVEL_FULL={none:'None',user:'User (Basic)',bu:'Business Unit (Local)',deep:'Parent: Child (Deep)',org:'Organization (Global)'};
+// a privilege name is prv<Verb><EntityLogicalName>; the remainder after the verb is the entity token
+function parsePrivName(name){ if(!name||name.slice(0,3)!=='prv')return null; const body=name.slice(3);
+  for(const [k,P] of SEC_VERBS)if(body.startsWith(P))return {verb:k, ent:body.slice(P.length).toLowerCase()};
+  return null; }
+// level is exported as a word (Basic/Local/Deep/Global) or a depth-mask number (1/2/4/8; 0 = none)
+function parsePrivLevel(v){ v=(v||'').trim().toLowerCase();
+  if(v==='1'||v==='basic'||v==='user')return 'user';
+  if(v==='2'||v==='local'||v==='businessunit'||v==='bu')return 'bu';
+  if(v==='4'||v==='deep'||v==='parentchild')return 'deep';
+  if(v==='8'||v==='global'||v==='organization'||v==='org')return 'org';
+  return 'none'; }
 function parseCustomizationsXml(text){
   const doc=new DOMParser().parseFromString(text,'application/xml');
   if(doc.querySelector('parsererror')) throw new Error('not valid XML');
@@ -69,7 +92,21 @@ function parseCustomizationsXml(text){
   for(const r of rels){ if(r.type!=='OneToMany')continue; const e=entities[r.referencing]; if(!e)continue;
     const a=e.attributes.find(x=>x.name===r.attr); if(a){ a.fk=true; a.targets=a.targets||[]; if(!a.targets.includes(r.referenced))a.targets.push(r.referenced); } }
   if(!Object.keys(entities).length) throw new Error('no tables found');
-  return {entities,relationships:rels};
+  // security roles: keep only privileges whose entity token matches a parsed table
+  const roles=[], rolesEl=doc.getElementsByTagName('Roles')[0];
+  if(rolesEl)for(const role of rolesEl.getElementsByTagName('Role')){
+    const rname=(role.getAttribute('name')||role.getAttribute('id')||'').trim(); if(!rname)continue;
+    const priv={};
+    for(const rp of role.getElementsByTagName('RolePrivilege')){
+      const pp=parsePrivName(rp.getAttribute('name')); if(!pp||!entities[pp.ent])continue;
+      const lv=parsePrivLevel(rp.getAttribute('level')); if(lv==='none')continue;
+      const cur=priv[pp.ent]||(priv[pp.ent]={});
+      if(!cur[pp.verb]||SEC_LEVEL_RANK[lv]>SEC_LEVEL_RANK[cur[pp.verb]])cur[pp.verb]=lv;
+    }
+    roles.push({id:role.getAttribute('id')||'', name:rname, priv});
+  }
+  roles.sort((a,b)=>a.name.localeCompare(b.name));
+  return {entities,relationships:rels,roles};
 }
 /* ---- IndexedDB storage for an imported schema (large capacity) ---- */
 const IDB_NAME='tdp-erd-db', IDB_STORE='kv', IDB_KEY='import';
@@ -116,6 +153,7 @@ function startApp(MODEL, isImported, importMeta){
 const land=document.getElementById('landing'); if(land)land.hidden=true;
 const app=document.getElementById('app'); if(app)app.hidden=false;
 const ENT = MODEL.entities, RELS = MODEL.relationships;
+const ROLES = Array.isArray(MODEL.roles)?MODEL.roles:[];
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const SVGNS='http://www.w3.org/2000/svg';
 
@@ -166,7 +204,8 @@ function saveState(){ try{ localStorage.setItem(LS, JSON.stringify({
   sizes:Object.fromEntries(Object.entries(sizes).map(([k,v])=>[k,[Math.round(v.w),Math.round(v.h)]])),
   notation, lineMode, lineWeight, defaultDetail, labelsMode, pngScale, exportTitle, view, railW, railCollapsed,
   ribbonCollapsed, minimapCollapsed, mmPos, gestureSeen, dcolOrder, dcolW, dcolF, dcolHidden:[...dcolHidden],
-  dsort, exportOpts, dVis:!!(document.getElementById('dVis')||{}).checked, dq:(document.getElementById('dq')||{}).value||''
+  dsort, exportOpts, dVis:!!(document.getElementById('dVis')||{}).checked, dq:(document.getElementById('dq')||{}).value||'',
+  secRole:(document.getElementById('secRole')||{}).value||'', secOnly:!(document.getElementById('secOnly'))||!!document.getElementById('secOnly').checked
 })); }catch(e){} }
 const saved=loadState();
 let initVis = saved.vis&&saved.vis.length ? saved.vis.filter(id=>ENT[id]) : allIds.slice();
@@ -198,7 +237,8 @@ let gestureSeen=!!saved.gestureSeen;
 let labelsMode=['hover','always','never'].includes(saved.labelsMode)?saved.labelsMode:'hover';
 let pngScale=[2,3,4].includes(saved.pngScale)?saved.pngScale:2;
 let exportTitle=saved.exportTitle!==false;
-let view=['diagram','dict','settings'].includes(saved.view)?saved.view:'diagram';
+let view=['diagram','dict','settings','security'].includes(saved.view)?saved.view:'diagram';
+if(view==='security'&&!ROLES.length)view='diagram';
 
 /* data-dictionary column model (order / width / per-column filters, all persisted) */
 const DCOLDEF={
@@ -967,16 +1007,49 @@ window.addEventListener('dragleave',()=>{ dzc=Math.max(0,dzc-1); if(!dzc)dz.clas
 window.addEventListener('drop',e=>{ if(dz.classList.contains('on')){ e.preventDefault(); dzc=0; dz.classList.remove('on'); readFile(e.dataTransfer.files&&e.dataTransfer.files[0]); } });
 
 /* ---------- views ---------- */
-const VIEW_EL={diagram:'view-diagram',dict:'view-dict',settings:'view-settings'};
-function setView(v){ view=v;
+const VIEW_EL={diagram:'view-diagram',dict:'view-dict',security:'view-security',settings:'view-settings'};
+function setView(v){ if(v==='security'&&!ROLES.length)v='diagram'; view=v;
   document.querySelectorAll('#tabs .tab').forEach(t=>t.classList.toggle('on',t.dataset.view===v));
   for(const [k,id] of Object.entries(VIEW_EL))document.getElementById(id).classList.toggle('on',k===v);
   if(v==='dict'){ if(!dictBuilt)buildDict(); renderDict(); }
+  else if(v==='security')renderSecurity();
   else if(v==='settings')syncSettings();
   else if(v==='diagram'){ requestAnimationFrame(()=>{ visible.forEach(id=>{ if(N[id])nodeMeasure(id); }); drawLinks(); if(pendingFit){ fit(); pendingFit=false; } applyMinimap(); }); }
   saveState();
 }
 document.querySelectorAll('#tabs .tab').forEach(t=>t.addEventListener('click',()=>setView(t.dataset.view)));
+// the Security tab appears only when the imported file carries role metadata
+if(ROLES.length){ const st=document.getElementById('tab-security'); if(st)st.hidden=false; }
+/* ---------- security roles page ---------- */
+let securityInited=false;
+function initSecurity(){ if(securityInited||!ROLES.length)return; securityInited=true;
+  const sel=document.getElementById('secRole'); if(!sel)return;
+  sel.innerHTML=ROLES.map(r=>`<option value="${esc(r.name)}">${esc(r.name)}</option>`).join('');
+  if(saved.secRole&&ROLES.some(r=>r.name===saved.secRole))sel.value=saved.secRole;
+  const only=document.getElementById('secOnly'); if(only&&saved.secOnly===false)only.checked=false;
+  sel.addEventListener('change',()=>{ renderSecurity(); saveState(); });
+  document.getElementById('secQ').addEventListener('input',renderSecurity);
+  if(only)only.addEventListener('change',()=>{ renderSecurity(); saveState(); });
+}
+function renderSecurity(){ if(!ROLES.length)return; initSecurity();
+  const nm=(document.getElementById('secRole')||{}).value, role=ROLES.find(r=>r.name===nm)||ROLES[0]; if(!role)return;
+  const q=((document.getElementById('secQ')||{}).value||'').trim().toLowerCase();
+  const onlyEl=document.getElementById('secOnly'), only=!onlyEl||onlyEl.checked;
+  const rows=allIds.filter(id=>{
+    if(only && !role.priv[id])return false;
+    if(q && !((id+' '+(ENT[id].display||'')).toLowerCase().includes(q)))return false;
+    return true; });
+  const table=document.getElementById('sectable');
+  table.querySelector('thead').innerHTML='<tr><th>Table</th>'+SEC_VERB_ORDER.map(v=>`<th>${esc(SEC_VERB_LABEL[v])}</th>`).join('')+'</tr>';
+  const cell=(id,v)=>{ const lv=(role.priv[id]&&role.priv[id][v])||'none';
+    return `<td><span class="slvl ${lv}" title="${esc(SEC_VERB_LABEL[v])} — ${esc(SEC_LEVEL_FULL[lv])}">${esc(SEC_LEVEL_LABEL[lv])}</span></td>`; };
+  table.querySelector('tbody').innerHTML = rows.length ? rows.map(id=>{ const e=ENT[id];
+    return `<tr><td><div class="dt-ent"><span class="dot" style="background:var(${GVAR[e.group]})"></span><span class="sec-tname"><span class="en">${esc(e.display||id)}</span> <span class="el">${esc(id)}</span></span></div></td>`+
+      SEC_VERB_ORDER.map(v=>cell(id,v)).join('')+`</tr>`; }).join('')
+    : `<tr><td colspan="${SEC_VERB_ORDER.length+1}"><div class="dict-empty">No tables match${only?' — the role has no table privileges, or none match the filter':''}.</div></td></tr>`;
+  document.getElementById('secCount').textContent=`${rows.length} table${rows.length===1?'':'s'}`;
+  document.getElementById('secLegend').innerHTML='Access &nbsp;'+SEC_LEVELS.filter(l=>l!=='none').map(l=>`<span class="lg"><span class="slvl ${l}">${esc(SEC_LEVEL_LABEL[l])}</span>${esc(SEC_LEVEL_FULL[l].replace(/ \(.*/,''))}</span>`).join('');
+}
 
 /* ---------- data dictionary ---------- */
 let DICT=[], dictBuilt=false;
