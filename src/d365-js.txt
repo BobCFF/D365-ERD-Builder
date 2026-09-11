@@ -45,7 +45,16 @@ const SEC_VERB_LABEL={create:'Create',read:'Read',write:'Write',delete:'Delete',
 // access levels, weakest→strongest; rank drives colour + "max" merge of duplicate privileges
 const SEC_LEVELS=['none','user','bu','deep','org'];
 const SEC_LEVEL_RANK=Object.fromEntries(SEC_LEVELS.map((l,i)=>[l,i]));
-const SEC_LEVEL_LABEL={none:'—',user:'User',bu:'BU',deep:'Deep',org:'Org'};
+const SEC_LEVEL_LABEL={none:'—',user:'User',bu:'BU',deep:'PC',org:'Org'};
+// classic Dynamics access-level glyph: an outlined circle with a pie wedge sized to the scope
+const SEC_PIE_FRAC={none:0,user:0.25,bu:0.5,deep:0.75,org:1};
+function secPie(level){ const f=SEC_PIE_FRAC[level]||0, r=6.5, cx=8, cy=8;
+  const cls='sp-'+level;
+  if(f>=1)return `<svg class="spie ${cls}" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="${r}"/></svg>`;
+  let wedge='';
+  if(f>0){ const a=2*Math.PI*f, ex=cx+r*Math.sin(a), ey=cy-r*Math.cos(a), large=f>0.5?1:0;
+    wedge=`<path d="M${cx} ${cy} L${cx} ${cy-r} A${r} ${r} 0 ${large} 1 ${ex.toFixed(2)} ${ey.toFixed(2)} Z"/>`; }
+  return `<svg class="spie ${cls}" viewBox="0 0 16 16" aria-hidden="true"><circle class="rim" cx="8" cy="8" r="${r}" fill="none"/>${wedge}</svg>`; }
 const SEC_LEVEL_FULL={none:'None',user:'User (Basic)',bu:'Business Unit (Local)',deep:'Parent: Child (Deep)',org:'Organization (Global)'};
 // a privilege name is prv<Verb><EntityLogicalName>; the remainder after the verb is the entity token
 function parsePrivName(name){ if(!name||name.slice(0,3)!=='prv')return null; const body=name.slice(3);
@@ -205,9 +214,14 @@ function saveState(){ try{ localStorage.setItem(LS, JSON.stringify({
   notation, lineMode, lineWeight, defaultDetail, labelsMode, pngScale, exportTitle, view, railW, railCollapsed,
   ribbonCollapsed, minimapCollapsed, mmPos, gestureSeen, dcolOrder, dcolW, dcolF, dcolHidden:[...dcolHidden],
   dsort, exportOpts, dVis:!!(document.getElementById('dVis')||{}).checked, dq:(document.getElementById('dq')||{}).value||'',
-  secRole:(document.getElementById('secRole')||{}).value||'', secOnly:!(document.getElementById('secOnly'))||!!document.getElementById('secOnly').checked
+  secRole:(document.getElementById('secRole')||{}).value||'', secOnly:!(document.getElementById('secOnly'))||!!document.getElementById('secOnly').checked,
+  secSort, secFilter, secIcons
 })); }catch(e){} }
 const saved=loadState();
+// security page state (declared here so saveState — defined above — never hits their TDZ)
+let secSort={key:(saved.secSort&&(saved.secSort.key==='ent'||SEC_VERB_ORDER.includes(saved.secSort.key)))?saved.secSort.key:'ent', dir:(saved.secSort&&saved.secSort.dir===-1)?-1:1};
+let secFilter=(function(){ const o={}, s=saved.secFilter; if(s&&typeof s==='object')for(const v of SEC_VERB_ORDER){ const a=s[v]; if(Array.isArray(a)){ const f=a.filter(x=>SEC_LEVELS.includes(x)); if(f.length&&f.length<SEC_LEVELS.length)o[v]=f; } } return o; })();
+let secIcons=saved.secIcons===true;
 let initVis = saved.vis&&saved.vis.length ? saved.vis.filter(id=>ENT[id]) : allIds.slice();
 if(!initVis.length) initVis = allIds.slice();
 const visible=new Set(initVis);
@@ -1020,35 +1034,73 @@ function setView(v){ if(v==='security'&&!ROLES.length)v='diagram'; view=v;
 document.querySelectorAll('#tabs .tab').forEach(t=>t.addEventListener('click',()=>setView(t.dataset.view)));
 // the Security tab appears only when the imported file carries role metadata
 if(ROLES.length){ const st=document.getElementById('tab-security'); if(st)st.hidden=false; }
-/* ---------- security roles page ---------- */
-let securityInited=false;
-function initSecurity(){ if(securityInited||!ROLES.length)return; securityInited=true;
+/* ---------- security roles page (state initialised up top, near other saved state) ---------- */
+let secInited=false, secMenuKey=null;
+function secColActive(k){ return k!=='ent' && !!(secFilter[k]&&secFilter[k].length); }
+function closeSecMenu(){ const m=document.getElementById('secmenu'); if(m){ m.hidden=true; m.innerHTML=''; } secMenuKey=null; }
+function openSecMenu(k,thEl){ if(secMenuKey===k){ closeSecMenu(); return; }
+  const m=document.getElementById('secmenu'); secMenuKey=k;
+  let h=`<div class="dm-h">${esc(k==='ent'?'Table':SEC_VERB_LABEL[k])}</div>`;
+  h+=`<div class="dm-opts"><label class="dm-opt"><input type="radio" name="secsort" data-dir="1" ${secSort.key===k&&secSort.dir>0?'checked':''}><span>Sort ascending</span></label>`+
+     `<label class="dm-opt"><input type="radio" name="secsort" data-dir="-1" ${secSort.key===k&&secSort.dir<0?'checked':''}><span>Sort descending</span></label></div>`;
+  if(k!=='ent'){ const sel=new Set(secFilter[k]||SEC_LEVELS);
+    h+=`<div class="dm-sub">Access level</div><div class="dm-list">`+SEC_LEVELS.map(l=>
+      `<label class="dm-chk"><input type="checkbox" data-lv="${l}" ${sel.has(l)?'checked':''}><span class="slvl ${l}">${esc(SEC_LEVEL_LABEL[l])}</span> ${esc(l==='none'?'No access':SEC_LEVEL_FULL[l].replace(/ \(.*/,''))}</label>`).join('')+`</div>`;
+    h+=`<div class="dm-foot"><button class="dm-clear" ${secColActive(k)?'':'disabled'}>Clear filter</button></div>`; }
+  m.innerHTML=h; m.hidden=false;
+  const panel=thEl.closest('.panel'), pr=panel.getBoundingClientRect(), br=thEl.getBoundingClientRect(), mw=Math.max(m.offsetWidth,200);
+  let left=br.left-pr.left; left=Math.max(6,Math.min(left, pr.width-mw-6));
+  m.style.left=left+'px'; m.style.top=(br.bottom-pr.top+3)+'px';
+  m.querySelectorAll('input[name="secsort"]').forEach(r=>r.addEventListener('change',()=>{ if(!r.checked)return; secSort={key:k,dir:r.dataset.dir==='-1'?-1:1}; renderSecurity(); saveState(); }));
+  m.querySelectorAll('input[data-lv]').forEach(c=>c.addEventListener('change',()=>{
+    const chosen=[...m.querySelectorAll('input[data-lv]')].filter(x=>x.checked).map(x=>x.dataset.lv);
+    if(!chosen.length||chosen.length===SEC_LEVELS.length)delete secFilter[k]; else secFilter[k]=chosen;
+    renderSecurity(); saveState();
+    const th=document.querySelector(`#sectable th[data-k="${k}"]`); if(th)th.classList.toggle('filtered',secColActive(k));
+    const cb=m.querySelector('.dm-clear'); if(cb)cb.disabled=!secColActive(k); }));
+  const cb=m.querySelector('.dm-clear'); if(cb)cb.addEventListener('click',()=>{ delete secFilter[k];
+    m.querySelectorAll('input[data-lv]').forEach(x=>x.checked=true); cb.disabled=true;
+    const th=document.querySelector(`#sectable th[data-k="${k}"]`); if(th)th.classList.remove('filtered'); renderSecurity(); saveState(); });
+}
+function initSecurity(){ if(secInited||!ROLES.length)return; secInited=true;
   const sel=document.getElementById('secRole'); if(!sel)return;
   sel.innerHTML=ROLES.map(r=>`<option value="${esc(r.name)}">${esc(r.name)}</option>`).join('');
   if(saved.secRole&&ROLES.some(r=>r.name===saved.secRole))sel.value=saved.secRole;
   const only=document.getElementById('secOnly'); if(only&&saved.secOnly===false)only.checked=false;
+  const icons=document.getElementById('secIcons'); if(icons){ icons.checked=secIcons; icons.addEventListener('change',()=>{ secIcons=icons.checked; renderSecurity(); saveState(); }); }
   sel.addEventListener('change',()=>{ renderSecurity(); saveState(); });
   document.getElementById('secQ').addEventListener('input',renderSecurity);
   if(only)only.addEventListener('change',()=>{ renderSecurity(); saveState(); });
+  const thead=document.getElementById('sectable').querySelector('thead');
+  thead.addEventListener('click',e=>{ const mb=e.target.closest('.dth-menu'); if(mb){ e.stopPropagation(); openSecMenu(mb.closest('th').dataset.k, mb.closest('th')); return; }
+    const l=e.target.closest('.dth-l'); if(l){ const k=l.closest('th').dataset.k; if(secSort.key===k)secSort.dir*=-1; else{secSort.key=k;secSort.dir=1;} renderSecurity(); saveState(); } });
+  document.addEventListener('mousedown',e=>{ if(secMenuKey!=null && !e.target.closest('#secmenu') && !e.target.closest('.dth-menu'))closeSecMenu(); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&secMenuKey!=null)closeSecMenu(); });
+  const sc=document.querySelector('#view-security .dict-scroll'); if(sc)sc.addEventListener('scroll',()=>{ if(secMenuKey!=null)closeSecMenu(); });
 }
 function renderSecurity(){ if(!ROLES.length)return; initSecurity();
   const nm=(document.getElementById('secRole')||{}).value, role=ROLES.find(r=>r.name===nm)||ROLES[0]; if(!role)return;
   const q=((document.getElementById('secQ')||{}).value||'').trim().toLowerCase();
   const onlyEl=document.getElementById('secOnly'), only=!onlyEl||onlyEl.checked;
-  const rows=allIds.filter(id=>{
+  const lvOf=(id,v)=>(role.priv[id]&&role.priv[id][v])||'none';
+  let rows=allIds.filter(id=>{
     if(only && !role.priv[id])return false;
     if(q && !((id+' '+(ENT[id].display||'')).toLowerCase().includes(q)))return false;
+    for(const v of SEC_VERB_ORDER){ const f=secFilter[v]; if(f&&!f.includes(lvOf(id,v)))return false; }
     return true; });
-  const table=document.getElementById('sectable');
-  table.querySelector('thead').innerHTML='<tr><th>Table</th>'+SEC_VERB_ORDER.map(v=>`<th>${esc(SEC_VERB_LABEL[v])}</th>`).join('')+'</tr>';
-  const cell=(id,v)=>{ const lv=(role.priv[id]&&role.priv[id][v])||'none';
-    return `<td><span class="slvl ${lv}" title="${esc(SEC_VERB_LABEL[v])} — ${esc(SEC_LEVEL_FULL[lv])}">${esc(SEC_LEVEL_LABEL[lv])}</span></td>`; };
+  const dir=secSort.dir, key=secSort.key, val=key==='ent'?(id=>(ENT[id].display||id).toLowerCase()):(id=>SEC_LEVEL_RANK[lvOf(id,key)]);
+  rows.sort((a,b)=>{ const va=val(a),vb=val(b); if(va<vb)return -dir; if(va>vb)return dir; return (ENT[a].display||a).localeCompare(ENT[b].display||b); });
+  const table=document.getElementById('sectable'), arrow=k=>secSort.key===k?`<span class="arr">${secSort.dir>0?'▲':'▼'}</span>`:'';
+  const th=(k,label)=>`<th data-k="${k}" class="dth${secColActive(k)?' filtered':''}"><span class="dth-l" title="Click to sort">${esc(label)}${arrow(k)}</span><button class="dth-menu" title="Filter / sort" aria-label="Filter ${esc(label)}">${IC_DOTS}</button></th>`;
+  table.querySelector('thead').innerHTML='<tr>'+th('ent','Table')+SEC_VERB_ORDER.map(v=>th(v,SEC_VERB_LABEL[v])).join('')+'</tr>';
+  const cell=(id,v)=>{ const lv=lvOf(id,v), tip=`${SEC_VERB_LABEL[v]} — ${SEC_LEVEL_FULL[lv]}`;
+    return `<td title="${esc(tip)}">${secIcons?secPie(lv):`<span class="slvl ${lv}">${esc(SEC_LEVEL_LABEL[lv])}</span>`}</td>`; };
   table.querySelector('tbody').innerHTML = rows.length ? rows.map(id=>{ const e=ENT[id];
     return `<tr><td><div class="dt-ent"><span class="dot" style="background:var(${GVAR[e.group]})"></span><span class="sec-tname"><span class="en">${esc(e.display||id)}</span> <span class="el">${esc(id)}</span></span></div></td>`+
       SEC_VERB_ORDER.map(v=>cell(id,v)).join('')+`</tr>`; }).join('')
-    : `<tr><td colspan="${SEC_VERB_ORDER.length+1}"><div class="dict-empty">No tables match${only?' — the role has no table privileges, or none match the filter':''}.</div></td></tr>`;
+    : `<tr><td colspan="${SEC_VERB_ORDER.length+1}"><div class="dict-empty">No tables match these filters.</div></td></tr>`;
   document.getElementById('secCount').textContent=`${rows.length} table${rows.length===1?'':'s'}`;
-  document.getElementById('secLegend').innerHTML='Access &nbsp;'+SEC_LEVELS.filter(l=>l!=='none').map(l=>`<span class="lg"><span class="slvl ${l}">${esc(SEC_LEVEL_LABEL[l])}</span>${esc(SEC_LEVEL_FULL[l].replace(/ \(.*/,''))}</span>`).join('');
+  document.getElementById('secLegend').innerHTML='Access &nbsp;'+SEC_LEVELS.filter(l=>l!=='none').map(l=>`<span class="lg">${secIcons?secPie(l):`<span class="slvl ${l}">${esc(SEC_LEVEL_LABEL[l])}</span>`}${esc(SEC_LEVEL_FULL[l].replace(/ \(.*/,''))}</span>`).join('');
 }
 
 /* ---------- data dictionary ---------- */
