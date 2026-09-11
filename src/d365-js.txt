@@ -289,7 +289,7 @@ let gestureSeen=!!saved.gestureSeen;
 let labelsMode=['hover','always','never'].includes(saved.labelsMode)?saved.labelsMode:'hover';
 let pngScale=[2,3,4].includes(saved.pngScale)?saved.pngScale:2;
 let exportTitle=saved.exportTitle!==false;
-let view=['diagram','dict','settings','security'].includes(saved.view)?saved.view:'diagram';
+let view=['diagram','dict','settings','security','insights'].includes(saved.view)?saved.view:'diagram';
 if(view==='security'&&!HAS_SEC)view='diagram';
 
 /* data-dictionary column model (order / width / per-column filters, all persisted) */
@@ -1063,12 +1063,13 @@ window.addEventListener('dragleave',()=>{ dzc=Math.max(0,dzc-1); if(!dzc)dz.clas
 window.addEventListener('drop',e=>{ if(dz.classList.contains('on')){ e.preventDefault(); dzc=0; dz.classList.remove('on'); readFile(e.dataTransfer.files&&e.dataTransfer.files[0]); } });
 
 /* ---------- views ---------- */
-const VIEW_EL={diagram:'view-diagram',dict:'view-dict',security:'view-security',settings:'view-settings'};
+const VIEW_EL={diagram:'view-diagram',dict:'view-dict',security:'view-security',insights:'view-insights',settings:'view-settings'};
 function setView(v){ if(v==='security'&&!HAS_SEC)v='diagram'; view=v;
   document.querySelectorAll('#tabs .tab').forEach(t=>t.classList.toggle('on',t.dataset.view===v));
   for(const [k,id] of Object.entries(VIEW_EL))document.getElementById(id).classList.toggle('on',k===v);
   if(v==='dict'){ if(!dictBuilt)buildDict(); renderDict(); }
   else if(v==='security')renderSecurity();
+  else if(v==='insights')renderInsights();
   else if(v==='settings')syncSettings();
   else if(v==='diagram'){ requestAnimationFrame(()=>{ visible.forEach(id=>{ if(N[id])nodeMeasure(id); }); drawLinks(); if(pendingFit){ fit(); pendingFit=false; } applyMinimap(); }); }
   saveState();
@@ -1315,6 +1316,126 @@ function runSecExport(){
     saveExport(`d365-security-roles-${stamp}.xlsx`, bytes, `${sheets.length} sheet${sheets.length===1?'':'s'}`);
   }
 }
+
+/* ---------- insights / report ---------- */
+// One-pass aggregation of the parsed model into report-ready metrics. Recomputed
+// on each view entry so it always reflects the currently loaded schema.
+function computeInsights(){
+  let cols=0, custF=0, auditF=0, secF=0, reqF=0, withDisp=0, withDesc=0;
+  const typeCount={}, reqCount={}, perTable=[];
+  for(const id of allIds){
+    const e=ENT[id], n=e.attributes.length; cols+=n; perTable.push({id,n});
+    for(const a of e.attributes){
+      const t=(a.type||'—').trim()||'—'; typeCount[t]=(typeCount[t]||0)+1;
+      const rq=(a.required||'none').toLowerCase(); reqCount[rq]=(reqCount[rq]||0)+1;
+      if(rq==='required'||rq==='systemrequired'||rq==='applicationrequired')reqF++;
+      if(a.custom==='Yes')custF++;
+      if(a.audit==='Yes')auditF++;
+      if(a.secured==='Yes')secF++;
+      if(a.display&&a.display.trim())withDisp++;
+      if(a.desc&&a.desc.trim())withDesc++;
+    }
+  }
+  const custTables=allIds.filter(id=>ENT[id].group!=='__std');
+  // relationships by category (all parsed rels carry a .cat)
+  const relCat={}; for(const r of RELS)relCat[r.cat]=(relCat[r.cat]||0)+1;
+  const relType={}; for(const r of RELS)relType[r.type||'—']=(relType[r.type||'—']||0)+1;
+  const selfRefs=RELS.filter(r=>r.referenced===r.referencing).length;
+  // group (publisher-prefix) breakdown, largest first, mirroring GROUPS order
+  const byGroup=GROUPS.map(([pf,label])=>({pf,label,color:GVAR[pf],n:allIds.filter(id=>ENT[id].group===pf).length})).filter(g=>g.n>0);
+  const topBySize=perTable.slice().sort((a,b)=>b.n-a.n||(ENT[a.id].display||a.id).localeCompare(ENT[b.id].display||b.id)).slice(0,8);
+  const connected=allIds.map(id=>({id,n:bizCount[id]||0})).sort((a,b)=>b.n-a.n).filter(x=>x.n>0).slice(0,8);
+  const isolated=allIds.filter(id=>!bizCount[id]);
+  return {cols,custF,auditF,secF,reqF,withDisp,withDesc,typeCount,reqCount,relCat,relType,selfRefs,
+    byGroup,topBySize,connected,isolated,custTables};
+}
+const REQ_LABEL={none:'Optional',recommended:'Business recommended',required:'Business required',systemrequired:'System required',applicationrequired:'Application required'};
+function insBars(rows,total,fmt){ // rows: [{label,n,color?,dot?}]
+  const max=Math.max(1,...rows.map(r=>r.n));
+  return `<div class="bars">`+rows.map(r=>{
+    const w=Math.round((r.n/max)*100), col=r.color?`var(${r.color})`:'var(--accent)';
+    const dot=r.dot?`<span class="dot" style="background:${col}"></span>`:'';
+    const val=fmt?fmt(r.n):String(r.n);
+    return `<div class="bar-row"><span class="b-lbl">${dot}<span class="t" title="${esc(r.label)}">${esc(r.label)}</span></span>`+
+      `<span class="bar-track"><span class="bar-fill" style="width:${w}%;background:${col}"></span></span>`+
+      `<span class="b-val">${esc(val)}</span></div>`; }).join('')+`</div>`;
+}
+function insMeter(label,num,den,sub){ const pct=den?Math.round((num/den)*100):0;
+  return `<div class="meter"><div class="m-top"><span class="m-lbl">${esc(label)}</span><span class="m-pct">${pct}%</span></div>`+
+    `<div class="m-track"><span class="m-fill" style="width:${pct}%"></span></div>`+
+    `<div class="m-sub">${esc(sub||(num.toLocaleString()+' of '+den.toLocaleString()))}</div></div>`;
+}
+function insKpi(val,lbl,sub){ return `<div class="ins-kpi"><div class="k-val">${esc(String(val))}</div><div class="k-lbl">${esc(lbl)}</div>`+(sub?`<div class="k-sub">${esc(sub)}</div>`:'')+`</div>`; }
+let _lastInsights=null;
+function renderInsights(){
+  const body=document.getElementById('insightsBody'); if(!body)return;
+  const sub=document.getElementById('insightsSub');
+  const src=(importMeta&&importMeta.filename?importMeta.filename.replace(/\.xml$/i,''):'schema');
+  if(sub)sub.textContent=`${isImported?'Imported':'Sample'} schema · ${src} · generated ${new Date().toLocaleString()}`;
+  if(!allIds.length){ body.innerHTML=`<div class="ins-empty">No tables in this file.</div>`; return; }
+  const m=computeInsights(); _lastInsights=m;
+  const pct=(a,b)=>b?Math.round(a/b*100)+'%':'0%';
+  // KPI row
+  let kpis=insKpi(allIds.length.toLocaleString(),'Tables',`${m.custTables.length} custom · ${allIds.length-m.custTables.length} standard`)
+    +insKpi(m.cols.toLocaleString(),'Columns',`~${Math.round(m.cols/allIds.length)} per table`)
+    +insKpi(RELS.length.toLocaleString(),'Relationships',`${m.selfRefs} self-referencing`)
+    +insKpi(m.custF.toLocaleString(),'Custom fields',pct(m.custF,m.cols)+' of columns');
+  if(HAS_SEC)kpis+=insKpi((ROLES.length+FSPS.length).toLocaleString(),'Security',`${ROLES.length} roles · ${FSPS.length} field profiles`);
+  // relationship category rows (ordered by REL_CATS, then any extras)
+  const relRows=REL_CATS.filter(c=>m.relCat[c[0]]).map(c=>({label:c[1],n:m.relCat[c[0]],color:c[2],dot:true}));
+  // column type rows — top 10
+  const typeRows=Object.entries(m.typeCount).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([t,n])=>({label:t,n}));
+  // required-level rows in a sensible order
+  const reqOrder=['systemrequired','applicationrequired','required','recommended','none'];
+  const reqRows=reqOrder.filter(k=>m.reqCount[k]).map(k=>({label:REQ_LABEL[k]||k,n:m.reqCount[k]}));
+  const card=(title,note,inner,span)=>`<div class="ins-card${span?' span2':''}"><div class="ins-card-h"><h3>${esc(title)}</h3>${note?`<span class="h-note">${esc(note)}</span>`:''}</div><div class="ins-card-b">${inner}</div></div>`;
+  const listCard=(title,note,items)=>card(title,note,items.length?`<div class="ins-list">`+items.join('')+`</div>`:`<div class="m-sub">None.</div>`);
+  const li=(id,val,subtxt)=>`<div class="ins-li"><span class="li-dot" style="background:var(${GVAR[ENT[id].group]})"></span><span class="li-name" title="${esc(id)}">${esc(ENT[id].display||id)}</span>${subtxt?`<span class="li-sub">${esc(subtxt)}</span>`:''}<span class="li-val">${esc(String(val))}</span></div>`;
+  const grid=
+    card('Tables by publisher',`${m.byGroup.length} group${m.byGroup.length===1?'':'s'}`,insBars(m.byGroup.map(g=>({label:g.label,n:g.n,color:g.color,dot:true})),allIds.length))
+    +card('Relationships by category',`${RELS.length} total`,relRows.length?insBars(relRows,RELS.length):`<div class="m-sub">No relationships.</div>`)
+    +card('Columns by data type',`top ${typeRows.length}`,insBars(typeRows,m.cols))
+    +card('Columns by requirement level',null,reqRows.length?insBars(reqRows,m.cols):`<div class="m-sub">—</div>`)
+    +card('Metadata coverage',null,`<div class="meters">`+
+        insMeter('Columns with a display name',m.withDisp,m.cols)+
+        insMeter('Columns with a description',m.withDesc,m.cols)+
+        insMeter('Audit-enabled columns',m.auditF,m.cols)+
+        insMeter('Field-secured columns',m.secF,m.cols)+
+        insMeter('Required columns',m.reqF,m.cols)+`</div>`)
+    +listCard('Largest tables','by column count',m.topBySize.map(t=>li(t.id,t.n,null)))
+    +listCard('Most connected tables','business lookups',m.connected.map(t=>li(t.id,t.n,null)))
+    +card('Tables without business lookups',`${m.isolated.length} of ${allIds.length}`,
+        m.isolated.length?`<div class="ins-list">`+m.isolated.slice(0,8).map(id=>li(id,'—',null)).join('')+`</div>`+(m.isolated.length>8?`<p class="ins-note">+ ${m.isolated.length-8} more.</p>`:''):`<div class="m-sub">Every table has at least one business relationship.</div>`);
+  body.innerHTML=`<div class="ins-kpis">${kpis}</div><div class="ins-grid">${grid}</div>`+
+    `<p class="ins-note">Counts come from the metadata in this customizations.xml. A solution export usually contains only the tables and columns explicitly added to the solution, so this reflects the export — not necessarily the whole environment.</p>`;
+}
+function insightsCsv(){
+  const m=_lastInsights||computeInsights();
+  const rows=[['Metric','Value']];
+  rows.push(['Tables (total)',allIds.length]);
+  rows.push(['Tables (custom)',m.custTables.length]);
+  rows.push(['Tables (standard/system)',allIds.length-m.custTables.length]);
+  rows.push(['Columns (total)',m.cols]);
+  rows.push(['Columns (custom)',m.custF]);
+  rows.push(['Columns (audit-enabled)',m.auditF]);
+  rows.push(['Columns (field-secured)',m.secF]);
+  rows.push(['Columns (required)',m.reqF]);
+  rows.push(['Columns with display name',m.withDisp]);
+  rows.push(['Columns with description',m.withDesc]);
+  rows.push(['Relationships (total)',RELS.length]);
+  rows.push(['Relationships (self-referencing)',m.selfRefs]);
+  if(HAS_SEC){ rows.push(['Security roles',ROLES.length]); rows.push(['Field security profiles',FSPS.length]); }
+  rows.push([]);
+  rows.push(['Tables by publisher','']); for(const g of m.byGroup)rows.push([g.label,g.n]);
+  rows.push([]);
+  rows.push(['Relationships by category','']); for(const c of REL_CATS)if(m.relCat[c[0]])rows.push([c[1],m.relCat[c[0]]]);
+  rows.push([]);
+  rows.push(['Columns by data type','']); for(const [t,n] of Object.entries(m.typeCount).sort((a,b)=>b[1]-a[1]))rows.push([t,n]);
+  const stamp=new Date().toISOString().slice(0,10);
+  saveExport(`d365-insights-${stamp}.csv`, '﻿'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n'), `${rows.length} rows`);
+}
+{ const pb=document.getElementById('insPrint'); if(pb)pb.addEventListener('click',()=>window.print());
+  const cb=document.getElementById('insCsv'); if(cb)cb.addEventListener('click',insightsCsv); }
 
 /* ---------- data dictionary ---------- */
 let DICT=[], dictBuilt=false;
