@@ -2,11 +2,11 @@
 <ImportExportXml version="9.2.0.0" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <Entities>
     <Entity>
-      <Name LocalizedName="Company" OriginalName="Account">account</Name>
+      <Name LocalizedName="Account" OriginalName="Account">account</Name>
       <EntityInfo>
         <entity Name="account">
           <LocalizedNames>
-            <LocalizedName description="Company" languagecode="1033" />
+            <LocalizedName description="Account" languagecode="1033" />
           </LocalizedNames>
           <attributes>
             <attribute PhysicalName="AccountId">
@@ -35,17 +35,33 @@
               <displaynames>
                 <displayname description="Primary Contact" languagecode="1033" />
               </displaynames>
-            </attribute>
-            <attribute PhysicalName="cff_IndustryId">
-              <Type>lookup</Type>
-              <LogicalName>cff_industryid</LogicalName>
-              <RequiredLevel>recommended</RequiredLevel>
-              <displaynames>
-                <displayname description="Industry" languagecode="1033" />
-              </displaynames>
               <Descriptions>
-                <Description description="Industry classification for the company." languagecode="1033" />
+                <Description description="The primary contact for the account." languagecode="1033" />
               </Descriptions>
+            </attribute>
+            <attribute PhysicalName="ParentAccountId">
+              <Type>lookup</Type>
+              <LogicalName>parentaccountid</LogicalName>
+              <RequiredLevel>none</RequiredLevel>
+              <displaynames>
+                <displayname description="Parent Account" languagecode="1033" />
+              </displaynames>
+            </attribute>
+            <attribute PhysicalName="Revenue">
+              <Type>money</Type>
+              <LogicalName>revenue</LogicalName>
+              <RequiredLevel>none</RequiredLevel>
+              <displaynames>
+                <displayname description="Annual Revenue" languagecode="1033" />
+              </displaynames>
+            </attribute>
+            <attribute PhysicalName="OwningBusinessUnit">
+              <Type>lookup</Type>
+              <LogicalName>owningbusinessunit</LogicalName>
+              <RequiredLevel>none</RequiredLevel>
+              <displaynames>
+                <displayname description="Owning Business Unit" languagecode="1033" />
+              </displaynames>
             </attribute>
             <attribute PhysicalName="OwnerId">
               <Type>owner</Type>
@@ -73,11 +89,17 @@
           <ReferencedEntityName>account</ReferencedEntityName>
           <ReferencingAttributeName>parentcustomerid</ReferencingAttributeName>
         </EntityRelationship>
-        <EntityRelationship Name="account_cff_projects">
+        <EntityRelationship Name="account_parent_account">
           <EntityRelationshipType>OneToMany</EntityRelationshipType>
-          <ReferencingEntityName>cff_project</ReferencingEntityName>
+          <ReferencingEntityName>account</ReferencingEntityName>
           <ReferencedEntityName>account</ReferencedEntityName>
-          <ReferencingAttributeName>cff_companyid</ReferencingAttributeName>
+          <ReferencingAttributeName>parentaccountid</ReferencingAttributeName>
+        </EntityRelationship>
+        <EntityRelationship Name="account_primary_contact">
+          <EntityRelationshipType>OneToMany</EntityRelationshipType>
+          <ReferencingEntityName>account</ReferencingEntityName>
+          <ReferencedEntityName>contact</ReferencedEntityName>
+          <ReferencingAttributeName>primarycontactid</ReferencingAttributeName>
         </EntityRelationship>
       </EntityRelationships>
     </Entity>
@@ -98,6 +120,12 @@
               <LogicalName>fullname</LogicalName>
               <RequiredLevel>none</RequiredLevel>
               <displaynames><displayname description="Full Name" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="EMailAddress1">
+              <Type>nvarchar</Type>
+              <LogicalName>emailaddress1</LogicalName>
+              <RequiredLevel>none</RequiredLevel>
+              <displaynames><displayname description="Email" languagecode="1033" /></displaynames>
             </attribute>
             <attribute PhysicalName="ParentCustomerId">
               <Type>customer</Type>
@@ -133,46 +161,142 @@
               <RequiredLevel>none</RequiredLevel>
               <displaynames><displayname description="Full Name" languagecode="1033" /></displaynames>
             </attribute>
+            <attribute PhysicalName="InternalEMailAddress">
+              <Type>nvarchar</Type>
+              <LogicalName>internalemailaddress</LogicalName>
+              <RequiredLevel>none</RequiredLevel>
+              <displaynames><displayname description="Primary Email" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="BusinessUnitId">
+              <Type>lookup</Type>
+              <LogicalName>businessunitid</LogicalName>
+              <RequiredLevel>systemrequired</RequiredLevel>
+              <displaynames><displayname description="Business Unit" languagecode="1033" /></displaynames>
+            </attribute>
+          </attributes>
+        </entity>
+      </EntityInfo>
+      <EntityRelationships>
+        <EntityRelationship Name="business_unit_users">
+          <EntityRelationshipType>OneToMany</EntityRelationshipType>
+          <ReferencingEntityName>systemuser</ReferencingEntityName>
+          <ReferencedEntityName>businessunit</ReferencedEntityName>
+          <ReferencingAttributeName>businessunitid</ReferencingAttributeName>
+        </EntityRelationship>
+      </EntityRelationships>
+    </Entity>
+
+    <Entity>
+      <Name LocalizedName="Business Unit" OriginalName="Business Unit">businessunit</Name>
+      <EntityInfo>
+        <entity Name="businessunit">
+          <attributes>
+            <attribute PhysicalName="BusinessUnitId">
+              <Type>primarykey</Type>
+              <LogicalName>businessunitid</LogicalName>
+              <RequiredLevel>systemrequired</RequiredLevel>
+              <displaynames><displayname description="Business Unit" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="Name">
+              <Type>nvarchar</Type>
+              <LogicalName>name</LogicalName>
+              <RequiredLevel>applicationrequired</RequiredLevel>
+              <displaynames><displayname description="Name" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="ParentBusinessUnitId">
+              <Type>lookup</Type>
+              <LogicalName>parentbusinessunitid</LogicalName>
+              <RequiredLevel>none</RequiredLevel>
+              <displaynames><displayname description="Parent Business Unit" languagecode="1033" /></displaynames>
+            </attribute>
+          </attributes>
+        </entity>
+      </EntityInfo>
+      <EntityRelationships>
+        <EntityRelationship Name="businessunit_parent_businessunit">
+          <EntityRelationshipType>OneToMany</EntityRelationshipType>
+          <ReferencingEntityName>businessunit</ReferencingEntityName>
+          <ReferencedEntityName>businessunit</ReferencedEntityName>
+          <ReferencingAttributeName>parentbusinessunitid</ReferencingAttributeName>
+        </EntityRelationship>
+      </EntityRelationships>
+    </Entity>
+
+    <Entity>
+      <Name LocalizedName="Lead" OriginalName="Lead">lead</Name>
+      <EntityInfo>
+        <entity Name="lead">
+          <attributes>
+            <attribute PhysicalName="LeadId">
+              <Type>primarykey</Type>
+              <LogicalName>leadid</LogicalName>
+              <RequiredLevel>systemrequired</RequiredLevel>
+              <displaynames><displayname description="Lead" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="Subject">
+              <Type>nvarchar</Type>
+              <LogicalName>subject</LogicalName>
+              <RequiredLevel>applicationrequired</RequiredLevel>
+              <displaynames><displayname description="Topic" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="CompanyName">
+              <Type>nvarchar</Type>
+              <LogicalName>companyname</LogicalName>
+              <RequiredLevel>none</RequiredLevel>
+              <displaynames><displayname description="Company Name" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="OwnerId">
+              <Type>owner</Type>
+              <LogicalName>ownerid</LogicalName>
+              <RequiredLevel>systemrequired</RequiredLevel>
+              <displaynames><displayname description="Owner" languagecode="1033" /></displaynames>
+            </attribute>
           </attributes>
         </entity>
       </EntityInfo>
     </Entity>
 
     <Entity>
-      <Name LocalizedName="Project" OriginalName="cff_project">cff_project</Name>
+      <Name LocalizedName="Opportunity" OriginalName="Opportunity">opportunity</Name>
       <EntityInfo>
-        <entity Name="cff_project">
+        <entity Name="opportunity">
           <attributes>
-            <attribute PhysicalName="cff_projectId">
+            <attribute PhysicalName="OpportunityId">
               <Type>primarykey</Type>
-              <LogicalName>cff_projectid</LogicalName>
+              <LogicalName>opportunityid</LogicalName>
               <RequiredLevel>systemrequired</RequiredLevel>
-              <displaynames><displayname description="Project" languagecode="1033" /></displaynames>
+              <displaynames><displayname description="Opportunity" languagecode="1033" /></displaynames>
             </attribute>
-            <attribute PhysicalName="cff_name">
+            <attribute PhysicalName="Name">
               <Type>nvarchar</Type>
-              <LogicalName>cff_name</LogicalName>
+              <LogicalName>name</LogicalName>
               <RequiredLevel>applicationrequired</RequiredLevel>
-              <displaynames><displayname description="Project Name" languagecode="1033" /></displaynames>
+              <displaynames><displayname description="Topic" languagecode="1033" /></displaynames>
             </attribute>
-            <attribute PhysicalName="cff_CompanyId">
+            <attribute PhysicalName="ParentAccountId">
               <Type>lookup</Type>
-              <LogicalName>cff_companyid</LogicalName>
-              <RequiredLevel>applicationrequired</RequiredLevel>
-              <displaynames><displayname description="Company" languagecode="1033" /></displaynames>
-              <Descriptions><Description description="The company this project belongs to." languagecode="1033" /></Descriptions>
-            </attribute>
-            <attribute PhysicalName="cff_LeadContactId">
-              <Type>lookup</Type>
-              <LogicalName>cff_leadcontactid</LogicalName>
+              <LogicalName>parentaccountid</LogicalName>
               <RequiredLevel>none</RequiredLevel>
-              <displaynames><displayname description="Lead Contact" languagecode="1033" /></displaynames>
+              <displaynames><displayname description="Account" languagecode="1033" /></displaynames>
+              <Descriptions><Description description="The account this opportunity is for." languagecode="1033" /></Descriptions>
             </attribute>
-            <attribute PhysicalName="cff_StageId">
+            <attribute PhysicalName="ParentContactId">
               <Type>lookup</Type>
-              <LogicalName>cff_stageid</LogicalName>
+              <LogicalName>parentcontactid</LogicalName>
               <RequiredLevel>none</RequiredLevel>
-              <displaynames><displayname description="Stage" languagecode="1033" /></displaynames>
+              <displaynames><displayname description="Contact" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="OriginatingLeadId">
+              <Type>lookup</Type>
+              <LogicalName>originatingleadid</LogicalName>
+              <RequiredLevel>none</RequiredLevel>
+              <displaynames><displayname description="Originating Lead" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="EstimatedValue">
+              <Type>money</Type>
+              <LogicalName>estimatedvalue</LogicalName>
+              <RequiredLevel>none</RequiredLevel>
+              <displaynames><displayname description="Est. Revenue" languagecode="1033" /></displaynames>
             </attribute>
             <attribute PhysicalName="OwnerId">
               <Type>owner</Type>
@@ -184,91 +308,116 @@
         </entity>
       </EntityInfo>
       <EntityRelationships>
-        <EntityRelationship Name="contact_cff_project_lead">
+        <EntityRelationship Name="opportunity_parent_account">
           <EntityRelationshipType>OneToMany</EntityRelationshipType>
-          <ReferencingEntityName>cff_project</ReferencingEntityName>
+          <ReferencingEntityName>opportunity</ReferencingEntityName>
+          <ReferencedEntityName>account</ReferencedEntityName>
+          <ReferencingAttributeName>parentaccountid</ReferencingAttributeName>
+        </EntityRelationship>
+        <EntityRelationship Name="opportunity_parent_contact">
+          <EntityRelationshipType>OneToMany</EntityRelationshipType>
+          <ReferencingEntityName>opportunity</ReferencingEntityName>
           <ReferencedEntityName>contact</ReferencedEntityName>
-          <ReferencingAttributeName>cff_leadcontactid</ReferencingAttributeName>
+          <ReferencingAttributeName>parentcontactid</ReferencingAttributeName>
         </EntityRelationship>
-        <EntityRelationship Name="cff_stage_cff_project">
+        <EntityRelationship Name="lead_originating_opportunities">
           <EntityRelationshipType>OneToMany</EntityRelationshipType>
-          <ReferencingEntityName>cff_project</ReferencingEntityName>
-          <ReferencedEntityName>cff_stage</ReferencedEntityName>
-          <ReferencingAttributeName>cff_stageid</ReferencingAttributeName>
+          <ReferencingEntityName>opportunity</ReferencingEntityName>
+          <ReferencedEntityName>lead</ReferencedEntityName>
+          <ReferencingAttributeName>originatingleadid</ReferencingAttributeName>
         </EntityRelationship>
-        <EntityRelationship Name="user_owns_cff_project">
+        <EntityRelationship Name="user_owns_opportunities">
           <EntityRelationshipType>OneToMany</EntityRelationshipType>
-          <ReferencingEntityName>cff_project</ReferencingEntityName>
+          <ReferencingEntityName>opportunity</ReferencingEntityName>
           <ReferencedEntityName>systemuser</ReferencedEntityName>
           <ReferencingAttributeName>ownerid</ReferencingAttributeName>
         </EntityRelationship>
-        <EntityRelationship Name="cff_project_cff_projecttask">
-          <EntityRelationshipType>OneToMany</EntityRelationshipType>
-          <ReferencingEntityName>cff_projecttask</ReferencingEntityName>
-          <ReferencedEntityName>cff_project</ReferencedEntityName>
-          <ReferencingAttributeName>cff_projectid</ReferencingAttributeName>
-        </EntityRelationship>
       </EntityRelationships>
     </Entity>
 
     <Entity>
-      <Name LocalizedName="Project Task" OriginalName="cff_projecttask">cff_projecttask</Name>
+      <Name LocalizedName="Case" OriginalName="Case">incident</Name>
       <EntityInfo>
-        <entity Name="cff_projecttask">
+        <entity Name="incident">
           <attributes>
-            <attribute PhysicalName="cff_projecttaskId">
+            <attribute PhysicalName="IncidentId">
               <Type>primarykey</Type>
-              <LogicalName>cff_projecttaskid</LogicalName>
+              <LogicalName>incidentid</LogicalName>
               <RequiredLevel>systemrequired</RequiredLevel>
-              <displaynames><displayname description="Project Task" languagecode="1033" /></displaynames>
+              <displaynames><displayname description="Case" languagecode="1033" /></displaynames>
             </attribute>
-            <attribute PhysicalName="cff_subject">
+            <attribute PhysicalName="Title">
               <Type>nvarchar</Type>
-              <LogicalName>cff_subject</LogicalName>
+              <LogicalName>title</LogicalName>
               <RequiredLevel>applicationrequired</RequiredLevel>
-              <displaynames><displayname description="Subject" languagecode="1033" /></displaynames>
+              <displaynames><displayname description="Case Title" languagecode="1033" /></displaynames>
             </attribute>
-            <attribute PhysicalName="cff_ProjectId">
-              <Type>lookup</Type>
-              <LogicalName>cff_projectid</LogicalName>
+            <attribute PhysicalName="CustomerId">
+              <Type>customer</Type>
+              <LogicalName>customerid</LogicalName>
               <RequiredLevel>applicationrequired</RequiredLevel>
-              <displaynames><displayname description="Project" languagecode="1033" /></displaynames>
+              <displaynames><displayname description="Customer" languagecode="1033" /></displaynames>
+              <Descriptions><Description description="The account the case is for." languagecode="1033" /></Descriptions>
             </attribute>
-            <attribute PhysicalName="cff_AssignedToId">
+            <attribute PhysicalName="PrimaryContactId">
               <Type>lookup</Type>
-              <LogicalName>cff_assignedtoid</LogicalName>
+              <LogicalName>primarycontactid</LogicalName>
               <RequiredLevel>none</RequiredLevel>
-              <displaynames><displayname description="Assigned To" languagecode="1033" /></displaynames>
+              <displaynames><displayname description="Contact" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="OwnerId">
+              <Type>owner</Type>
+              <LogicalName>ownerid</LogicalName>
+              <RequiredLevel>systemrequired</RequiredLevel>
+              <displaynames><displayname description="Owner" languagecode="1033" /></displaynames>
             </attribute>
           </attributes>
         </entity>
       </EntityInfo>
       <EntityRelationships>
-        <EntityRelationship Name="user_cff_projecttask_assignee">
+        <EntityRelationship Name="incident_customer_accounts">
           <EntityRelationshipType>OneToMany</EntityRelationshipType>
-          <ReferencingEntityName>cff_projecttask</ReferencingEntityName>
-          <ReferencedEntityName>systemuser</ReferencedEntityName>
-          <ReferencingAttributeName>cff_assignedtoid</ReferencingAttributeName>
+          <ReferencingEntityName>incident</ReferencingEntityName>
+          <ReferencedEntityName>account</ReferencedEntityName>
+          <ReferencingAttributeName>customerid</ReferencingAttributeName>
+        </EntityRelationship>
+        <EntityRelationship Name="incident_primary_contact">
+          <EntityRelationshipType>OneToMany</EntityRelationshipType>
+          <ReferencingEntityName>incident</ReferencingEntityName>
+          <ReferencedEntityName>contact</ReferencedEntityName>
+          <ReferencingAttributeName>primarycontactid</ReferencingAttributeName>
         </EntityRelationship>
       </EntityRelationships>
     </Entity>
 
     <Entity>
-      <Name LocalizedName="Stage" OriginalName="cff_stage">cff_stage</Name>
+      <Name LocalizedName="Product" OriginalName="Product">product</Name>
       <EntityInfo>
-        <entity Name="cff_stage">
+        <entity Name="product">
           <attributes>
-            <attribute PhysicalName="cff_stageId">
+            <attribute PhysicalName="ProductId">
               <Type>primarykey</Type>
-              <LogicalName>cff_stageid</LogicalName>
+              <LogicalName>productid</LogicalName>
               <RequiredLevel>systemrequired</RequiredLevel>
-              <displaynames><displayname description="Stage" languagecode="1033" /></displaynames>
+              <displaynames><displayname description="Product" languagecode="1033" /></displaynames>
             </attribute>
-            <attribute PhysicalName="cff_name">
+            <attribute PhysicalName="Name">
               <Type>nvarchar</Type>
-              <LogicalName>cff_name</LogicalName>
+              <LogicalName>name</LogicalName>
               <RequiredLevel>applicationrequired</RequiredLevel>
               <displaynames><displayname description="Name" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="ProductNumber">
+              <Type>nvarchar</Type>
+              <LogicalName>productnumber</LogicalName>
+              <RequiredLevel>applicationrequired</RequiredLevel>
+              <displaynames><displayname description="Product ID" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="Price">
+              <Type>money</Type>
+              <LogicalName>price</LogicalName>
+              <RequiredLevel>none</RequiredLevel>
+              <displaynames><displayname description="List Price" languagecode="1033" /></displaynames>
             </attribute>
           </attributes>
         </entity>
@@ -276,31 +425,49 @@
     </Entity>
 
     <Entity>
-      <Name LocalizedName="Industry" OriginalName="cff_industry">cff_industry</Name>
+      <Name LocalizedName="Opportunity Product" OriginalName="Opportunity Product">opportunityproduct</Name>
       <EntityInfo>
-        <entity Name="cff_industry">
+        <entity Name="opportunityproduct">
           <attributes>
-            <attribute PhysicalName="cff_industryId">
+            <attribute PhysicalName="OpportunityProductId">
               <Type>primarykey</Type>
-              <LogicalName>cff_industryid</LogicalName>
+              <LogicalName>opportunityproductid</LogicalName>
               <RequiredLevel>systemrequired</RequiredLevel>
-              <displaynames><displayname description="Industry" languagecode="1033" /></displaynames>
+              <displaynames><displayname description="Opportunity Product" languagecode="1033" /></displaynames>
             </attribute>
-            <attribute PhysicalName="cff_name">
-              <Type>nvarchar</Type>
-              <LogicalName>cff_name</LogicalName>
+            <attribute PhysicalName="OpportunityId">
+              <Type>lookup</Type>
+              <LogicalName>opportunityid</LogicalName>
               <RequiredLevel>applicationrequired</RequiredLevel>
-              <displaynames><displayname description="Name" languagecode="1033" /></displaynames>
+              <displaynames><displayname description="Opportunity" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="ProductId">
+              <Type>lookup</Type>
+              <LogicalName>productid</LogicalName>
+              <RequiredLevel>applicationrequired</RequiredLevel>
+              <displaynames><displayname description="Product" languagecode="1033" /></displaynames>
+            </attribute>
+            <attribute PhysicalName="Quantity">
+              <Type>decimal</Type>
+              <LogicalName>quantity</LogicalName>
+              <RequiredLevel>applicationrequired</RequiredLevel>
+              <displaynames><displayname description="Quantity" languagecode="1033" /></displaynames>
             </attribute>
           </attributes>
         </entity>
       </EntityInfo>
       <EntityRelationships>
-        <EntityRelationship Name="cff_industry_account">
+        <EntityRelationship Name="opportunity_opportunityproducts">
           <EntityRelationshipType>OneToMany</EntityRelationshipType>
-          <ReferencingEntityName>account</ReferencingEntityName>
-          <ReferencedEntityName>cff_industry</ReferencedEntityName>
-          <ReferencingAttributeName>cff_industryid</ReferencingAttributeName>
+          <ReferencingEntityName>opportunityproduct</ReferencingEntityName>
+          <ReferencedEntityName>opportunity</ReferencedEntityName>
+          <ReferencingAttributeName>opportunityid</ReferencingAttributeName>
+        </EntityRelationship>
+        <EntityRelationship Name="product_opportunityproducts">
+          <EntityRelationshipType>OneToMany</EntityRelationshipType>
+          <ReferencingEntityName>opportunityproduct</ReferencingEntityName>
+          <ReferencedEntityName>product</ReferencedEntityName>
+          <ReferencingAttributeName>productid</ReferencingAttributeName>
         </EntityRelationship>
       </EntityRelationships>
     </Entity>
