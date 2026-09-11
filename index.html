@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-xnebzJVsx9M/JBaf5b0SNs3+X7aYW9eLQSk0f5mloFQ='; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-t+Cxl9GM5YjM290rX7hSkZIN6/CC6N7LUBRDvB6IZd0='; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <title>D365 ERD Builder</title>
 <meta name="description" content="Turn a Dynamics 365 / Dataverse customizations.xml into an interactive entity-relationship diagram — entirely in your browser. Explore tables and lookups, then export to PNG, SVG, CSV, or Excel. Nothing is uploaded.">
 <link rel="canonical" href="https://d365-erd-builder-five.vercel.app/">
@@ -692,6 +692,8 @@ body.col-resizing{cursor:col-resize;user-select:none}
 .bar-track{position:relative;height:9px;border-radius:5px;background:var(--surface-2);overflow:hidden}
 .bar-fill{position:absolute;inset:0 auto 0 0;border-radius:5px;background:var(--accent);min-width:2px}
 .bar-row .b-val{font-family:var(--font-mono);font-size:11.5px;color:var(--muted);text-align:right;min-width:26px}
+/* notation legend card */
+.ins-nota{display:flex;flex-direction:column;gap:9px}
 /* meters (data quality) */
 .meters{display:flex;flex-direction:column;gap:12px}
 .meter .m-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:5px}
@@ -736,7 +738,7 @@ body.col-resizing{cursor:col-resize;user-select:none}
     <div id="landing-msg" class="landing-msg" hidden></div>
     <div class="lnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6z"/></svg><span>Your file never leaves your browser — parsing and rendering happen entirely on this page. To get the XML: export a solution containing your tables from Power&nbsp;Apps, unzip it, and use the <span class="amono">customizations.xml</span> inside. <a href="PRIVACY.md" target="_blank" rel="noopener">How your data is handled →</a></span></div>
     <a href="#" id="lsample" class="lsample">Explore a sample schema instead →</a>
-    <div class="lver">D365 ERD Builder v2.27.0</div>
+    <div class="lver">D365 ERD Builder v2.28.0</div>
   </div>
 </section>
 <input type="file" id="landing-file" accept=".xml,application/xml,text/xml" hidden>
@@ -1512,7 +1514,7 @@ body.col-resizing{cursor:col-resize;user-select:none}
     <section id="view-settings" class="view">
       <div class="panel settings-panel">
         <div class="settings-inner">
-          <div class="settings-head"><h1 class="settings-title">Settings</h1><span class="settings-ver">D365 ERD Builder <b>v2.27.0</b> · <a href="CHANGELOG.md" target="_blank" rel="noopener">changelog</a></span></div>
+          <div class="settings-head"><h1 class="settings-title">Settings</h1><span class="settings-ver">D365 ERD Builder <b>v2.28.0</b> · <a href="CHANGELOG.md" target="_blank" rel="noopener">changelog</a></span></div>
           <p class="settings-sub">Preferences are saved in this browser only. They control how the diagram, dictionary, and exports behave.</p>
 
           <div class="scard">
@@ -2476,7 +2478,7 @@ async function doExport(kind){
 }
 
 /* ---------- status / theme ---------- */
-const APP_VERSION='2.27.0';
+const APP_VERSION='2.28.0';
 function updateStatus(ec){ document.getElementById('status').textContent=`${visible.size} of ${allIds.length} tables · ${ec} relationships shown`; }
 const themebtn=document.getElementById('themebtn');
 const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
@@ -3020,6 +3022,9 @@ function renderInsights(){
   const grid=
     card('Tables by publisher',`${m.byGroup.length} group${m.byGroup.length===1?'':'s'}`,insBars(m.byGroup.map(g=>({label:g.label,n:g.n,color:g.color,dot:true})),allIds.length))
     +card('Relationships by category',`${RELS.length} total`,relRows.length?insBars(relRows,RELS.length):`<div class="m-sub">No relationships.</div>`)
+    +card('Relationship notation',legendRows().title,(function(){ const L=legendRows();
+        return `<div class="ins-nota">`+L.rows.map(([k,t])=>`<div class="nl-row">${legendGlyph(k)}<span class="t">${t}</span></div>`).join('')+`</div>`
+          +`<p class="ins-note">Line colour = relationship type (above). ${esc(L.note)}</p>`; })())
     +card('Columns by data type',`top ${typeRows.length}`,insBars(typeRows,m.cols))
     +card('Columns by requirement level',null,reqRows.length?insBars(reqRows,m.cols):`<div class="m-sub">—</div>`)
     +card('Metadata coverage',null,`<div class="meters">`+
@@ -3055,6 +3060,8 @@ function insightsCsv(){
   rows.push(['Tables by publisher','']); for(const g of m.byGroup)rows.push([g.label,g.n]);
   rows.push([]);
   rows.push(['Relationships by category','']); for(const c of REL_CATS)if(m.relCat[c[0]])rows.push([c[1],m.relCat[c[0]]]);
+  rows.push([]);
+  { const L=legendRows(); rows.push(['Relationship notation',L.title]); for(const [,t] of L.rows)rows.push(['',t.replace(/<[^>]+>/g,'')]); }
   rows.push([]);
   rows.push(['Columns by data type','']); for(const [t,n] of Object.entries(m.typeCount).sort((a,b)=>b[1]-a[1]))rows.push([t,n]);
   const stamp=new Date().toISOString().slice(0,10);

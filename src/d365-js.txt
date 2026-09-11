@@ -1448,6 +1448,9 @@ function renderInsights(){
   const grid=
     card('Tables by publisher',`${m.byGroup.length} group${m.byGroup.length===1?'':'s'}`,insBars(m.byGroup.map(g=>({label:g.label,n:g.n,color:g.color,dot:true})),allIds.length))
     +card('Relationships by category',`${RELS.length} total`,relRows.length?insBars(relRows,RELS.length):`<div class="m-sub">No relationships.</div>`)
+    +card('Relationship notation',legendRows().title,(function(){ const L=legendRows();
+        return `<div class="ins-nota">`+L.rows.map(([k,t])=>`<div class="nl-row">${legendGlyph(k)}<span class="t">${t}</span></div>`).join('')+`</div>`
+          +`<p class="ins-note">Line colour = relationship type (above). ${esc(L.note)}</p>`; })())
     +card('Columns by data type',`top ${typeRows.length}`,insBars(typeRows,m.cols))
     +card('Columns by requirement level',null,reqRows.length?insBars(reqRows,m.cols):`<div class="m-sub">—</div>`)
     +card('Metadata coverage',null,`<div class="meters">`+
@@ -1483,6 +1486,8 @@ function insightsCsv(){
   rows.push(['Tables by publisher','']); for(const g of m.byGroup)rows.push([g.label,g.n]);
   rows.push([]);
   rows.push(['Relationships by category','']); for(const c of REL_CATS)if(m.relCat[c[0]])rows.push([c[1],m.relCat[c[0]]]);
+  rows.push([]);
+  { const L=legendRows(); rows.push(['Relationship notation',L.title]); for(const [,t] of L.rows)rows.push(['',t.replace(/<[^>]+>/g,'')]); }
   rows.push([]);
   rows.push(['Columns by data type','']); for(const [t,n] of Object.entries(m.typeCount).sort((a,b)=>b[1]-a[1]))rows.push([t,n]);
   const stamp=new Date().toISOString().slice(0,10);
