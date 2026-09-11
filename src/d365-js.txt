@@ -240,7 +240,8 @@ function saveState(){ try{ localStorage.setItem(LS, JSON.stringify({
   ribbonCollapsed, minimapCollapsed, mmPos, gestureSeen, dcolOrder, dcolW, dcolF, dcolHidden:[...dcolHidden],
   dsort, exportOpts, dVis:!!(document.getElementById('dVis')||{}).checked, dq:(document.getElementById('dq')||{}).value||'',
   secRole:(document.getElementById('secRole')||{}).value||'', secOnly:!(document.getElementById('secOnly'))||!!document.getElementById('secOnly').checked,
-  secSort, secFilter, secIcons, secEntFilter, secExportOpts, secMode, secVerb, secCompareRoles, secSection, secFsProfile
+  secSort, secFilter, secIcons, secEntFilter, secExportOpts, secMode, secVerb, secCompareRoles, secSection, secFsProfile,
+  secQ:(document.getElementById('secQ')||{}).value||''
 })); }catch(e){} }
 const saved=loadState();
 // security page state (declared here so saveState — defined above — never hits their TDZ)
@@ -1120,7 +1121,8 @@ function initSecurity(){ if(secInited||!HAS_SEC)return; secInited=true;
   const only=document.getElementById('secOnly'); if(only&&saved.secOnly===false)only.checked=false;
   const icons=document.getElementById('secIcons'); if(icons){ icons.checked=secIcons; icons.addEventListener('change',()=>{ secIcons=icons.checked; renderSecurity(); saveState(); }); }
   sel.addEventListener('change',()=>{ renderSecurity(); saveState(); });
-  document.getElementById('secQ').addEventListener('input',renderSecurity);
+  const secq=document.getElementById('secQ'); if(secq&&typeof saved.secQ==='string')secq.value=saved.secQ;
+  if(secq)secq.addEventListener('input',()=>{ renderSecurity(); saveState(); });
   if(only)only.addEventListener('change',()=>{ renderSecurity(); saveState(); });
   const exp=document.getElementById('secExport'); if(exp)exp.addEventListener('click',openSecExportDialog);
   // role-comparison controls
