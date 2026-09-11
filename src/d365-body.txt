@@ -150,7 +150,7 @@
     <section id="view-settings" class="view">
       <div class="panel settings-panel">
         <div class="settings-inner">
-          <h1 class="settings-title">Settings</h1>
+          <div class="settings-head"><h1 class="settings-title">Settings</h1><span class="settings-ver">D365 ERD Builder <b>v__APP_VERSION__</b> · <a href="CHANGELOG.md" target="_blank" rel="noopener">changelog</a></span></div>
           <p class="settings-sub">Preferences are saved in this browser only. They control how the diagram, dictionary, and exports behave.</p>
 
           <div class="scard">
