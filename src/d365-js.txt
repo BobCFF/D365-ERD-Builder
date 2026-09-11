@@ -599,7 +599,7 @@ function buildEdges(edges){
   }
   const selfSeen={};
   for(const r of selfs){ const a=N[r.referencing]; const idx=(selfSeen[r.referenced]=(selfSeen[r.referenced]||0)+1)-1;
-    const x=a.x+a.w,y=a.y+a.h*0.5,off=30+idx*18, p1=[x,y-11],p2=[x,y+11], c1=[x+off,y-off],c2=[x+off,y+off];
+    const x=a.x+a.w,y=a.y+a.h*0.5,off=46+idx*24, p1=[x,y-15],p2=[x,y+15], c1=[x+off,y-off],c2=[x+off,y+off];
     const [s1,s2]=insetEnds(p1,c1,p2,c2,r.mandatory);
     const d=`M${s1[0]},${s1[1]} C${c1[0]},${c1[1]} ${c2[0]},${c2[1]} ${s2[0]},${s2[1]}`;
     out.push({r,d,p1:s1,p2:s2,star:cpt(s1,c1,c2,s2,0.22),one:cpt(s1,c1,c2,s2,0.78),mid:cpt(s1,c1,c2,s2,0.5)}); }
