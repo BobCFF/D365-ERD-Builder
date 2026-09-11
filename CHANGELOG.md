@@ -7,6 +7,20 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.17.0] — 2026-09-11
+
+### Added
+- **The per-table Data Dictionary dialog is now the full grid.** Opening a
+  table's **Data dictionary…** from its card menu gives the same column controls
+  as the main Data Dictionary tab: click a heading to **sort**, use each
+  column's **⋯** to **filter**, **drag** a heading to reorder, drag its right
+  edge to **resize** (double-click to reset), and a **Columns** button to add
+  the optional **metadata columns** (max length, required, audit enabled, …)
+  when the file carries them. Column layout, sort, and filters are shared with
+  the main tab, so the dialog is simply that dictionary focused on one table
+  (its redundant *Table* column is hidden). A **Clear filters** button and the
+  live column count round out the toolbar.
+
 ## [2.16.5] — 2026-09-10
 
 ### Changed

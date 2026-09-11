@@ -139,7 +139,7 @@
         </div>
         <div class="dict-hint">Click a column's <b>⋯</b> to filter · drag a heading to reorder · drag its right edge to resize.</div>
         <div class="dict-scroll">
-          <table id="dicttable"><colgroup></colgroup><thead></thead><tbody id="dictbody"></tbody></table>
+          <table id="dicttable" class="dgrid"><colgroup></colgroup><thead></thead><tbody id="dictbody"></tbody></table>
         </div>
         <div id="dmenu" class="dmenu" hidden></div>
         <div id="dcolsmenu" class="dmenu" hidden></div>

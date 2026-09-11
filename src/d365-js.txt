@@ -1012,34 +1012,38 @@ function dcolActive(k){ const f=dcolF[k]; switch(DCOLDEF[k].filter){
   case 'textblank': return !!(f.q||f.has);
   case 'multi': return !!f.sel.length;
   case 'tri': case 'keysel': case 'boolsel': return !!f.mode; } return false; }
-function dictFiltered(){
-  const q=document.getElementById('dq').value.trim().toLowerCase();
-  const visOnly=document.getElementById('dVis').checked, F=dcolF;
-  const rows=DICT.filter(d=>{
-    if(visOnly&&!visible.has(d.ent))return false;
+// per-column filters (shared dcolF) — used by the main tab and the per-entity dialog
+function colPass(d,skipEnt){ const F=dcolF;
+  if(!skipEnt){ // the per-table dialog hides the Table column, so its filter doesn't apply there
     if(F.ent.groups.length&&!F.ent.groups.includes(d.group))return false;
     if(F.ent.tables.length&&!F.ent.tables.includes(d.ent))return false;
-    if(F.ent.q&&!((d.entdisp+' '+d.ent).toLowerCase().includes(F.ent.q.toLowerCase())))return false;
-    if(F.name.q&&!d.name.toLowerCase().includes(F.name.q.toLowerCase()))return false;
-    if(!matchBlank(F.display,d.display))return false;
-    if(F.type.sel.length&&!F.type.sel.includes(d.type))return false;
-    if(F.req.mode==='req'&&!d.req)return false; if(F.req.mode==='opt'&&d.req)return false;
-    if(!matchKey(F.key.mode,d))return false;
-    if(!matchBlank(F.refs,d.refs))return false;
-    if(!matchBlank(F.desc,d.desc))return false;
-    for(const mk of META_KEYS){ const ff=F[mk]; if(!ff)continue; const mv=d[mk]!=null?String(d[mk]):'';
-      if(DCOLDEF[mk].filter==='boolsel'){ if(ff.mode==='yes'&&mv!=='Yes')return false; if(ff.mode==='no'&&mv!=='No')return false; }
-      else if(!matchBlank(ff,mv))return false; }
-    if(q&&!((d.ent+' '+d.entdisp+' '+d.name+' '+d.display+' '+d.desc+' '+d.reflog).toLowerCase().includes(q)))return false;
-    return true;
-  });
-  const k=dsort.key,dir=dsort.dir;
+    if(F.ent.q&&!((d.entdisp+' '+d.ent).toLowerCase().includes(F.ent.q.toLowerCase())))return false; }
+  if(F.name.q&&!d.name.toLowerCase().includes(F.name.q.toLowerCase()))return false;
+  if(!matchBlank(F.display,d.display))return false;
+  if(F.type.sel.length&&!F.type.sel.includes(d.type))return false;
+  if(F.req.mode==='req'&&!d.req)return false; if(F.req.mode==='opt'&&d.req)return false;
+  if(!matchKey(F.key.mode,d))return false;
+  if(!matchBlank(F.refs,d.refs))return false;
+  if(!matchBlank(F.desc,d.desc))return false;
+  for(const mk of META_KEYS){ const ff=F[mk]; if(!ff)continue; const mv=d[mk]!=null?String(d[mk]):'';
+    if(DCOLDEF[mk].filter==='boolsel'){ if(ff.mode==='yes'&&mv!=='Yes')return false; if(ff.mode==='no'&&mv!=='No')return false; }
+    else if(!matchBlank(ff,mv))return false; }
+  return true; }
+function sortRows(rows){ const k=dsort.key,dir=dsort.dir;
   const val=d=> k==='key'?(d.pk?0:d.fk?1:2) : k==='req'?(d.req?0:1) : k==='refs'?d.refs.toLowerCase()
     : META_NUM.has(k)?(d[k]!=null&&d[k]!==''?Number(d[k]):Infinity) : String(d[k]!=null?d[k]:'').toLowerCase();
-  rows.sort((a,b)=>{ const va=val(a),vb=val(b); if(va<vb)return -dir; if(va>vb)return dir;
-    if(a.entdisp!==b.entdisp)return a.entdisp<b.entdisp?-1:1; return a.name<b.name?-1:1; });
-  return rows;
+  return rows.sort((a,b)=>{ const va=val(a),vb=val(b); if(va<vb)return -dir; if(va>vb)return dir;
+    if(a.entdisp!==b.entdisp)return a.entdisp<b.entdisp?-1:1; return a.name<b.name?-1:1; }); }
+function dictFiltered(){
+  const q=document.getElementById('dq').value.trim().toLowerCase();
+  const visOnly=document.getElementById('dVis').checked;
+  return sortRows(DICT.filter(d=>{
+    if(visOnly&&!visible.has(d.ent))return false;
+    if(!colPass(d))return false;
+    if(q&&!((d.ent+' '+d.entdisp+' '+d.name+' '+d.display+' '+d.desc+' '+d.reflog).toLowerCase().includes(q)))return false;
+    return true; }));
 }
+function dlgRows(id){ return sortRows(entityRows(id).filter(d=>colPass(d,true))); }
 function dictCell(k,d){ switch(k){
   case 'ent': return `<td><div class="dt-ent"><span class="dot" style="background:var(${GVAR[d.group]})"></span><span><span class="en">${esc(d.entdisp)}</span> <span class="el">${esc(d.ent)}</span></span></div></td>`;
   case 'name': return `<td><span class="mono${(d.pk||d.fk)?'':' dim'}">${esc(d.name)}</span></td>`;
@@ -1051,11 +1055,14 @@ function dictCell(k,d){ switch(k){
   case 'desc': return `<td><span class="dt-desc">${esc(d.desc)}</span></td>`; }
   if(DCOLDEF[k]&&DCOLDEF[k].meta)return `<td><span class="dt-meta">${esc(d[k]!=null?String(d[k]):'')}</span></td>`;
   return '<td></td>'; }
-// visible column keys, in order: base columns always; meta columns only if shown and present in the file
-function visCols(){ return dcolOrder.filter(k=>DCOLDEF[k] && !dcolHidden.has(k) && (!DCOLDEF[k].meta || DMETA_AVAIL.has(k))); }
-function renderDict(){
-  if(!dictBuilt)return;
-  const rows=dictFiltered(), table=document.getElementById('dicttable'), order=visCols();
+// visible column keys, in order: base columns always; meta columns only if shown and present in the file.
+// A grid may `omit` columns (the per-table dialog hides the redundant Table column).
+function visCols(g){ const omit=g&&g.omit; return dcolOrder.filter(k=>DCOLDEF[k] && !dcolHidden.has(k) && !(omit&&omit.has(k)) && (!DCOLDEF[k].meta || DMETA_AVAIL.has(k))); }
+// All live grids (the main tab + any open per-entity dialog) share the column state
+// (dcolF / dsort / dcolOrder / dcolW / dcolHidden); GRIDS lets global handlers reach each.
+const GRIDS=[];
+function renderGrid(g){
+  const rows=g.rowsFn(), table=g.table, order=visCols(g);
   table.style.width=order.reduce((s,k)=>s+dcolW[k],0)+'px';
   table.querySelector('colgroup').innerHTML=order.map(k=>`<col data-k="${k}" style="width:${dcolW[k]}px">`).join('');
   table.querySelector('thead').innerHTML='<tr>'+order.map(k=>{ const def=DCOLDEF[k];
@@ -1064,13 +1071,13 @@ function renderDict(){
       `<span class="dth-l" draggable="true" data-sort="${def.sort}" title="Click to sort · drag to reorder">${esc(def.label)}${arr}</span>`+
       `<button class="dth-menu" title="Filter this column" aria-label="Filter ${esc(def.label)}">${IC_DOTS}</button>`+
       `<span class="dth-rz" title="Drag to resize · double-click to reset"></span></th>`; }).join('')+'</tr>';
-  const body=document.getElementById('dictbody');
+  const body=table.querySelector('tbody');
   body.innerHTML = rows.length ? rows.map(d=>'<tr>'+order.map(k=>dictCell(k,d)).join('')+'</tr>').join('')
     : `<tr><td colspan="${order.length}"><div class="dict-empty">No columns match these filters.</div></td></tr>`;
-  document.getElementById('dCount').textContent=`${rows.length} column${rows.length===1?'':'s'}`;
+  if(g.count)g.count.textContent=`${rows.length} column${rows.length===1?'':'s'}`;
 }
-/* ---- per-column filter menu ---- */
-let dmenuKey=null;
+function renderDict(){ if(dictBuilt)renderGrid(mainGrid); }
+/* ---- per-column filter menu (per-grid: g.dmenuKey / g.menu) ---- */
 function radioRow(field,val,cur,label){ return `<label class="dm-opt"><input type="radio" name="dm-${field}" data-v="${val}" ${cur===val?'checked':''}><span>${esc(label)}</span></label>`; }
 function dmenuHTML(k){ const def=DCOLDEF[k], f=dcolF[k]; let h=`<div class="dm-h">Filter · ${esc(def.label)}</div>`;
   if(def.filter==='group'){
@@ -1097,47 +1104,51 @@ function dmenuHTML(k){ const def=DCOLDEF[k], f=dcolF[k]; let h=`<div class="dm-h
   }
   h+=`<div class="dm-foot"><button class="dm-clear" ${dcolActive(k)?'':'disabled'}>Clear column</button></div>`;
   return h; }
-function closeDMenu(){ const m=document.getElementById('dmenu'); m.hidden=true; m.innerHTML=''; dmenuKey=null; }
-function openDMenu(k,thEl){ if(dmenuKey===k){ closeDMenu(); return; }
-  const m=document.getElementById('dmenu'); dmenuKey=k; m.innerHTML=dmenuHTML(k); m.hidden=false;
-  const panel=thEl.closest('.panel'), pr=panel.getBoundingClientRect(), br=thEl.getBoundingClientRect();
+function closeDMenu(g){ if(!g||g.dmenuKey==null)return; g.menu.hidden=true; g.menu.innerHTML=''; g.dmenuKey=null; }
+function openDMenu(g,k,thEl){ if(g.dmenuKey===k){ closeDMenu(g); return; }
+  const m=g.menu; g.dmenuKey=k; m.innerHTML=dmenuHTML(k); m.hidden=false;
   const mw=Math.max(m.offsetWidth,220);
-  let left=br.right-pr.left-mw; left=Math.max(6,Math.min(left, pr.width-mw-6));
-  m.style.left=left+'px'; m.style.top=(br.bottom-pr.top+3)+'px';
-  wireDMenu(k); }
+  if(g.fixed){ // dialog: menu is body-level and positioned in viewport coords (above the modal)
+    const br=thEl.getBoundingClientRect(); let left=Math.max(6,Math.min(br.right-mw, innerWidth-mw-6));
+    let top=br.bottom+3; if(top+m.offsetHeight>innerHeight-6)top=Math.max(6,br.top-m.offsetHeight-3);
+    m.style.left=left+'px'; m.style.top=top+'px';
+  } else { const panel=g.posEl, pr=panel.getBoundingClientRect(), br=thEl.getBoundingClientRect();
+    let left=br.right-pr.left-mw; left=Math.max(6,Math.min(left, pr.width-mw-6));
+    m.style.left=left+'px'; m.style.top=(br.bottom-pr.top+3)+'px'; }
+  wireDMenu(g,k); }
 let dmTimer=null;
-function dmApply(){ renderDict(); clearTimeout(dmTimer); dmTimer=setTimeout(saveState,300);
+function dmApply(g){ renderGrid(g); clearTimeout(dmTimer); dmTimer=setTimeout(saveState,300);
   // keep the open menu's Clear button + header state in sync without rebuilding inputs
-  const m=document.getElementById('dmenu'), th=document.querySelector(`#dicttable th[data-k="${dmenuKey}"]`);
-  if(th)th.classList.toggle('filtered',dcolActive(dmenuKey));
-  const cb=m.querySelector('.dm-clear'); if(cb)cb.disabled=!dcolActive(dmenuKey); }
-function wireDMenu(k){ const m=document.getElementById('dmenu'), f=dcolF[k], def=DCOLDEF[k];
-  const q=m.querySelector('#dm-q'); if(q)q.addEventListener('input',()=>{ f.q=q.value; dmApply(); });
-  m.querySelectorAll('input[data-g]').forEach(c=>c.addEventListener('change',()=>{ const g=c.dataset.g; f.groups=f.groups.filter(x=>x!==g); if(c.checked)f.groups.push(g); dmApply(); }));
-  m.querySelectorAll('input[data-ent]').forEach(c=>c.addEventListener('change',()=>{ const id=c.dataset.ent; f.tables=f.tables.filter(x=>x!==id); if(c.checked)f.tables.push(id); dmApply(); }));
-  m.querySelectorAll('input[data-t]').forEach(c=>c.addEventListener('change',()=>{ const t=c.dataset.t; f.sel=f.sel.filter(x=>x!==t); if(c.checked)f.sel.push(t); dmApply(); }));
-  m.querySelectorAll('input[name^="dm-"]').forEach(r=>r.addEventListener('change',()=>{ if(!r.checked)return; const field=r.getAttribute('name').slice(3); f[field]=r.dataset.v; dmApply(); }));
-  const cb=m.querySelector('.dm-clear'); if(cb)cb.addEventListener('click',()=>{ resetDcol(k); m.innerHTML=dmenuHTML(k); wireDMenu(k); dmApply(); });
+  const th=g.table.querySelector(`th[data-k="${g.dmenuKey}"]`);
+  if(th)th.classList.toggle('filtered',dcolActive(g.dmenuKey));
+  const cb=g.menu.querySelector('.dm-clear'); if(cb)cb.disabled=!dcolActive(g.dmenuKey); }
+function wireDMenu(g,k){ const m=g.menu, f=dcolF[k], def=DCOLDEF[k];
+  const q=m.querySelector('#dm-q'); if(q)q.addEventListener('input',()=>{ f.q=q.value; dmApply(g); });
+  m.querySelectorAll('input[data-g]').forEach(c=>c.addEventListener('change',()=>{ const gid=c.dataset.g; f.groups=f.groups.filter(x=>x!==gid); if(c.checked)f.groups.push(gid); dmApply(g); }));
+  m.querySelectorAll('input[data-ent]').forEach(c=>c.addEventListener('change',()=>{ const id=c.dataset.ent; f.tables=f.tables.filter(x=>x!==id); if(c.checked)f.tables.push(id); dmApply(g); }));
+  m.querySelectorAll('input[data-t]').forEach(c=>c.addEventListener('change',()=>{ const t=c.dataset.t; f.sel=f.sel.filter(x=>x!==t); if(c.checked)f.sel.push(t); dmApply(g); }));
+  m.querySelectorAll('input[name^="dm-"]').forEach(r=>r.addEventListener('change',()=>{ if(!r.checked)return; const field=r.getAttribute('name').slice(3); f[field]=r.dataset.v; dmApply(g); }));
+  const cb=m.querySelector('.dm-clear'); if(cb)cb.addEventListener('click',()=>{ resetDcol(k); m.innerHTML=dmenuHTML(k); wireDMenu(g,k); dmApply(g); });
 }
 function resetDcol(k){ dcolF[k]=fState(DCOLDEF[k].filter); }
-function clearAllDcol(){ dcolF=defaultDcolF(); closeDMenu(); renderDict(); saveState(); }
+function clearAllDcol(g){ dcolF=defaultDcolF(); closeDMenu(g); renderGrid(g); saveState(); }
 /* header interactions: sort / menu / resize / drag-reorder (delegated on the persistent thead) */
-(function wireDictHead(){ const table=document.getElementById('dicttable'), thead=table.querySelector('thead');
+function wireGridHead(g){ const table=g.table, thead=table.querySelector('thead');
   thead.addEventListener('click',e=>{
-    const mb=e.target.closest('.dth-menu'); if(mb){ e.stopPropagation(); openDMenu(mb.closest('th').dataset.k, mb.closest('th')); return; }
+    const mb=e.target.closest('.dth-menu'); if(mb){ e.stopPropagation(); openDMenu(g, mb.closest('th').dataset.k, mb.closest('th')); return; }
     if(e.target.closest('.dth-rz'))return;
-    const l=e.target.closest('.dth-l'); if(l){ const kk=l.dataset.sort; if(dsort.key===kk)dsort.dir*=-1; else{dsort.key=kk;dsort.dir=1;} renderDict(); saveState(); } });
+    const l=e.target.closest('.dth-l'); if(l){ const kk=l.dataset.sort; if(dsort.key===kk)dsort.dir*=-1; else{dsort.key=kk;dsort.dir=1;} renderGrid(g); saveState(); } });
   thead.addEventListener('mousedown',e=>{ const rz=e.target.closest('.dth-rz'); if(!rz)return; e.preventDefault(); e.stopPropagation();
     const k=rz.closest('th').dataset.k, startX=e.clientX, startW=dcolW[k]; document.body.classList.add('col-resizing');
     const move=ev=>{ dcolW[k]=Math.max(DCOLDEF[k].min,Math.min(900,startW+(ev.clientX-startX)));
       const col=table.querySelector(`colgroup col[data-k="${k}"]`); if(col)col.style.width=dcolW[k]+'px'; };
     const up=()=>{ window.removeEventListener('mousemove',move); window.removeEventListener('mouseup',up); document.body.classList.remove('col-resizing'); saveState(); };
     window.addEventListener('mousemove',move); window.addEventListener('mouseup',up); });
-  thead.addEventListener('dblclick',e=>{ const rz=e.target.closest('.dth-rz'); if(!rz)return; const k=rz.closest('th').dataset.k; dcolW[k]=DCOLDEF[k].w; renderDict(); saveState(); });
+  thead.addEventListener('dblclick',e=>{ const rz=e.target.closest('.dth-rz'); if(!rz)return; const k=rz.closest('th').dataset.k; dcolW[k]=DCOLDEF[k].w; renderGrid(g); saveState(); });
   let dragK=null;
   const clearDrop=()=>thead.querySelectorAll('th').forEach(t=>t.classList.remove('dragging','drop-l','drop-r'));
   // touch: resize (drag the edge) and reorder (drag the label; a tap still sorts)
-  const thAt=(x,y)=>{ const el=document.elementFromPoint(x,y); return el&&el.closest?el.closest('#dicttable thead th'):null; };
+  const thAt=(x,y)=>{ const el=document.elementFromPoint(x,y), th=el&&el.closest?el.closest('th'):null; return th&&thead.contains(th)?th:null; };
   thead.addEventListener('touchstart',e=>{ if(e.touches.length!==1)return; const t=e.touches[0];
     const rz=t.target.closest('.dth-rz'); if(rz){ e.preventDefault();
       const k=rz.closest('th').dataset.k, startX=t.clientX, startW=dcolW[k]; document.body.classList.add('col-resizing');
@@ -1147,15 +1158,15 @@ function clearAllDcol(){ dcolF=defaultDcolF(); closeDMenu(); renderDict(); saveS
       window.addEventListener('touchmove',mv,{passive:false}); window.addEventListener('touchend',up); window.addEventListener('touchcancel',up); return; }
     const l=t.target.closest('.dth-l'); if(l){ const k=l.closest('th').dataset.k, sx=t.clientX, sy=t.clientY; let active=false;
       const mv=ev=>{ const tt=ev.touches[0]; if(!tt)return;
-        if(!active){ if(Math.abs(tt.clientX-sx)+Math.abs(tt.clientY-sy)<7)return; active=true; closeDMenu(); l.closest('th').classList.add('dragging'); }
+        if(!active){ if(Math.abs(tt.clientX-sx)+Math.abs(tt.clientY-sy)<7)return; active=true; closeDMenu(g); l.closest('th').classList.add('dragging'); }
         ev.preventDefault(); const th=thAt(tt.clientX,tt.clientY); thead.querySelectorAll('th').forEach(x=>x.classList.remove('drop-l','drop-r'));
         if(th&&th.dataset.k!==k){ const r=th.getBoundingClientRect(); th.classList.add((tt.clientX-r.left)>r.width/2?'drop-r':'drop-l'); } };
       const up=ev=>{ window.removeEventListener('touchmove',mv); window.removeEventListener('touchend',up); window.removeEventListener('touchcancel',up);
         if(active){ const tt=ev.changedTouches&&ev.changedTouches[0], th=tt&&thAt(tt.clientX,tt.clientY);
           if(th&&th.dataset.k!==k){ const r=th.getBoundingClientRect(), after=(tt.clientX-r.left)>r.width/2; dcolOrder.splice(dcolOrder.indexOf(k),1); let to=dcolOrder.indexOf(th.dataset.k); if(after)to++; dcolOrder.splice(to,0,k); }
-          clearDrop(); renderDict(); saveState(); } };
+          clearDrop(); renderGrid(g); saveState(); } };
       window.addEventListener('touchmove',mv,{passive:false}); window.addEventListener('touchend',up); window.addEventListener('touchcancel',up); } },{passive:false});
-  thead.addEventListener('dragstart',e=>{ const l=e.target.closest('.dth-l'); if(!l){ e.preventDefault(); return; } closeDMenu();
+  thead.addEventListener('dragstart',e=>{ const l=e.target.closest('.dth-l'); if(!l){ e.preventDefault(); return; } closeDMenu(g);
     dragK=l.closest('th').dataset.k; try{e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain',dragK);}catch(_){} l.closest('th').classList.add('dragging'); });
   thead.addEventListener('dragover',e=>{ if(dragK==null)return; e.preventDefault(); e.dataTransfer.dropEffect='move';
     const th=e.target.closest('th'); thead.querySelectorAll('th').forEach(t=>t.classList.remove('drop-l','drop-r'));
@@ -1163,30 +1174,43 @@ function clearAllDcol(){ dcolF=defaultDcolF(); closeDMenu(); renderDict(); saveS
   thead.addEventListener('drop',e=>{ if(dragK==null)return; e.preventDefault(); const th=e.target.closest('th');
     if(th&&th.dataset.k!==dragK){ const r=th.getBoundingClientRect(), after=(e.clientX-r.left)>r.width/2;
       dcolOrder.splice(dcolOrder.indexOf(dragK),1); let to=dcolOrder.indexOf(th.dataset.k); if(after)to++; dcolOrder.splice(to,0,dragK); }
-    dragK=null; clearDrop(); renderDict(); saveState(); });
+    dragK=null; clearDrop(); renderGrid(g); saveState(); });
   thead.addEventListener('dragend',()=>{ dragK=null; clearDrop(); });
-})();
-document.getElementById('dq').addEventListener('input',()=>{ renderDict(); saveState(); });
-document.getElementById('dVis').addEventListener('change',()=>{ renderDict(); saveState(); });
-document.getElementById('dClearCols').addEventListener('click',clearAllDcol);
-/* ---- metadata column chooser ---- */
-let colsMenuOpen=false;
-function closeColsMenu(){ const m=document.getElementById('dcolsmenu'); m.hidden=true; m.innerHTML=''; colsMenuOpen=false; }
-function openColsMenu(btn){ if(colsMenuOpen){ closeColsMenu(); return; } closeDMenu();
-  const m=document.getElementById('dcolsmenu'); const avail=META_COLS.filter(x=>DMETA_AVAIL.has(x.key));
+}
+/* ---- metadata column chooser (per-grid: g.colsMenu / g.colsOpen / g.colsBtn) ---- */
+function closeColsMenu(g){ if(!g||!g.colsOpen)return; g.colsMenu.hidden=true; g.colsMenu.innerHTML=''; g.colsOpen=false; }
+function openColsMenu(g){ if(g.colsOpen){ closeColsMenu(g); return; } closeDMenu(g);
+  const m=g.colsMenu, btn=g.colsBtn; const avail=META_COLS.filter(x=>DMETA_AVAIL.has(x.key));
   let h=`<div class="dm-h">Metadata columns</div>`;
   if(!avail.length){ h+=`<div class="dm-note">No optional metadata was found in this file. Export an unmanaged solution's <b>customizations.xml</b> for the richest set.</div>`; }
   else { h+=`<div class="dm-list">`+avail.map(x=>`<label class="dm-chk"><input type="checkbox" data-col="${x.key}" ${dcolHidden.has(x.key)?'':'checked'}><span class="dt-tname">${esc(x.label)}</span></label>`).join('')+`</div>`; }
-  m.innerHTML=h; m.hidden=false; colsMenuOpen=true;
-  const panel=btn.closest('.panel'), pr=panel.getBoundingClientRect(), br=btn.getBoundingClientRect();
-  const mw=Math.max(m.offsetWidth,220); let left=br.left-pr.left; left=Math.max(6,Math.min(left, pr.width-mw-6));
-  m.style.left=left+'px'; m.style.top=(br.bottom-pr.top+3)+'px';
-  m.querySelectorAll('input[data-col]').forEach(c=>c.addEventListener('change',()=>{ const k=c.dataset.col; if(c.checked)dcolHidden.delete(k); else dcolHidden.add(k); renderDict(); saveState(); })); }
-document.getElementById('dCols').addEventListener('click',e=>{ e.stopPropagation(); openColsMenu(e.currentTarget); });
-document.addEventListener('mousedown',e=>{ if(colsMenuOpen && !e.target.closest('#dcolsmenu') && !e.target.closest('#dCols'))closeColsMenu(); });
-document.addEventListener('mousedown',e=>{ if(dmenuKey!=null && !e.target.closest('#dmenu') && !e.target.closest('.dth-menu'))closeDMenu(); });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(dmenuKey!=null)closeDMenu(); if(colsMenuOpen)closeColsMenu(); } });
-const _dscroll=document.querySelector('#view-dict .dict-scroll'); if(_dscroll)_dscroll.addEventListener('scroll',()=>{ if(dmenuKey!=null)closeDMenu(); });
+  m.innerHTML=h; m.hidden=false; g.colsOpen=true;
+  const mw=Math.max(m.offsetWidth,220);
+  if(g.fixed){ const br=btn.getBoundingClientRect(); let left=Math.max(6,Math.min(br.left, innerWidth-mw-6));
+    let top=br.bottom+3; if(top+m.offsetHeight>innerHeight-6)top=Math.max(6,br.top-m.offsetHeight-3);
+    m.style.left=left+'px'; m.style.top=top+'px';
+  } else { const panel=g.posEl, pr=panel.getBoundingClientRect(), br=btn.getBoundingClientRect();
+    let left=br.left-pr.left; left=Math.max(6,Math.min(left, pr.width-mw-6));
+    m.style.left=left+'px'; m.style.top=(br.bottom-pr.top+3)+'px'; }
+  m.querySelectorAll('input[data-col]').forEach(c=>c.addEventListener('change',()=>{ const k=c.dataset.col; if(c.checked)dcolHidden.delete(k); else dcolHidden.add(k); renderGrid(g); saveState(); })); }
+/* ---- main-tab grid + its toolbar wiring ---- */
+const mainGrid={ table:document.getElementById('dicttable'), menu:document.getElementById('dmenu'),
+  colsMenu:document.getElementById('dcolsmenu'), colsBtn:document.getElementById('dCols'),
+  count:document.getElementById('dCount'), posEl:document.querySelector('#view-dict .panel'),
+  rowsFn:dictFiltered, fixed:false, dmenuKey:null, colsOpen:false };
+GRIDS.push(mainGrid); wireGridHead(mainGrid);
+document.getElementById('dq').addEventListener('input',()=>{ renderGrid(mainGrid); saveState(); });
+document.getElementById('dVis').addEventListener('change',()=>{ renderGrid(mainGrid); saveState(); });
+document.getElementById('dClearCols').addEventListener('click',()=>clearAllDcol(mainGrid));
+document.getElementById('dCols').addEventListener('click',e=>{ e.stopPropagation(); openColsMenu(mainGrid); });
+/* global dismissers span every live grid */
+document.addEventListener('mousedown',e=>{ GRIDS.forEach(g=>{
+  if(g.colsOpen && !g.colsMenu.contains(e.target) && !(g.colsBtn&&g.colsBtn.contains(e.target)))closeColsMenu(g);
+  if(g.dmenuKey!=null && !g.menu.contains(e.target) && !(e.target.closest('.dth-menu')&&g.table.contains(e.target)))closeDMenu(g); }); });
+document.addEventListener('keydown',e=>{ if(e.key!=='Escape')return; let closed=false;
+  GRIDS.forEach(g=>{ if(g.dmenuKey!=null){ closeDMenu(g); closed=true; } if(g.colsOpen){ closeColsMenu(g); closed=true; } });
+  if(closed)e.stopImmediatePropagation(); }); // swallow the key so it doesn't also close the dialog
+const _dscroll=document.querySelector('#view-dict .dict-scroll'); if(_dscroll)_dscroll.addEventListener('scroll',()=>closeDMenu(mainGrid));
 function csvCell(v){ v=v==null?'':String(v); return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
 /* export column definitions (superset of the on-screen columns) */
 const XCOLS=[
@@ -1240,7 +1264,8 @@ function xlsxSheetName(name,used){ let n=String(name||'Sheet').replace(/[\\\/\?\
 /* ---- generic modal + floating menu ---- */
 function openModal(html,cls){ const o=document.getElementById('modal'); o.innerHTML=`<div class="modal-card ${cls||''}">${html}</div>`; o.hidden=false;
   o.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeModal)); return o.querySelector('.modal-card'); }
-function closeModal(){ const o=document.getElementById('modal'); o.hidden=true; o.innerHTML=''; }
+let _modalCleanup=null;
+function closeModal(){ const o=document.getElementById('modal'); o.hidden=true; o.innerHTML=''; if(_modalCleanup){ const c=_modalCleanup; _modalCleanup=null; c(); } }
 document.getElementById('modal').addEventListener('mousedown',e=>{ if(e.target.id==='modal')closeModal(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!document.getElementById('modal').hidden)closeModal(); });
 let _floatMenu=null;
@@ -1254,18 +1279,31 @@ function openFloatMenu(x,y,items){ closeFloatMenu(); const m=document.createElem
 document.addEventListener('mousedown',e=>{ if(_floatMenu&&!e.target.closest('.floatmenu'))closeFloatMenu(); },true);
 window.addEventListener('blur',closeFloatMenu);
 
-/* ---- per-entity data dictionary dialog ---- */
+/* ---- per-entity data dictionary dialog: the full Data Dictionary grid, scoped to one table ---- */
 function entityRows(id){ return DICT.filter(d=>d.ent===id); }
-function openEntityDict(id){ if(!dictBuilt)buildDict(); const e=ENT[id], rows=entityRows(id);
-  const body=rows.length?rows.map(d=>{ const key=d.pk?'<span class="kpill pk">PK</span>':d.fk?'<span class="kpill fk">FK</span>':'';
-    return `<tr><td><span class="mono${(d.pk||d.fk)?'':' dim'}">${esc(d.name)}</span></td><td>${esc(d.display)}</td>`+
-      `<td><span class="dt-type">${esc(d.type)}</span></td><td>${d.req?'<span class="dt-req">●</span>':''}</td><td>${key}</td>`+
-      `<td><span class="dt-refs">${esc(d.refs)}</span></td><td><span class="dt-desc">${esc(d.desc)}</span></td></tr>`; }).join('')
-    :'<tr><td colspan="7"><div class="dict-empty">This table has no columns.</div></td></tr>';
-  openModal(`<div class="modal-h"><div><div class="modal-t"><span class="dot" style="background:var(${GVAR[e.group]})"></span>${esc(e.display||id)}</div><div class="modal-sub mono">${esc(id)} · ${rows.length} column${rows.length===1?'':'s'}</div></div><button class="modal-x" data-close aria-label="Close">${IC_X}</button></div>`+
-    `<div class="modal-body"><table class="edtable"><thead><tr><th>Column</th><th>Display name</th><th>Type</th><th>Req</th><th>Key</th><th>References</th><th>Description</th></tr></thead><tbody>${body}</tbody></table></div>`+
-    `<div class="modal-foot"><button class="btn" id="edExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v13M7 11l5 5 5-5"/></svg>Export table…</button><button class="btn primary" data-close>Close</button></div>`,'modal-wide');
-  document.getElementById('edExport').addEventListener('click',()=>{ closeModal(); openExportDialog(id); }); }
+function openEntityDict(id){ if(!dictBuilt)buildDict(); const e=ENT[id];
+  const card=openModal(
+    `<div class="modal-h"><div><div class="modal-t"><span class="dot" style="background:var(${GVAR[e.group]})"></span>${esc(e.display||id)}</div><div class="modal-sub mono">${esc(id)}</div></div><button class="modal-x" data-close aria-label="Close">${IC_X}</button></div>`+
+    `<div class="modal-tools"><button class="btn ghost" data-role="cols" title="Show or hide metadata columns"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg>Columns</button>`+
+      `<button class="btn ghost" data-role="clear" title="Clear all column filters">Clear filters</button>`+
+      `<span class="dict-count" data-role="count"></span></div>`+
+    `<div class="modal-grid"><table class="dgrid"><colgroup></colgroup><thead></thead><tbody></tbody></table></div>`+
+    `<div class="modal-foot"><button class="btn" data-role="export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v13M7 11l5 5 5-5"/></svg>Export table…</button><button class="btn primary" data-close>Close</button></div>`,
+    'modal-wide');
+  // menus live at the body level (position:fixed, above the modal) so the modal's overflow can't clip them
+  const menu=document.createElement('div'); menu.className='dmenu'; menu.hidden=true; menu.style.position='fixed'; menu.style.zIndex='90';
+  const colsMenu=document.createElement('div'); colsMenu.className='dmenu'; colsMenu.hidden=true; colsMenu.style.position='fixed'; colsMenu.style.zIndex='90';
+  document.body.appendChild(menu); document.body.appendChild(colsMenu);
+  const g={ table:card.querySelector('.dgrid'), menu, colsMenu, colsBtn:card.querySelector('[data-role="cols"]'),
+    count:card.querySelector('[data-role="count"]'), rowsFn:()=>dlgRows(id), omit:new Set(['ent']),
+    fixed:true, dmenuKey:null, colsOpen:false };
+  GRIDS.push(g); wireGridHead(g); renderGrid(g);
+  g.colsBtn.addEventListener('click',ev=>{ ev.stopPropagation(); openColsMenu(g); });
+  card.querySelector('[data-role="clear"]').addEventListener('click',()=>clearAllDcol(g));
+  card.querySelector('[data-role="export"]').addEventListener('click',()=>{ closeModal(); openExportDialog(id); });
+  card.querySelector('.modal-grid').addEventListener('scroll',()=>closeDMenu(g));
+  // tearing down: drop the grid from GRIDS and remove its body-level menus
+  _modalCleanup=()=>{ const i=GRIDS.indexOf(g); if(i>=0)GRIDS.splice(i,1); menu.remove(); colsMenu.remove(); }; }
 
 /* ---- export dialog ---- */
 let exportOpts=(function(){ const d={fmt:'xlsx', layout:'multi', scope:'filter', cols:XCOLS.filter(c=>c.def).map(c=>c.id)}, s=saved.exportOpts;
