@@ -548,6 +548,17 @@ body.col-resizing{cursor:col-resize;user-select:none}
 .ex-cols{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px}
 .modal .dm-chk{display:flex;align-items:center;gap:8px;padding:4px 2px;cursor:pointer;font-size:12.5px}
 .modal .dm-chk:hover{color:var(--ink)}
+/* connected-tables picker */
+.cx-list{display:flex;flex-direction:column;gap:1px;max-height:300px;overflow:auto}
+.cx-shown{max-height:150px}
+.cx-row .dot{width:9px;height:9px;border-radius:3px;flex:none}
+.cx-row.muted{opacity:.6;cursor:default}
+.cx-name{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+.cx-en{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cx-dir{color:var(--accent);font-weight:700;flex:none}
+.cx-attr{color:var(--faint);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-left:auto}
+.cx-links{float:right;font-weight:400;display:inline-flex;gap:8px}
+.cx-empty{padding:20px 6px;color:var(--muted);font-size:12.5px;text-align:center;line-height:1.6}
 .dt-ent{display:flex;align-items:center;gap:7px;white-space:nowrap}
 .dt-ent .dot{width:8px;height:8px;border-radius:2.5px;flex:none}
 .dt-ent .en{font-weight:600;color:var(--ink)}
