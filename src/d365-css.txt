@@ -355,7 +355,9 @@ input[type=checkbox]:focus-visible,input[type=radio]:focus-visible{outline:2px s
 /* notation legend (bottom-left, above the status line) */
 .legend-dock{position:absolute;left:14px;bottom:48px;z-index:12;display:flex;flex-direction:column;align-items:flex-start;gap:7px}
 .nlegend{background:var(--surface);border:1px solid var(--border-strong);border-radius:9px;box-shadow:var(--shadow);overflow:hidden}
-.nl-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 6px 4px 10px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.legend-dock.dragging{opacity:.9}
+.nl-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 6px 4px 10px;border-bottom:1px solid var(--border);background:var(--surface-2);cursor:grab;user-select:none;touch-action:none}
+.legend-dock.dragging .nl-head{cursor:grabbing}
 .nl-title{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);white-space:nowrap}
 .nl-min{border:none;background:none;color:var(--muted);width:20px;height:20px;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}
 .nl-min:hover{background:var(--surface-3);color:var(--ink)}

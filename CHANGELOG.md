@@ -7,6 +7,19 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.29.0] — 2026-09-11
+
+### Added
+- **Notation legend in the Data Dictionary export.** The Data Dictionary CSV
+  export gains a "Relationship notation" section, and the XLSX export gains a
+  matching **Notation** sheet, naming the active notation and its cardinality
+  markers — the same legend now carried by the diagram image and Insights
+  exports.
+- **Draggable notation legend.** The on-screen notation legend on the Diagram
+  can be dragged by its header to any spot on the canvas (like the minimap);
+  double-click the header to snap it back to the default corner. Its position is
+  saved in the browser.
+
 ## [2.28.1] — 2026-09-11
 
 ### Fixed
