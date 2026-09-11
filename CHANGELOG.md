@@ -7,6 +7,26 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.24.2] — 2026-09-11
+
+### Fixed
+- **Diagram sidebar search now persists.** The table-search box in the diagram
+  sidebar is saved and restored on reload, and — critically — the restored
+  filter is now re-applied *after* the sidebar is rebuilt on boot, so the rail
+  actually shows the filtered set instead of every table. This was the one
+  remaining Diagram/Data Dictionary control that didn't survive a reload; all
+  other Data Dictionary settings (column order, widths, per-column filters,
+  hidden columns, sort, export options, visibility, search) and Diagram settings
+  (positions, visibility, categories, group collapse, theme, viewport, sizes,
+  notation, line mode/weight, detail, labels, PNG scale, export title, active
+  view, rail/ribbon/minimap state) were confirmed to persist.
+
+### Changed
+- **Security permission-column menus honor "Classic icons".** When the Classic
+  icons toggle is on, the Access-level checklist in each permission column's ⋯
+  menu renders the classic Dynamics access-level pie glyphs instead of the text
+  pills, matching the grid.
+
 ## [2.24.1] — 2026-09-11
 
 ### Fixed
