@@ -387,8 +387,8 @@ input[type=checkbox]:focus-visible,input[type=radio]:focus-visible{outline:2px s
 .dict-hint b{color:var(--muted)}
 #view-dict .panel{position:relative}
 .dict-scroll{flex:1;min-height:0;overflow:auto}
-#dicttable{border-collapse:separate;border-spacing:0;min-width:100%;table-layout:fixed;font-size:12.5px}
-#dicttable thead th{position:sticky;top:0;z-index:2;background:var(--surface-2);color:var(--muted);
+.dgrid{border-collapse:separate;border-spacing:0;min-width:100%;table-layout:fixed;font-size:12.5px}
+.dgrid thead th{position:sticky;top:0;z-index:2;background:var(--surface-2);color:var(--muted);
   text-align:left;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;
   padding:0;border-bottom:1px solid var(--border-strong);white-space:nowrap;overflow:hidden}
 .dth{position:relative}
@@ -411,8 +411,8 @@ input[type=checkbox]:focus-visible,input[type=radio]:focus-visible{outline:2px s
 .dth-rz::before{content:"";position:absolute;top:22%;bottom:22%;right:3px;width:1px;background:var(--border-strong);opacity:0}
 .dth:hover .dth-rz::before{opacity:.7}
 body.col-resizing{cursor:col-resize;user-select:none}
-#dicttable td{padding:7px 12px;border-bottom:1px solid var(--surface-2);vertical-align:top;overflow:hidden;text-overflow:ellipsis}
-#dicttable tbody tr:hover{background:var(--surface-2)}
+.dgrid td{padding:7px 12px;border-bottom:1px solid var(--surface-2);vertical-align:top;overflow:hidden;text-overflow:ellipsis}
+.dgrid tbody tr:hover{background:var(--surface-2)}
 /* per-column filter popover */
 .dmenu{position:absolute;z-index:40;min-width:212px;max-width:280px;background:var(--surface);
   border:1px solid var(--border-strong);border-radius:10px;box-shadow:0 12px 34px rgba(0,0,0,.28);padding:10px;font-size:12px}
@@ -457,6 +457,10 @@ body.col-resizing{cursor:col-resize;user-select:none}
 .modal-x:hover{color:var(--ink);background:var(--surface-2)}
 .modal-body{padding:14px 18px;overflow:auto}
 .modal-foot{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+.modal-tools{display:flex;align-items:center;gap:8px;padding:9px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.modal-tools .dict-count{margin-left:auto}
+.modal-grid{flex:1;min-height:0;overflow:auto;padding:0 18px}
+.modal-grid .dict-empty{padding:40px 20px}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
 .btn.primary:hover{filter:brightness(1.06)}
 /* entity dictionary table */
