@@ -7,6 +7,15 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.25.1] — 2026-09-11
+
+### Changed
+- **Larger self-referencing (parent/child) loop.** The loop drawn for a table's
+  self-referencing lookup (e.g. `parentaccountid` → Account) is bigger and
+  rounder, so its notation marker and direction read clearly instead of
+  crowding against the card's edge. Stacked self-loops on one table also spread
+  further apart.
+
 ## [2.25.0] — 2026-09-11
 
 ### Added
