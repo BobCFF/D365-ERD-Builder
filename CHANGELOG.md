@@ -7,6 +7,20 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.30.0] — 2026-09-11
+
+### Added
+- **Notation legend in the Security export.** The Security roles CSV export
+  gains a "Relationship notation" section and the XLSX export a matching
+  **Notation** sheet, so the notation legend now travels with every export
+  (diagram image, Insights, Data Dictionary, and Security).
+
+### Changed
+- **Diagram export moved to the ribbon.** The **PNG** and **SVG** export buttons
+  now live in an **Export** group on the ribbon toolbar (next to Weight),
+  instead of a section in the left panel — keeping the diagram tools together
+  and freeing space in the panel.
+
 ## [2.29.0] — 2026-09-11
 
 ### Added
