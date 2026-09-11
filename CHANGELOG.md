@@ -7,6 +7,13 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.17.3] — 2026-09-11
+
+### Changed
+- **Version shown at the top-right of Settings.** The `D365 ERD Builder vX ·
+  changelog` line now sits in the Settings page header (top-right, beside the
+  "Settings" title) instead of at the bottom of the Data source card.
+
 ## [2.17.2] — 2026-09-11
 
 ### Changed

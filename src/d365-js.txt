@@ -1395,8 +1395,7 @@ function aboutHTML(){ const attrs=allIds.reduce((s,id)=>s+ENT[id].attributes.len
     : `Sample schema (bundled demo)`;
   return `${src}.<br>`+
     `<b>${allIds.length}</b> tables · <b>${attrs}</b> columns · <b>${O2M.length}</b> relationships (<b>${biz}</b> business lookups).<br>`+
-    `Parsed and rendered entirely in your browser — nothing is uploaded. An imported file is kept in this browser (IndexedDB) and reopens automatically.<br>`+
-    `<span class="about-ver">D365 ERD Builder <b>v${esc(APP_VERSION)}</b> · <a href="CHANGELOG.md" target="_blank" rel="noopener">changelog</a></span>`;
+    `Parsed and rendered entirely in your browser — nothing is uploaded. An imported file is kept in this browser (IndexedDB) and reopens automatically.`;
 }
 function syncSettings(){ setSeg('setTheme',themeChoice||'system'); setSeg('setDensity',defaultDetail); setSeg('setLabels',labelsMode);
   setSeg('setScale',String(pngScale)); setSeg('setLegend',exportTitle?'on':'off'); document.getElementById('aboutBox').innerHTML=aboutHTML();
