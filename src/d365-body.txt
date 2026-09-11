@@ -22,6 +22,7 @@
       <button class="tab on" data-view="diagram" role="tab">Diagram</button>
       <button class="tab" data-view="dict" role="tab">Data Dictionary</button>
       <button class="tab" data-view="security" role="tab" id="tab-security" hidden>Security</button>
+      <button class="tab" data-view="insights" role="tab">Insights</button>
       <button class="tab" data-view="settings" role="tab">Settings</button>
     </nav>
     <div class="top-actions">
@@ -174,6 +175,25 @@
         </div>
         <div id="secmenu" class="dmenu" hidden></div>
         <div id="secrolesmenu" class="dmenu" hidden></div>
+      </div>
+    </section>
+
+    <!-- ============ INSIGHTS ============ -->
+    <section id="view-insights" class="view">
+      <div class="panel insights-panel" id="insightsPanel">
+        <div class="insights-inner" id="insightsInner">
+          <div class="insights-head">
+            <div>
+              <h1 class="insights-title">Schema insights</h1>
+              <p class="insights-sub" id="insightsSub">A one-page report of what's in this customizations.xml.</p>
+            </div>
+            <div class="insights-actions">
+              <button class="btn ghost" id="insCsv" title="Download the summary metrics as CSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v13M7 11l5 5 5-5"/></svg>CSV</button>
+              <button class="btn" id="insPrint" title="Print or save this report as a PDF"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M6 14h12v7H6z"/></svg>Print / PDF</button>
+            </div>
+          </div>
+          <div id="insightsBody"></div>
+        </div>
       </div>
     </section>
 

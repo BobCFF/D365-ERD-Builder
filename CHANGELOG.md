@@ -7,6 +7,26 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.25.0] — 2026-09-11
+
+### Added
+- **Insights page** — a new tab between Security and Settings that turns the
+  loaded `customizations.xml` into a one-page dashboard/report:
+  - **Headline metrics** — tables (custom vs standard), columns and average per
+    table, relationships (with self-referencing count), custom fields, and, when
+    the file carries role metadata, a security summary (roles + field profiles).
+  - **Composition charts** — tables by publisher prefix, relationships by
+    category, columns by data type (top 10), and columns by requirement level,
+    all as theme-aware bars reusing the app's group/relationship colors.
+  - **Metadata coverage meters** — share of columns with a display name, a
+    description, audit enabled, field-secured, and required.
+  - **Ranked lists** — largest tables by column count, most-connected tables by
+    business lookups, and tables with no business lookups.
+  - **Export** — a **CSV** button downloads the summary metrics, and a
+    **Print / PDF** button prints just the report (dedicated print stylesheet).
+  The active tab (including Insights) persists across reloads like the rest of
+  the app.
+
 ## [2.24.2] — 2026-09-11
 
 ### Fixed
