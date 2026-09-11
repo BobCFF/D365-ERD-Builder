@@ -68,6 +68,14 @@
             <div class="ribbon-row"><select class="ribbon-select" id="selWeight" title="Connector line &amp; marker thickness (1–5)"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div>
             <span class="ribbon-label">Weight</span>
           </div>
+          <div class="ribbon-div"></div>
+          <div class="ribbon-group">
+            <div class="ribbon-row">
+              <button class="btn" id="expPng" title="Export the diagram as a PNG image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v13M7 11l5 5 5-5"/></svg><span>PNG</span></button>
+              <button class="btn" id="expSvg" title="Export the diagram as an SVG image"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v13M7 11l5 5 5-5"/></svg><span>SVG</span></button>
+            </div>
+            <span class="ribbon-label">Export</span>
+          </div>
         </div>
         <button class="ribbon-toggle" id="ribbonToggle" title="Collapse toolbar" aria-label="Collapse toolbar" aria-expanded="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 15l6-6 6 6"/></svg></button>
       </div>
@@ -92,13 +100,6 @@
             <div class="sect">
               <div class="sect-h"><h2>Relationships</h2></div>
               <div id="rellist"></div>
-            </div>
-            <div class="sect">
-              <div class="sect-h"><h2>Export</h2></div>
-              <div class="actions" style="padding-left:0;padding-right:0">
-                <button class="btn" id="expPng"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v13M7 11l5 5 5-5"/></svg>PNG</button>
-                <button class="btn" id="expSvg"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v13M7 11l5 5 5-5"/></svg>SVG</button>
-              </div>
             </div>
           </div>
           <div class="rail-resizer" id="railResizer" title="Drag to resize · double-click to reset"></div>
