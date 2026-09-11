@@ -7,6 +7,17 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.32.0] — 2026-09-11
+
+### Added
+- **Add connected tables from an entity's menu.** A table card's ⋯ menu gains
+  **Add connected tables…**, which opens a picker of every table related to it
+  (by a relationship in the enabled categories) — each row shows the direction
+  (→ / ← / ↔) and the linking lookup field. Choose which hidden ones to add
+  (All / None helpers) and they're placed around the source with the layout
+  engine while the rest of the diagram stays put; tables already on the diagram
+  are listed separately for reference. Undoable.
+
 ## [2.31.0] — 2026-09-11
 
 ### Changed

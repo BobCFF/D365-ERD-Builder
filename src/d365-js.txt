@@ -507,12 +507,63 @@ function openCardMenu(id,x,y){ const e=ENT[id];
     {label:'Data dictionary', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M3 9h18M3 14.5h18"/></svg>', fn:()=>openEntityDict(id)},
     {label:'Show in Data Dictionary tab', fn:()=>{ dcolF=defaultDcolF(); dcolF.ent.q=id; document.getElementById('dq').value=''; document.getElementById('dVis').checked=false; setView('dict'); renderDict(); saveState(); }},
     {sep:true},
+    {label:'Add connected tables…', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.1 11l7.8-4M8.1 13l7.8 4"/></svg>', fn:()=>openConnectedDialog(id)},
+    {sep:true},
     {label:'Maximize — all columns', fn:()=>setDetail(id,'full')},
     {label:'Keys — PK & FK', fn:()=>setDetail(id,'keys')},
     {label:'Minimize — title only', fn:()=>setDetail(id,'title')},
     {sep:true},
     {label:'Hide table', danger:true, fn:()=>{ pushUndo(); toggleEntity(id,false); }}
   ]); }
+// Tables related to `id` by a relationship in an enabled category (what the diagram
+// would draw a line for). Aggregated per other-table with direction + linking attrs.
+function connectedTables(id){
+  const map=new Map();
+  for(const r of O2M){ if(!cats.has(r.cat))continue;
+    let other=null,dir=null;
+    if(r.referencing===id && r.referenced!==id){ other=r.referenced; dir='out'; }     // id → other (id holds the lookup)
+    else if(r.referenced===id && r.referencing!==id){ other=r.referencing; dir='in'; } // other → id
+    if(!other||!ENT[other])continue;
+    const rec=map.get(other)||{id:other,attrs:new Set(),dirs:new Set()}; rec.attrs.add(r.attr); rec.dirs.add(dir); map.set(other,rec);
+  }
+  return [...map.values()].sort((a,b)=>(ENT[a.id].display||a.id).localeCompare(ENT[b.id].display||b.id));
+}
+// Picker to find the tables connected to `id` and add the hidden ones to the diagram.
+function openConnectedDialog(id){ const e=ENT[id]; if(!e)return;
+  const conns=connectedTables(id);
+  const hidden=conns.filter(c=>!visible.has(c.id)), shown=conns.filter(c=>visible.has(c.id));
+  const dirGlyph=c=>c.dirs.has('out')&&c.dirs.has('in')?'↔':(c.dirs.has('out')?'→':'←');
+  const attrsOf=c=>{ const a=[...c.attrs]; return a.slice(0,2).join(', ')+(a.length>2?` +${a.length-2}`:''); };
+  const addRow=c=>{ const en=ENT[c.id];
+    return `<label class="dm-chk cx-row"><input type="checkbox" data-add="${esc(c.id)}" checked><span class="dot" style="background:var(${GVAR[en.group]})"></span><span class="cx-name"><span class="cx-en">${esc(en.display||c.id)}</span><span class="cx-dir" title="${c.dirs.has('out')?'this table → '+esc(en.display||c.id):esc(en.display||c.id)+' → this table'}">${dirGlyph(c)}</span><span class="cx-attr mono">${esc(attrsOf(c))}</span></span></label>`; };
+  const shownRow=c=>{ const en=ENT[c.id];
+    return `<div class="dm-chk cx-row muted"><span class="dot" style="background:var(${GVAR[en.group]})"></span><span class="cx-name"><span class="cx-en">${esc(en.display||c.id)}</span><span class="cx-dir">${dirGlyph(c)}</span></span></div>`; };
+  const body = !conns.length
+    ? `<div class="cx-empty">No connected tables in the enabled relationship categories.<br><span class="mono dim">Enable more relationship types in the side panel to widen the search.</span></div>`
+    : (hidden.length
+        ? `<div class="ex-sect"><div class="ex-lbl">Add to diagram (${hidden.length})<span class="cx-links"><button class="linkbtn" data-cx="all">All</button><button class="linkbtn" data-cx="none">None</button></span></div><div class="cx-list">`+hidden.map(addRow).join('')+`</div></div>`
+        : `<div class="cx-empty">All connected tables are already on the diagram.</div>`)
+      +(shown.length?`<div class="ex-sect"><div class="ex-lbl">Already on the diagram (${shown.length})</div><div class="cx-list cx-shown">`+shown.map(shownRow).join('')+`</div></div>`:'');
+  const card=openModal(
+    `<div class="modal-h"><div><div class="modal-t"><span class="dot" style="background:var(${GVAR[e.group]})"></span>Connected to ${esc(e.display||id)}</div><div class="modal-sub mono">${esc(id)}</div></div><button class="modal-x" data-close aria-label="Close">${IC_X}</button></div>`+
+    `<div class="modal-body ex-body">`+body+`</div>`+
+    `<div class="modal-foot"><button class="btn" data-close>Cancel</button><button class="btn primary" id="cxAdd"${hidden.length?'':' disabled'}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add <span id="cxN">${hidden.length}</span></button></div>`,
+    'modal-export');
+  const upd=()=>{ const n=card.querySelectorAll('input[data-add]:checked').length; const btn=card.querySelector('#cxAdd'), cn=card.querySelector('#cxN'); if(cn)cn.textContent=n; if(btn)btn.disabled=!n; };
+  card.querySelectorAll('input[data-add]').forEach(cb=>cb.addEventListener('change',upd));
+  const all=card.querySelector('[data-cx="all"]'), none=card.querySelector('[data-cx="none"]');
+  if(all)all.addEventListener('click',()=>{ card.querySelectorAll('input[data-add]').forEach(cb=>cb.checked=true); upd(); });
+  if(none)none.addEventListener('click',()=>{ card.querySelectorAll('input[data-add]').forEach(cb=>cb.checked=false); upd(); });
+  const go=card.querySelector('#cxAdd'); if(go)go.addEventListener('click',()=>{
+    const ids=[...card.querySelectorAll('input[data-add]:checked')].map(cb=>cb.dataset.add).filter(x=>ENT[x]&&!visible.has(x));
+    if(!ids.length)return;
+    const before=new Set(visible); pushUndo();
+    ids.forEach(x=>toggleEntity(x,true));
+    forceLayout([...visible], before);
+    drawLinks(); saveState(); closeModal();
+    toast(`Added ${ids.length} connected table${ids.length===1?'':'s'}.`);
+  });
+}
 function wireNode(id){
   const n=N[id];
   const hb=n.card.querySelector('[data-hide]'); if(hb)hb.addEventListener('click',ev=>{ ev.stopPropagation(); toggleEntity(id,false); });

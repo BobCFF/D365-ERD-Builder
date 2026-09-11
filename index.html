@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-MHiboV+hRZ6ZiRfolwgF5O4i+6fZzUoDctg0lYBPV2I='; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-X6J+Eam7bo953H4OfxIiVnwDsqNsa0YTbuoicOFnm0I='; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <title>D365 ERD Builder</title>
 <meta name="description" content="Turn a Dynamics 365 / Dataverse customizations.xml into an interactive entity-relationship diagram — entirely in your browser. Explore tables and lookups, then export to PNG, SVG, CSV, or Excel. Nothing is uploaded.">
 <link rel="canonical" href="https://d365-erd-builder-five.vercel.app/">
@@ -558,6 +558,17 @@ body.col-resizing{cursor:col-resize;user-select:none}
 .ex-cols{display:grid;grid-template-columns:1fr 1fr;gap:2px 14px}
 .modal .dm-chk{display:flex;align-items:center;gap:8px;padding:4px 2px;cursor:pointer;font-size:12.5px}
 .modal .dm-chk:hover{color:var(--ink)}
+/* connected-tables picker */
+.cx-list{display:flex;flex-direction:column;gap:1px;max-height:300px;overflow:auto}
+.cx-shown{max-height:150px}
+.cx-row .dot{width:9px;height:9px;border-radius:3px;flex:none}
+.cx-row.muted{opacity:.6;cursor:default}
+.cx-name{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+.cx-en{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cx-dir{color:var(--accent);font-weight:700;flex:none}
+.cx-attr{color:var(--faint);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-left:auto}
+.cx-links{float:right;font-weight:400;display:inline-flex;gap:8px}
+.cx-empty{padding:20px 6px;color:var(--muted);font-size:12.5px;text-align:center;line-height:1.6}
 .dt-ent{display:flex;align-items:center;gap:7px;white-space:nowrap}
 .dt-ent .dot{width:8px;height:8px;border-radius:2.5px;flex:none}
 .dt-ent .en{font-weight:600;color:var(--ink)}
@@ -746,7 +757,7 @@ body.col-resizing{cursor:col-resize;user-select:none}
     <div id="landing-msg" class="landing-msg" hidden></div>
     <div class="lnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6z"/></svg><span>Your file never leaves your browser — parsing and rendering happen entirely on this page. To get the XML: export a solution containing your tables from Power&nbsp;Apps, unzip it, and use the <span class="amono">customizations.xml</span> inside. <a href="PRIVACY.md" target="_blank" rel="noopener">How your data is handled →</a></span></div>
     <a href="#" id="lsample" class="lsample">Explore a sample schema instead →</a>
-    <div class="lver">D365 ERD Builder v2.31.0</div>
+    <div class="lver">D365 ERD Builder v2.32.0</div>
   </div>
 </section>
 <input type="file" id="landing-file" accept=".xml,application/xml,text/xml" hidden>
@@ -1523,7 +1534,7 @@ body.col-resizing{cursor:col-resize;user-select:none}
     <section id="view-settings" class="view">
       <div class="panel settings-panel">
         <div class="settings-inner">
-          <div class="settings-head"><h1 class="settings-title">Settings</h1><span class="settings-ver">D365 ERD Builder <b>v2.31.0</b> · <a href="CHANGELOG.md" target="_blank" rel="noopener">changelog</a></span></div>
+          <div class="settings-head"><h1 class="settings-title">Settings</h1><span class="settings-ver">D365 ERD Builder <b>v2.32.0</b> · <a href="CHANGELOG.md" target="_blank" rel="noopener">changelog</a></span></div>
           <p class="settings-sub">Preferences are saved in this browser only. They control how the diagram, dictionary, and exports behave.</p>
 
           <div class="scard">
@@ -2090,12 +2101,63 @@ function openCardMenu(id,x,y){ const e=ENT[id];
     {label:'Data dictionary', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M3 9h18M3 14.5h18"/></svg>', fn:()=>openEntityDict(id)},
     {label:'Show in Data Dictionary tab', fn:()=>{ dcolF=defaultDcolF(); dcolF.ent.q=id; document.getElementById('dq').value=''; document.getElementById('dVis').checked=false; setView('dict'); renderDict(); saveState(); }},
     {sep:true},
+    {label:'Add connected tables…', icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.1 11l7.8-4M8.1 13l7.8 4"/></svg>', fn:()=>openConnectedDialog(id)},
+    {sep:true},
     {label:'Maximize — all columns', fn:()=>setDetail(id,'full')},
     {label:'Keys — PK & FK', fn:()=>setDetail(id,'keys')},
     {label:'Minimize — title only', fn:()=>setDetail(id,'title')},
     {sep:true},
     {label:'Hide table', danger:true, fn:()=>{ pushUndo(); toggleEntity(id,false); }}
   ]); }
+// Tables related to `id` by a relationship in an enabled category (what the diagram
+// would draw a line for). Aggregated per other-table with direction + linking attrs.
+function connectedTables(id){
+  const map=new Map();
+  for(const r of O2M){ if(!cats.has(r.cat))continue;
+    let other=null,dir=null;
+    if(r.referencing===id && r.referenced!==id){ other=r.referenced; dir='out'; }     // id → other (id holds the lookup)
+    else if(r.referenced===id && r.referencing!==id){ other=r.referencing; dir='in'; } // other → id
+    if(!other||!ENT[other])continue;
+    const rec=map.get(other)||{id:other,attrs:new Set(),dirs:new Set()}; rec.attrs.add(r.attr); rec.dirs.add(dir); map.set(other,rec);
+  }
+  return [...map.values()].sort((a,b)=>(ENT[a.id].display||a.id).localeCompare(ENT[b.id].display||b.id));
+}
+// Picker to find the tables connected to `id` and add the hidden ones to the diagram.
+function openConnectedDialog(id){ const e=ENT[id]; if(!e)return;
+  const conns=connectedTables(id);
+  const hidden=conns.filter(c=>!visible.has(c.id)), shown=conns.filter(c=>visible.has(c.id));
+  const dirGlyph=c=>c.dirs.has('out')&&c.dirs.has('in')?'↔':(c.dirs.has('out')?'→':'←');
+  const attrsOf=c=>{ const a=[...c.attrs]; return a.slice(0,2).join(', ')+(a.length>2?` +${a.length-2}`:''); };
+  const addRow=c=>{ const en=ENT[c.id];
+    return `<label class="dm-chk cx-row"><input type="checkbox" data-add="${esc(c.id)}" checked><span class="dot" style="background:var(${GVAR[en.group]})"></span><span class="cx-name"><span class="cx-en">${esc(en.display||c.id)}</span><span class="cx-dir" title="${c.dirs.has('out')?'this table → '+esc(en.display||c.id):esc(en.display||c.id)+' → this table'}">${dirGlyph(c)}</span><span class="cx-attr mono">${esc(attrsOf(c))}</span></span></label>`; };
+  const shownRow=c=>{ const en=ENT[c.id];
+    return `<div class="dm-chk cx-row muted"><span class="dot" style="background:var(${GVAR[en.group]})"></span><span class="cx-name"><span class="cx-en">${esc(en.display||c.id)}</span><span class="cx-dir">${dirGlyph(c)}</span></span></div>`; };
+  const body = !conns.length
+    ? `<div class="cx-empty">No connected tables in the enabled relationship categories.<br><span class="mono dim">Enable more relationship types in the side panel to widen the search.</span></div>`
+    : (hidden.length
+        ? `<div class="ex-sect"><div class="ex-lbl">Add to diagram (${hidden.length})<span class="cx-links"><button class="linkbtn" data-cx="all">All</button><button class="linkbtn" data-cx="none">None</button></span></div><div class="cx-list">`+hidden.map(addRow).join('')+`</div></div>`
+        : `<div class="cx-empty">All connected tables are already on the diagram.</div>`)
+      +(shown.length?`<div class="ex-sect"><div class="ex-lbl">Already on the diagram (${shown.length})</div><div class="cx-list cx-shown">`+shown.map(shownRow).join('')+`</div></div>`:'');
+  const card=openModal(
+    `<div class="modal-h"><div><div class="modal-t"><span class="dot" style="background:var(${GVAR[e.group]})"></span>Connected to ${esc(e.display||id)}</div><div class="modal-sub mono">${esc(id)}</div></div><button class="modal-x" data-close aria-label="Close">${IC_X}</button></div>`+
+    `<div class="modal-body ex-body">`+body+`</div>`+
+    `<div class="modal-foot"><button class="btn" data-close>Cancel</button><button class="btn primary" id="cxAdd"${hidden.length?'':' disabled'}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Add <span id="cxN">${hidden.length}</span></button></div>`,
+    'modal-export');
+  const upd=()=>{ const n=card.querySelectorAll('input[data-add]:checked').length; const btn=card.querySelector('#cxAdd'), cn=card.querySelector('#cxN'); if(cn)cn.textContent=n; if(btn)btn.disabled=!n; };
+  card.querySelectorAll('input[data-add]').forEach(cb=>cb.addEventListener('change',upd));
+  const all=card.querySelector('[data-cx="all"]'), none=card.querySelector('[data-cx="none"]');
+  if(all)all.addEventListener('click',()=>{ card.querySelectorAll('input[data-add]').forEach(cb=>cb.checked=true); upd(); });
+  if(none)none.addEventListener('click',()=>{ card.querySelectorAll('input[data-add]').forEach(cb=>cb.checked=false); upd(); });
+  const go=card.querySelector('#cxAdd'); if(go)go.addEventListener('click',()=>{
+    const ids=[...card.querySelectorAll('input[data-add]:checked')].map(cb=>cb.dataset.add).filter(x=>ENT[x]&&!visible.has(x));
+    if(!ids.length)return;
+    const before=new Set(visible); pushUndo();
+    ids.forEach(x=>toggleEntity(x,true));
+    forceLayout([...visible], before);
+    drawLinks(); saveState(); closeModal();
+    toast(`Added ${ids.length} connected table${ids.length===1?'':'s'}.`);
+  });
+}
 function wireNode(id){
   const n=N[id];
   const hb=n.card.querySelector('[data-hide]'); if(hb)hb.addEventListener('click',ev=>{ ev.stopPropagation(); toggleEntity(id,false); });
@@ -2493,7 +2555,7 @@ async function doExport(kind){
 }
 
 /* ---------- status / theme ---------- */
-const APP_VERSION='2.31.0';
+const APP_VERSION='2.32.0';
 function updateStatus(ec){ document.getElementById('status').textContent=`${visible.size} of ${allIds.length} tables · ${ec} relationships shown`; }
 const themebtn=document.getElementById('themebtn');
 const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
