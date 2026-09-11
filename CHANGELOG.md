@@ -7,6 +7,19 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.21.0] — 2026-09-11
+
+### Added
+- **Filter the Security page by table.** The **Table** column's ⋯ menu now has a
+  searchable checklist of tables — pick one or more to show only those rows
+  (empty = all). The header flags an active table filter, and the choice persists.
+
+### Changed
+- **Classic icons match the product.** The pie glyphs are re-oriented to match
+  the Dynamics access-level icons: **User** is a quarter centred at the top,
+  **BU** is the bottom half, **PC** is filled with a quarter open at the top,
+  **Org** is the full disc.
+
 ## [2.20.0] — 2026-09-11
 
 ### Added

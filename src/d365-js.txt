@@ -46,14 +46,16 @@ const SEC_VERB_LABEL={create:'Create',read:'Read',write:'Write',delete:'Delete',
 const SEC_LEVELS=['none','user','bu','deep','org'];
 const SEC_LEVEL_RANK=Object.fromEntries(SEC_LEVELS.map((l,i)=>[l,i]));
 const SEC_LEVEL_LABEL={none:'—',user:'User',bu:'BU',deep:'PC',org:'Org'};
-// classic Dynamics access-level glyph: an outlined circle with a pie wedge sized to the scope
-const SEC_PIE_FRAC={none:0,user:0.25,bu:0.5,deep:0.75,org:1};
-function secPie(level){ const f=SEC_PIE_FRAC[level]||0, r=6.5, cx=8, cy=8;
-  const cls='sp-'+level;
-  if(f>=1)return `<svg class="spie ${cls}" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="${r}"/></svg>`;
+// classic Dynamics access-level glyph: outlined circle + a pie wedge oriented to match the product's icons
+// (User = a quarter centred at the top; BU = the bottom half; PC = filled but a quarter open at the top; Org = full).
+// s/f are turns (0..1) measured from 12 o'clock, clockwise.
+const SEC_PIE={none:{f:0}, user:{s:-0.125,f:0.25}, bu:{s:0.25,f:0.5}, deep:{s:0.125,f:0.75}, org:{f:1}};
+function secPie(level){ const spec=SEC_PIE[level]||{f:0}, r=6.5, cx=8, cy=8, cls='sp-'+level;
+  if(spec.f>=1)return `<svg class="spie ${cls}" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="${r}"/></svg>`;
   let wedge='';
-  if(f>0){ const a=2*Math.PI*f, ex=cx+r*Math.sin(a), ey=cy-r*Math.cos(a), large=f>0.5?1:0;
-    wedge=`<path d="M${cx} ${cy} L${cx} ${cy-r} A${r} ${r} 0 ${large} 1 ${ex.toFixed(2)} ${ey.toFixed(2)} Z"/>`; }
+  if(spec.f>0){ const A=t=>[(cx+r*Math.sin(2*Math.PI*t)).toFixed(2),(cy-r*Math.cos(2*Math.PI*t)).toFixed(2)];
+    const p0=A(spec.s), p1=A(spec.s+spec.f), large=spec.f>0.5?1:0;
+    wedge=`<path d="M${cx} ${cy} L${p0[0]} ${p0[1]} A${r} ${r} 0 ${large} 1 ${p1[0]} ${p1[1]} Z"/>`; }
   return `<svg class="spie ${cls}" viewBox="0 0 16 16" aria-hidden="true"><circle class="rim" cx="8" cy="8" r="${r}" fill="none"/>${wedge}</svg>`; }
 const SEC_LEVEL_FULL={none:'None',user:'User (Basic)',bu:'Business Unit (Local)',deep:'Parent: Child (Deep)',org:'Organization (Global)'};
 // a privilege name is prv<Verb><EntityLogicalName>; the remainder after the verb is the entity token
@@ -215,13 +217,14 @@ function saveState(){ try{ localStorage.setItem(LS, JSON.stringify({
   ribbonCollapsed, minimapCollapsed, mmPos, gestureSeen, dcolOrder, dcolW, dcolF, dcolHidden:[...dcolHidden],
   dsort, exportOpts, dVis:!!(document.getElementById('dVis')||{}).checked, dq:(document.getElementById('dq')||{}).value||'',
   secRole:(document.getElementById('secRole')||{}).value||'', secOnly:!(document.getElementById('secOnly'))||!!document.getElementById('secOnly').checked,
-  secSort, secFilter, secIcons
+  secSort, secFilter, secIcons, secEntFilter
 })); }catch(e){} }
 const saved=loadState();
 // security page state (declared here so saveState — defined above — never hits their TDZ)
 let secSort={key:(saved.secSort&&(saved.secSort.key==='ent'||SEC_VERB_ORDER.includes(saved.secSort.key)))?saved.secSort.key:'ent', dir:(saved.secSort&&saved.secSort.dir===-1)?-1:1};
 let secFilter=(function(){ const o={}, s=saved.secFilter; if(s&&typeof s==='object')for(const v of SEC_VERB_ORDER){ const a=s[v]; if(Array.isArray(a)){ const f=a.filter(x=>SEC_LEVELS.includes(x)); if(f.length&&f.length<SEC_LEVELS.length)o[v]=f; } } return o; })();
 let secIcons=saved.secIcons===true;
+let secEntFilter=(Array.isArray(saved.secEntFilter)?saved.secEntFilter.filter(id=>ENT[id]):[]);
 let initVis = saved.vis&&saved.vis.length ? saved.vis.filter(id=>ENT[id]) : allIds.slice();
 if(!initVis.length) initVis = allIds.slice();
 const visible=new Set(initVis);
@@ -1036,7 +1039,7 @@ document.querySelectorAll('#tabs .tab').forEach(t=>t.addEventListener('click',()
 if(ROLES.length){ const st=document.getElementById('tab-security'); if(st)st.hidden=false; }
 /* ---------- security roles page (state initialised up top, near other saved state) ---------- */
 let secInited=false, secMenuKey=null;
-function secColActive(k){ return k!=='ent' && !!(secFilter[k]&&secFilter[k].length); }
+function secColActive(k){ return k==='ent' ? !!secEntFilter.length : !!(secFilter[k]&&secFilter[k].length); }
 function closeSecMenu(){ const m=document.getElementById('secmenu'); if(m){ m.hidden=true; m.innerHTML=''; } secMenuKey=null; }
 function openSecMenu(k,thEl){ if(secMenuKey===k){ closeSecMenu(); return; }
   const m=document.getElementById('secmenu'); secMenuKey=k;
@@ -1046,7 +1049,11 @@ function openSecMenu(k,thEl){ if(secMenuKey===k){ closeSecMenu(); return; }
   if(k!=='ent'){ const sel=new Set(secFilter[k]||SEC_LEVELS);
     h+=`<div class="dm-sub">Access level</div><div class="dm-list">`+SEC_LEVELS.map(l=>
       `<label class="dm-chk"><input type="checkbox" data-lv="${l}" ${sel.has(l)?'checked':''}><span class="slvl ${l}">${esc(SEC_LEVEL_LABEL[l])}</span> ${esc(l==='none'?'No access':SEC_LEVEL_FULL[l].replace(/ \(.*/,''))}</label>`).join('')+`</div>`;
-    h+=`<div class="dm-foot"><button class="dm-clear" ${secColActive(k)?'':'disabled'}>Clear filter</button></div>`; }
+    h+=`<div class="dm-foot"><button class="dm-clear" ${secColActive(k)?'':'disabled'}>Clear filter</button></div>`;
+  } else { // the Table column offers a checklist of tables to include (empty = all)
+    h+=`<div class="dm-sub">Tables</div><input class="dm-q" id="sec-tq" type="search" placeholder="Filter list…">`+
+      `<div class="dm-list dm-tables">`+allIds.map(id=>`<label class="dm-chk" data-name="${esc((((ENT[id].display||id)+' '+id).toLowerCase()))}"><input type="checkbox" data-ent="${esc(id)}" ${secEntFilter.includes(id)?'checked':''}><span class="dot" style="background:var(${GVAR[ENT[id].group]})"></span><span class="dt-tname">${esc(ENT[id].display||id)}</span></label>`).join('')+`</div>`+
+      `<div class="dm-foot"><button class="dm-clear" ${secColActive('ent')?'':'disabled'}>Clear filter</button></div>`; }
   m.innerHTML=h; m.hidden=false;
   const panel=thEl.closest('.panel'), pr=panel.getBoundingClientRect(), br=thEl.getBoundingClientRect(), mw=Math.max(m.offsetWidth,200);
   let left=br.left-pr.left; left=Math.max(6,Math.min(left, pr.width-mw-6));
@@ -1058,9 +1065,16 @@ function openSecMenu(k,thEl){ if(secMenuKey===k){ closeSecMenu(); return; }
     renderSecurity(); saveState();
     const th=document.querySelector(`#sectable th[data-k="${k}"]`); if(th)th.classList.toggle('filtered',secColActive(k));
     const cb=m.querySelector('.dm-clear'); if(cb)cb.disabled=!secColActive(k); }));
-  const cb=m.querySelector('.dm-clear'); if(cb)cb.addEventListener('click',()=>{ delete secFilter[k];
-    m.querySelectorAll('input[data-lv]').forEach(x=>x.checked=true); cb.disabled=true;
-    const th=document.querySelector(`#sectable th[data-k="${k}"]`); if(th)th.classList.remove('filtered'); renderSecurity(); saveState(); });
+  m.querySelectorAll('input[data-ent]').forEach(c=>c.addEventListener('change',()=>{ const id=c.dataset.ent;
+    secEntFilter=secEntFilter.filter(x=>x!==id); if(c.checked)secEntFilter.push(id); renderSecurity(); saveState();
+    const th=document.querySelector(`#sectable th[data-k="ent"]`); if(th)th.classList.toggle('filtered',secColActive('ent'));
+    const cb=m.querySelector('.dm-clear'); if(cb)cb.disabled=!secColActive('ent'); }));
+  const tq=m.querySelector('#sec-tq'); if(tq)tq.addEventListener('input',()=>{ const t=tq.value.trim().toLowerCase();
+    m.querySelectorAll('.dm-tables .dm-chk').forEach(el=>{ el.style.display=(!t||el.dataset.name.includes(t))?'':'none'; }); });
+  const cb=m.querySelector('.dm-clear'); if(cb)cb.addEventListener('click',()=>{
+    if(k==='ent'){ secEntFilter=[]; m.querySelectorAll('input[data-ent]').forEach(x=>x.checked=false); }
+    else { delete secFilter[k]; m.querySelectorAll('input[data-lv]').forEach(x=>x.checked=true); }
+    cb.disabled=true; const th=document.querySelector(`#sectable th[data-k="${k}"]`); if(th)th.classList.remove('filtered'); renderSecurity(); saveState(); });
 }
 function initSecurity(){ if(secInited||!ROLES.length)return; secInited=true;
   const sel=document.getElementById('secRole'); if(!sel)return;
@@ -1085,6 +1099,7 @@ function renderSecurity(){ if(!ROLES.length)return; initSecurity();
   const lvOf=(id,v)=>(role.priv[id]&&role.priv[id][v])||'none';
   let rows=allIds.filter(id=>{
     if(only && !role.priv[id])return false;
+    if(secEntFilter.length && !secEntFilter.includes(id))return false;
     if(q && !((id+' '+(ENT[id].display||'')).toLowerCase().includes(q)))return false;
     for(const v of SEC_VERB_ORDER){ const f=secFilter[v]; if(f&&!f.includes(lvOf(id,v)))return false; }
     return true; });
