@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-oVehJNqeCsih9Iz4LHfdtSGmqdKAkFNFHQMdiNGd75E='; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-j6EH6jDh7YMvvxH+XUlNuT4/z8pmRVFTRmkdROtqTzM='; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <title>D365 ERD Builder</title>
 <meta name="description" content="Turn a Dynamics 365 / Dataverse customizations.xml into an interactive entity-relationship diagram — entirely in your browser. Explore tables and lookups, then export to PNG, SVG, CSV, or Excel. Nothing is uploaded.">
 <link rel="canonical" href="https://d365-erd-builder-five.vercel.app/">
@@ -426,7 +426,10 @@ body.col-resizing{cursor:col-resize;user-select:none}
 /* security roles page */
 #view-security .panel{position:relative}
 .sec-toolbar{align-items:center;gap:10px;flex-wrap:wrap}
+.sec-mode{flex:none}
 .sec-search{flex:0 1 300px;min-width:170px}
+#secExport svg,#secRolesBtn svg{width:14px;height:14px}
+#sectable thead th .sec-rolehead{display:inline-block;max-width:150px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
 .sec-right{margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .sec-right .dict-count{margin:0}
 #secExport svg{width:14px;height:14px}
@@ -653,7 +656,7 @@ body.col-resizing{cursor:col-resize;user-select:none}
     <div id="landing-msg" class="landing-msg" hidden></div>
     <div class="lnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6z"/></svg><span>Your file never leaves your browser — parsing and rendering happen entirely on this page. To get the XML: export a solution containing your tables from Power&nbsp;Apps, unzip it, and use the <span class="amono">customizations.xml</span> inside. <a href="PRIVACY.md" target="_blank" rel="noopener">How your data is handled →</a></span></div>
     <a href="#" id="lsample" class="lsample">Explore a sample schema instead →</a>
-    <div class="lver">D365 ERD Builder v2.22.0</div>
+    <div class="lver">D365 ERD Builder v2.23.0</div>
   </div>
 </section>
 <input type="file" id="landing-file" accept=".xml,application/xml,text/xml" hidden>
@@ -1357,7 +1360,10 @@ body.col-resizing{cursor:col-resize;user-select:none}
     <section id="view-security" class="view">
       <div class="panel">
         <div class="dict-toolbar sec-toolbar">
-          <label class="sec-pick">Role <select id="secRole"></select></label>
+          <div class="seg sm sec-mode" id="secMode"><button data-v="role">Single role</button><button data-v="compare">Compare</button></div>
+          <label class="sec-pick" id="secRoleWrap">Role <select id="secRole"></select></label>
+          <label class="sec-pick sec-cmp" id="secVerbWrap" hidden>Privilege <select id="secVerb"></select></label>
+          <button class="btn ghost sec-cmp" id="secRolesBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>Roles</button>
           <div class="search dict-search sec-search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
             <input id="secQ" type="search" placeholder="Filter tables…" autocomplete="off">
@@ -1375,6 +1381,7 @@ body.col-resizing{cursor:col-resize;user-select:none}
           <table id="sectable" class="dgrid sgrid"><thead></thead><tbody></tbody></table>
         </div>
         <div id="secmenu" class="dmenu" hidden></div>
+        <div id="secrolesmenu" class="dmenu" hidden></div>
       </div>
     </section>
 
@@ -1382,7 +1389,7 @@ body.col-resizing{cursor:col-resize;user-select:none}
     <section id="view-settings" class="view">
       <div class="panel settings-panel">
         <div class="settings-inner">
-          <div class="settings-head"><h1 class="settings-title">Settings</h1><span class="settings-ver">D365 ERD Builder <b>v2.22.0</b> · <a href="CHANGELOG.md" target="_blank" rel="noopener">changelog</a></span></div>
+          <div class="settings-head"><h1 class="settings-title">Settings</h1><span class="settings-ver">D365 ERD Builder <b>v2.23.0</b> · <a href="CHANGELOG.md" target="_blank" rel="noopener">changelog</a></span></div>
           <p class="settings-sub">Preferences are saved in this browser only. They control how the diagram, dictionary, and exports behave.</p>
 
           <div class="scard">
@@ -1660,7 +1667,7 @@ function saveState(){ try{ localStorage.setItem(LS, JSON.stringify({
   ribbonCollapsed, minimapCollapsed, mmPos, gestureSeen, dcolOrder, dcolW, dcolF, dcolHidden:[...dcolHidden],
   dsort, exportOpts, dVis:!!(document.getElementById('dVis')||{}).checked, dq:(document.getElementById('dq')||{}).value||'',
   secRole:(document.getElementById('secRole')||{}).value||'', secOnly:!(document.getElementById('secOnly'))||!!document.getElementById('secOnly').checked,
-  secSort, secFilter, secIcons, secEntFilter, secExportOpts
+  secSort, secFilter, secIcons, secEntFilter, secExportOpts, secMode, secVerb, secCompareRoles
 })); }catch(e){} }
 const saved=loadState();
 // security page state (declared here so saveState — defined above — never hits their TDZ)
@@ -1673,6 +1680,10 @@ let secExportOpts=(function(){ const d={fmt:'xlsx',roles:'current',tables:'filte
   const cols=Array.isArray(s.cols)?s.cols.filter(id=>id==='logical'||SEC_VERB_ORDER.includes(id)):[];
   return { fmt:['xlsx','csv'].includes(s.fmt)?s.fmt:d.fmt, roles:['current','all'].includes(s.roles)?s.roles:d.roles,
     tables:['filter','all'].includes(s.tables)?s.tables:d.tables, cols:cols.length?cols:d.cols, levels:['short','full'].includes(s.levels)?s.levels:d.levels }; })();
+// role-comparison view: matrix of Table × Role for one chosen privilege
+let secMode=(saved.secMode==='compare')?'compare':'role';
+let secVerb=SEC_VERB_ORDER.includes(saved.secVerb)?saved.secVerb:'read';
+let secCompareRoles=(Array.isArray(saved.secCompareRoles)?saved.secCompareRoles:[]).filter(n=>ROLES.some(r=>r.name===n));
 let initVis = saved.vis&&saved.vis.length ? saved.vis.filter(id=>ENT[id]) : allIds.slice();
 if(!initVis.length) initVis = allIds.slice();
 const visible=new Set(initVis);
@@ -2293,7 +2304,7 @@ async function doExport(kind){
 }
 
 /* ---------- status / theme ---------- */
-const APP_VERSION='2.22.0';
+const APP_VERSION='2.23.0';
 function updateStatus(ec){ document.getElementById('status').textContent=`${visible.size} of ${allIds.length} tables · ${ec} relationships shown`; }
 const themebtn=document.getElementById('themebtn');
 const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
@@ -2491,20 +2502,22 @@ function secColActive(k){ return k==='ent' ? !!secEntFilter.length : !!(secFilte
 function closeSecMenu(){ const m=document.getElementById('secmenu'); if(m){ m.hidden=true; m.innerHTML=''; } secMenuKey=null; }
 function openSecMenu(k,thEl){ if(secMenuKey===k){ closeSecMenu(); return; }
   const m=document.getElementById('secmenu'); secMenuKey=k;
-  let h=`<div class="dm-h">${esc(k==='ent'?'Table':SEC_VERB_LABEL[k])}</div>`;
+  const isRole=k.indexOf('role:')===0, label=k==='ent'?'Table':(isRole?k.slice(5):SEC_VERB_LABEL[k]);
+  let h=`<div class="dm-h">${esc(label)}</div>`;
   h+=`<div class="dm-opts"><label class="dm-opt"><input type="radio" name="secsort" data-dir="1" ${secSort.key===k&&secSort.dir>0?'checked':''}><span>Sort ascending</span></label>`+
      `<label class="dm-opt"><input type="radio" name="secsort" data-dir="-1" ${secSort.key===k&&secSort.dir<0?'checked':''}><span>Sort descending</span></label></div>`;
-  if(k!=='ent'){ const sel=new Set(secFilter[k]||SEC_LEVELS);
+  if(k!=='ent'&&!isRole){ const sel=new Set(secFilter[k]||SEC_LEVELS);
     h+=`<div class="dm-sub">Access level</div><div class="dm-list">`+SEC_LEVELS.map(l=>
       `<label class="dm-chk"><input type="checkbox" data-lv="${l}" ${sel.has(l)?'checked':''}><span class="slvl ${l}">${esc(SEC_LEVEL_LABEL[l])}</span> ${esc(l==='none'?'No access':SEC_LEVEL_FULL[l].replace(/ \(.*/,''))}</label>`).join('')+`</div>`;
     h+=`<div class="dm-foot"><button class="dm-clear" ${secColActive(k)?'':'disabled'}>Clear filter</button></div>`;
-  } else { // the Table column offers a checklist of tables to include (empty = all)
+  } else if(k==='ent'){ // the Table column offers a checklist of tables to include (empty = all)
     h+=`<div class="dm-sub">Tables</div><input class="dm-q" id="sec-tq" type="search" placeholder="Filter list…">`+
       `<div class="dm-list dm-tables">`+allIds.map(id=>`<label class="dm-chk" data-name="${esc((((ENT[id].display||id)+' '+id).toLowerCase()))}"><input type="checkbox" data-ent="${esc(id)}" ${secEntFilter.includes(id)?'checked':''}><span class="dot" style="background:var(${GVAR[ENT[id].group]})"></span><span class="dt-tname">${esc(ENT[id].display||id)}</span></label>`).join('')+`</div>`+
       `<div class="dm-foot"><button class="dm-clear" ${secColActive('ent')?'':'disabled'}>Clear filter</button></div>`; }
   m.innerHTML=h; m.hidden=false;
   const panel=thEl.closest('.panel'), pr=panel.getBoundingClientRect(), br=thEl.getBoundingClientRect(), mw=Math.max(m.offsetWidth,200);
-  let left=br.left-pr.left; left=Math.max(6,Math.min(left, pr.width-mw-6));
+  // right-align the menu under the column's ⋯ icon (as on the Data Dictionary)
+  let left=br.right-pr.left-mw; left=Math.max(6,Math.min(left, pr.width-mw-6));
   m.style.left=left+'px'; m.style.top=(br.bottom-pr.top+3)+'px';
   m.querySelectorAll('input[name="secsort"]').forEach(r=>r.addEventListener('change',()=>{ if(!r.checked)return; secSort={key:k,dir:r.dataset.dir==='-1'?-1:1}; renderSecurity(); saveState(); }));
   m.querySelectorAll('input[data-lv]').forEach(c=>c.addEventListener('change',()=>{
@@ -2534,12 +2547,41 @@ function initSecurity(){ if(secInited||!ROLES.length)return; secInited=true;
   document.getElementById('secQ').addEventListener('input',renderSecurity);
   if(only)only.addEventListener('change',()=>{ renderSecurity(); saveState(); });
   const exp=document.getElementById('secExport'); if(exp)exp.addEventListener('click',openSecExportDialog);
+  // role-comparison controls
+  const modeSeg=document.getElementById('secMode'); if(modeSeg)modeSeg.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{ secMode=btn.dataset.v==='compare'?'compare':'role'; renderSecurity(); saveState(); }));
+  const verbSel=document.getElementById('secVerb'); if(verbSel){ verbSel.innerHTML=SEC_VERB_ORDER.map(v=>`<option value="${v}">${esc(SEC_VERB_LABEL[v])}</option>`).join(''); verbSel.value=secVerb; verbSel.addEventListener('change',()=>{ secVerb=verbSel.value; renderSecurity(); saveState(); }); }
+  const rolesBtn=document.getElementById('secRolesBtn'); if(rolesBtn)rolesBtn.addEventListener('click',e=>{ e.stopPropagation(); openSecRolesMenu(rolesBtn); });
   const thead=document.getElementById('sectable').querySelector('thead');
   thead.addEventListener('click',e=>{ const mb=e.target.closest('.dth-menu'); if(mb){ e.stopPropagation(); openSecMenu(mb.closest('th').dataset.k, mb.closest('th')); return; }
     const l=e.target.closest('.dth-l'); if(l){ const k=l.closest('th').dataset.k; if(secSort.key===k)secSort.dir*=-1; else{secSort.key=k;secSort.dir=1;} renderSecurity(); saveState(); } });
-  document.addEventListener('mousedown',e=>{ if(secMenuKey!=null && !e.target.closest('#secmenu') && !e.target.closest('.dth-menu'))closeSecMenu(); });
-  document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&secMenuKey!=null)closeSecMenu(); });
+  document.addEventListener('mousedown',e=>{ if(secMenuKey!=null && !e.target.closest('#secmenu') && !e.target.closest('.dth-menu'))closeSecMenu();
+    if(secRolesMenuOpen && !e.target.closest('#secrolesmenu') && !e.target.closest('#secRolesBtn'))closeSecRolesMenu(); });
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ if(secMenuKey!=null)closeSecMenu(); if(secRolesMenuOpen)closeSecRolesMenu(); } });
   const sc=document.querySelector('#view-security .dict-scroll'); if(sc)sc.addEventListener('scroll',()=>{ if(secMenuKey!=null)closeSecMenu(); });
+}
+let secRolesMenuOpen=false;
+function syncSecMode(){ document.querySelectorAll('#secMode button').forEach(b=>b.classList.toggle('on',b.dataset.v===secMode));
+  const cmp=secMode==='compare';
+  const rw=document.getElementById('secRoleWrap'); if(rw)rw.hidden=cmp;
+  document.querySelectorAll('.sec-cmp').forEach(el=>el.hidden=!cmp);
+  const rb=document.getElementById('secRolesBtn'); if(rb)rb.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>Roles (${secCompareRolesList().length})`;
+}
+function secCompareRolesList(){ const set=new Set(secCompareRoles); let list=ROLES.filter(r=>set.has(r.name)); if(!list.length)list=ROLES.slice(0,Math.min(6,ROLES.length)); return list; }
+function closeSecRolesMenu(){ const m=document.getElementById('secrolesmenu'); if(m){ m.hidden=true; m.innerHTML=''; } secRolesMenuOpen=false; }
+function openSecRolesMenu(btn){ if(secRolesMenuOpen){ closeSecRolesMenu(); return; } closeSecMenu();
+  const m=document.getElementById('secrolesmenu'); secRolesMenuOpen=true; const chosen=new Set(secCompareRolesList().map(r=>r.name));
+  let h=`<div class="dm-h">Roles to compare</div><input class="dm-q" id="sec-rq" type="search" placeholder="Filter roles…">`+
+    `<div class="dm-list dm-tables">`+ROLES.map(r=>`<label class="dm-chk" data-name="${esc(r.name.toLowerCase())}"><input type="checkbox" data-role="${esc(r.name)}" ${chosen.has(r.name)?'checked':''}><span class="dt-tname">${esc(r.name)}</span></label>`).join('')+`</div>`+
+    `<div class="dm-foot"><button class="dm-clear" id="sec-rall">All</button><button class="dm-clear" id="sec-rnone">None</button></div>`;
+  m.innerHTML=h; m.hidden=false;
+  const panel=btn.closest('.panel'), pr=panel.getBoundingClientRect(), br=btn.getBoundingClientRect(), mw=Math.max(m.offsetWidth,220);
+  let left=br.left-pr.left; left=Math.max(6,Math.min(left, pr.width-mw-6));
+  m.style.left=left+'px'; m.style.top=(br.bottom-pr.top+3)+'px';
+  const commit=()=>{ secCompareRoles=[...m.querySelectorAll('input[data-role]')].filter(x=>x.checked).map(x=>x.dataset.role); renderSecurity(); saveState(); };
+  m.querySelectorAll('input[data-role]').forEach(c=>c.addEventListener('change',commit));
+  m.querySelector('#sec-rall').addEventListener('click',()=>{ m.querySelectorAll('input[data-role]').forEach(x=>x.checked=true); commit(); });
+  m.querySelector('#sec-rnone').addEventListener('click',()=>{ m.querySelectorAll('input[data-role]').forEach(x=>x.checked=false); commit(); });
+  const rq=m.querySelector('#sec-rq'); if(rq)rq.addEventListener('input',()=>{ const t=rq.value.trim().toLowerCase(); m.querySelectorAll('.dm-tables .dm-chk').forEach(el=>{ el.style.display=(!t||el.dataset.name.includes(t))?'':'none'; }); });
 }
 function secCurrentRole(){ const nm=(document.getElementById('secRole')||{}).value; return ROLES.find(r=>r.name===nm)||ROLES[0]||null; }
 function secLevelOf(role,id,v){ return (role.priv[id]&&role.priv[id][v])||'none'; }
@@ -2556,7 +2598,8 @@ function secVisibleIds(role){ if(!role)return [];
   const dir=secSort.dir, key=secSort.key, val=key==='ent'?(id=>(ENT[id].display||id).toLowerCase()):(id=>SEC_LEVEL_RANK[secLevelOf(role,id,key)]);
   rows.sort((a,b)=>{ const va=val(a),vb=val(b); if(va<vb)return -dir; if(va>vb)return dir; return (ENT[a].display||a).localeCompare(ENT[b].display||b); });
   return rows; }
-function renderSecurity(){ if(!ROLES.length)return; initSecurity();
+function renderSecurity(){ if(!ROLES.length)return; initSecurity(); syncSecMode();
+  if(secMode==='compare'){ renderSecCompare(); return; }
   const role=secCurrentRole(); if(!role)return;
   const lvOf=(id,v)=>secLevelOf(role,id,v);
   const rows=secVisibleIds(role);
@@ -2570,6 +2613,34 @@ function renderSecurity(){ if(!ROLES.length)return; initSecurity();
       SEC_VERB_ORDER.map(v=>cell(id,v)).join('')+`</tr>`; }).join('')
     : `<tr><td colspan="${SEC_VERB_ORDER.length+1}"><div class="dict-empty">No tables match these filters.</div></td></tr>`;
   document.getElementById('secCount').textContent=`${rows.length} table${rows.length===1?'':'s'}`;
+  document.getElementById('secLegend').innerHTML='Access &nbsp;'+SEC_LEVELS.filter(l=>l!=='none').map(l=>`<span class="lg" title="${esc(SEC_LEVEL_TIP[l])}">${secIcons?secPie(l):`<span class="slvl ${l}">${esc(SEC_LEVEL_LABEL[l])}</span>`}${esc(SEC_LEVEL_FULL[l].replace(/ \(.*/,''))}</span>`).join('');
+}
+// compare mode: rows = tables, columns = the selected roles, cell = each role's level for the chosen privilege
+function renderSecCompare(){
+  const verb=SEC_VERB_ORDER.includes(secVerb)?secVerb:'read', roles=secCompareRolesList();
+  const q=((document.getElementById('secQ')||{}).value||'').trim().toLowerCase();
+  const onlyEl=document.getElementById('secOnly'), only=!onlyEl||onlyEl.checked;
+  const lv=(r,id)=>secLevelOf(r,id,verb);
+  let ids=allIds.filter(id=>{
+    if(secEntFilter.length && !secEntFilter.includes(id))return false;
+    if(q && !((id+' '+(ENT[id].display||'')).toLowerCase().includes(q)))return false;
+    if(only && !roles.some(r=>lv(r,id)!=='none'))return false;
+    return true; });
+  let key=secSort.key; const roleByKey=(key.indexOf&&key.indexOf('role:')===0)?roles.find(r=>('role:'+r.name)===key):null;
+  if(key!=='ent'&&!roleByKey)key='ent';
+  const dir=secSort.dir, val=roleByKey?(id=>SEC_LEVEL_RANK[lv(roleByKey,id)]):(id=>(ENT[id].display||id).toLowerCase());
+  ids.sort((a,b)=>{ const va=val(a),vb=val(b); if(va<vb)return -dir; if(va>vb)return dir; return (ENT[a].display||a).localeCompare(ENT[b].display||b); });
+  const table=document.getElementById('sectable'), arrow=k=>secSort.key===k?`<span class="arr">${secSort.dir>0?'▲':'▼'}</span>`:'';
+  const thEnt=`<th data-k="ent" class="dth${secColActive('ent')?' filtered':''}"><span class="dth-l" title="Click to sort">Table${arrow('ent')}</span><button class="dth-menu" title="Filter / sort" aria-label="Filter Table">${IC_DOTS}</button></th>`;
+  const thRole=r=>{ const k='role:'+r.name; return `<th data-k="${esc(k)}" class="dth"><span class="dth-l" title="Click to sort — ${esc(r.name)}"><span class="sec-rolehead">${esc(r.name)}</span>${arrow(k)}</span><button class="dth-menu" title="Sort" aria-label="Sort ${esc(r.name)}">${IC_DOTS}</button></th>`; };
+  table.querySelector('thead').innerHTML='<tr>'+thEnt+roles.map(thRole).join('')+'</tr>';
+  const cell=(r,id)=>{ const level=lv(r,id), tip=`${r.name} · ${SEC_VERB_LABEL[verb]} — ${SEC_LEVEL_FULL[level]}`;
+    return `<td title="${esc(tip)}">${secIcons?secPie(level):`<span class="slvl ${level}">${esc(SEC_LEVEL_LABEL[level])}</span>`}</td>`; };
+  table.querySelector('tbody').innerHTML = (roles.length&&ids.length) ? ids.map(id=>{ const e=ENT[id];
+    return `<tr><td><div class="dt-ent"><span class="dot" style="background:var(${GVAR[e.group]})"></span><span class="sec-tname"><span class="en">${esc(e.display||id)}</span> <span class="el">${esc(id)}</span></span></div></td>`+
+      roles.map(r=>cell(r,id)).join('')+`</tr>`; }).join('')
+    : `<tr><td colspan="${roles.length+1}"><div class="dict-empty">${roles.length?'No tables match these filters.':'Pick one or more roles to compare.'}</div></td></tr>`;
+  document.getElementById('secCount').textContent=`${SEC_VERB_LABEL[verb]} · ${ids.length} table${ids.length===1?'':'s'} · ${roles.length} role${roles.length===1?'':'s'}`;
   document.getElementById('secLegend').innerHTML='Access &nbsp;'+SEC_LEVELS.filter(l=>l!=='none').map(l=>`<span class="lg" title="${esc(SEC_LEVEL_TIP[l])}">${secIcons?secPie(l):`<span class="slvl ${l}">${esc(SEC_LEVEL_LABEL[l])}</span>`}${esc(SEC_LEVEL_FULL[l].replace(/ \(.*/,''))}</span>`).join('');
 }
 /* ---- security export ---- */

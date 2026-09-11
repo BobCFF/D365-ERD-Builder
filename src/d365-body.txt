@@ -150,7 +150,10 @@
     <section id="view-security" class="view">
       <div class="panel">
         <div class="dict-toolbar sec-toolbar">
-          <label class="sec-pick">Role <select id="secRole"></select></label>
+          <div class="seg sm sec-mode" id="secMode"><button data-v="role">Single role</button><button data-v="compare">Compare</button></div>
+          <label class="sec-pick" id="secRoleWrap">Role <select id="secRole"></select></label>
+          <label class="sec-pick sec-cmp" id="secVerbWrap" hidden>Privilege <select id="secVerb"></select></label>
+          <button class="btn ghost sec-cmp" id="secRolesBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>Roles</button>
           <div class="search dict-search sec-search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
             <input id="secQ" type="search" placeholder="Filter tables…" autocomplete="off">
@@ -168,6 +171,7 @@
           <table id="sectable" class="dgrid sgrid"><thead></thead><tbody></tbody></table>
         </div>
         <div id="secmenu" class="dmenu" hidden></div>
+        <div id="secrolesmenu" class="dmenu" hidden></div>
       </div>
     </section>
 
