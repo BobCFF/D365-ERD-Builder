@@ -1106,8 +1106,8 @@ function dmenuHTML(g,k){ const def=DCOLDEF[k], f=dcolF[k]; let h=`<div class="dm
   // Clear column (reset its filter) + Remove column (hide it; restore from the Columns chooser).
   // Remove is disabled when it would leave the grid with no visible column.
   const lastOne=visCols(g).length<=1;
-  h+=`<div class="dm-foot"><button class="dm-clear" ${dcolActive(k)?'':'disabled'}>Clear column</button>`+
-    `<button class="dm-remove" ${lastOne?'disabled':''} title="Hide this column (restore it from the Columns menu)">Remove column</button></div>`;
+  h+=`<div class="dm-foot"><button class="dm-clear" ${dcolActive(k)?'':'disabled'} title="Clear this column's filter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5a9 9 0 1 0 2.6-4"/><path d="M3 1v5h5"/></svg>Clear</button>`+
+    `<button class="dm-remove" ${lastOne?'disabled':''} title="Hide this column (restore it from the Columns menu)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.9 17.9A10 10 0 0 1 12 20C5 20 1 12 1 12a18 18 0 0 1 5.1-5.9M9.9 4.2A9 9 0 0 1 12 4c7 0 11 8 11 8a18 18 0 0 1-2.2 3.2m-6.7-1.1a3 3 0 1 1-4.2-4.2"/><path d="M1 1l22 22"/></svg>Remove</button></div>`;
   return h; }
 function closeDMenu(g){ if(!g||g.dmenuKey==null)return; g.menu.hidden=true; g.menu.innerHTML=''; g.dmenuKey=null; }
 function openDMenu(g,k,thEl){ if(g.dmenuKey===k){ closeDMenu(g); return; }

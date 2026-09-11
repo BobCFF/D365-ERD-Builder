@@ -7,6 +7,13 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.17.2] — 2026-09-11
+
+### Changed
+- **Compact column-menu buttons.** The column filter menu's footer buttons are
+  now **Clear** and **Remove** (dropping the redundant "column"), each with a
+  small icon — a reset arrow for Clear, an eye-off for Remove.
+
 ## [2.17.1] — 2026-09-11
 
 ### Added
