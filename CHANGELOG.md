@@ -7,6 +7,15 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.28.0] — 2026-09-11
+
+### Added
+- **Notation legend on the Insights report.** The Insights page gains a
+  **Relationship notation** card showing the cardinality-marker legend for the
+  active notation (crow's foot / UML / IDEF1X), so it's included when you
+  **Print / Save as PDF**. The Insights **CSV** export also gains a
+  "Relationship notation" section naming the notation and its markers.
+
 ## [2.27.0] — 2026-09-11
 
 ### Added

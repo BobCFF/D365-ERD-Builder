@@ -682,6 +682,8 @@ body.col-resizing{cursor:col-resize;user-select:none}
 .bar-track{position:relative;height:9px;border-radius:5px;background:var(--surface-2);overflow:hidden}
 .bar-fill{position:absolute;inset:0 auto 0 0;border-radius:5px;background:var(--accent);min-width:2px}
 .bar-row .b-val{font-family:var(--font-mono);font-size:11.5px;color:var(--muted);text-align:right;min-width:26px}
+/* notation legend card */
+.ins-nota{display:flex;flex-direction:column;gap:9px}
 /* meters (data quality) */
 .meters{display:flex;flex-direction:column;gap:12px}
 .meter .m-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:5px}
