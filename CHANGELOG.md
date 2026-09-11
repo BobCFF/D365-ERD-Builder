@@ -7,6 +7,13 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.17.4] — 2026-09-11
+
+### Changed
+- **Data dictionary menu icon.** The table card's ⋯ menu now shows a small
+  table icon (rather than a dots glyph) next to **Data dictionary**, and the
+  trailing "…" was dropped from the label.
+
 ## [2.17.3] — 2026-09-11
 
 ### Changed
