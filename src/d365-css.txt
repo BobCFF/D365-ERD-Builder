@@ -420,6 +420,8 @@ body.col-resizing{cursor:col-resize;user-select:none}
 .sec-search{flex:0 1 300px;min-width:170px}
 #secExport svg,#secRolesBtn svg{width:14px;height:14px}
 #sectable thead th .sec-rolehead{display:inline-block;max-width:150px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
+#sectable thead th.fs-th{padding:8px 12px}
+#sectable th.fs-l,#sectable td.fs-l{text-align:left}
 .sec-right{margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .sec-right .dict-count{margin:0}
 #secExport svg{width:14px;height:14px}

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-j6EH6jDh7YMvvxH+XUlNuT4/z8pmRVFTRmkdROtqTzM='; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-nvuYXodP9oylsbxZrUrDbsUGuCGbqRdxfrPUnoDHCk8='; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <title>D365 ERD Builder</title>
 <meta name="description" content="Turn a Dynamics 365 / Dataverse customizations.xml into an interactive entity-relationship diagram — entirely in your browser. Explore tables and lookups, then export to PNG, SVG, CSV, or Excel. Nothing is uploaded.">
 <link rel="canonical" href="https://d365-erd-builder-five.vercel.app/">
@@ -430,6 +430,8 @@ body.col-resizing{cursor:col-resize;user-select:none}
 .sec-search{flex:0 1 300px;min-width:170px}
 #secExport svg,#secRolesBtn svg{width:14px;height:14px}
 #sectable thead th .sec-rolehead{display:inline-block;max-width:150px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
+#sectable thead th.fs-th{padding:8px 12px}
+#sectable th.fs-l,#sectable td.fs-l{text-align:left}
 .sec-right{margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .sec-right .dict-count{margin:0}
 #secExport svg{width:14px;height:14px}
@@ -656,7 +658,7 @@ body.col-resizing{cursor:col-resize;user-select:none}
     <div id="landing-msg" class="landing-msg" hidden></div>
     <div class="lnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6z"/></svg><span>Your file never leaves your browser — parsing and rendering happen entirely on this page. To get the XML: export a solution containing your tables from Power&nbsp;Apps, unzip it, and use the <span class="amono">customizations.xml</span> inside. <a href="PRIVACY.md" target="_blank" rel="noopener">How your data is handled →</a></span></div>
     <a href="#" id="lsample" class="lsample">Explore a sample schema instead →</a>
-    <div class="lver">D365 ERD Builder v2.23.0</div>
+    <div class="lver">D365 ERD Builder v2.24.0</div>
   </div>
 </section>
 <input type="file" id="landing-file" accept=".xml,application/xml,text/xml" hidden>
@@ -1223,6 +1225,20 @@ body.col-resizing{cursor:col-resize;user-select:none}
       </RolePrivileges>
     </Role>
   </Roles>
+  <FieldSecurityProfiles>
+    <FieldSecurityProfile id="{00000000-0000-0000-0000-0000000000f1}" name="Restricted Fields">
+      <FieldPermissions>
+        <FieldPermission entityname="account" attributename="revenue" cancreate="0" canread="4" canupdate="0" />
+        <FieldPermission entityname="contact" attributename="emailaddress1" cancreate="4" canread="4" canupdate="0" />
+        <FieldPermission entityname="lead" attributename="companyname" cancreate="4" canread="4" canupdate="4" />
+      </FieldPermissions>
+    </FieldSecurityProfile>
+    <FieldSecurityProfile id="{00000000-0000-0000-0000-0000000000f2}" name="Finance (read only)">
+      <FieldPermissions>
+        <FieldPermission entityname="account" attributename="revenue" cancreate="0" canread="4" canupdate="0" />
+      </FieldPermissions>
+    </FieldSecurityProfile>
+  </FieldSecurityProfiles>
 </ImportExportXml>
 </script>
 <div id="app" hidden>
@@ -1360,23 +1376,25 @@ body.col-resizing{cursor:col-resize;user-select:none}
     <section id="view-security" class="view">
       <div class="panel">
         <div class="dict-toolbar sec-toolbar">
-          <div class="seg sm sec-mode" id="secMode"><button data-v="role">Single role</button><button data-v="compare">Compare</button></div>
-          <label class="sec-pick" id="secRoleWrap">Role <select id="secRole"></select></label>
+          <div class="seg sm sec-section" id="secSection" hidden><button data-v="roles">Table privileges</button><button data-v="fields">Field security</button></div>
+          <div class="seg sm sec-mode sec-role" id="secMode"><button data-v="role">Single role</button><button data-v="compare">Compare</button></div>
+          <label class="sec-pick sec-role" id="secRoleWrap">Role <select id="secRole"></select></label>
           <label class="sec-pick sec-cmp" id="secVerbWrap" hidden>Privilege <select id="secVerb"></select></label>
           <button class="btn ghost sec-cmp" id="secRolesBtn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M23 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>Roles</button>
+          <label class="sec-pick sec-fld" id="secFsWrap" hidden>Profile <select id="fsProfile"></select></label>
           <div class="search dict-search sec-search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
             <input id="secQ" type="search" placeholder="Filter tables…" autocomplete="off">
           </div>
-          <label class="chip" title="Show only tables this role has at least one privilege on"><input type="checkbox" id="secOnly" checked> With access only</label>
-          <label class="chip" title="Show the classic Dynamics access-level icons instead of text labels"><input type="checkbox" id="secIcons"> Classic icons</label>
+          <label class="chip sec-role" title="Show only tables this role has at least one privilege on"><input type="checkbox" id="secOnly" checked> With access only</label>
+          <label class="chip sec-role" title="Show the classic Dynamics access-level icons instead of text labels"><input type="checkbox" id="secIcons"> Classic icons</label>
           <div class="sec-right">
             <span class="dict-count" id="secCount"></span>
-            <button class="btn ghost" id="secExport" title="Export this role's table privileges"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v13M7 11l5 5 5-5"/></svg>Export…</button>
-            <span class="sec-legend" id="secLegend"></span>
+            <button class="btn ghost sec-role" id="secExport" title="Export this role's table privileges"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v13M7 11l5 5 5-5"/></svg>Export…</button>
+            <span class="sec-legend sec-role" id="secLegend"></span>
           </div>
         </div>
-        <div class="dict-hint">Table privileges granted by the selected role. Click a heading to sort · click its <b>⋯</b> to filter by access level. Empty means no privilege.</div>
+        <div class="dict-hint" id="secHint">Table privileges granted by the selected role. Click a heading to sort · click its <b>⋯</b> to filter by access level. Empty means no privilege.</div>
         <div class="dict-scroll">
           <table id="sectable" class="dgrid sgrid"><thead></thead><tbody></tbody></table>
         </div>
@@ -1389,7 +1407,7 @@ body.col-resizing{cursor:col-resize;user-select:none}
     <section id="view-settings" class="view">
       <div class="panel settings-panel">
         <div class="settings-inner">
-          <div class="settings-head"><h1 class="settings-title">Settings</h1><span class="settings-ver">D365 ERD Builder <b>v2.23.0</b> · <a href="CHANGELOG.md" target="_blank" rel="noopener">changelog</a></span></div>
+          <div class="settings-head"><h1 class="settings-title">Settings</h1><span class="settings-ver">D365 ERD Builder <b>v2.24.0</b> · <a href="CHANGELOG.md" target="_blank" rel="noopener">changelog</a></span></div>
           <p class="settings-sub">Preferences are saved in this browser only. They control how the diagram, dictionary, and exports behave.</p>
 
           <div class="scard">
@@ -1519,9 +1537,16 @@ function parsePrivLevel(v){ v=(v||'').trim().toLowerCase();
   if(v==='4'||v==='deep'||v==='parentchild')return 'deep';
   if(v==='8'||v==='global'||v==='organization'||v==='org')return 'org';
   return 'none'; }
+// a field-security permission (cancreate/canread/canupdate) is a numeric mask: 0 = not allowed, >0 = allowed
+function fieldPermAllowed(v){ v=(v||'').trim(); return v!=='' && v!=='0' && v.toLowerCase()!=='false'; }
 function parseCustomizationsXml(text){
+  if(!text||!text.trim()) throw new Error('The file is empty.');
   const doc=new DOMParser().parseFromString(text,'application/xml');
-  if(doc.querySelector('parsererror')) throw new Error('not valid XML');
+  const perr=doc.querySelector('parsererror');
+  if(perr){ const msg=(perr.textContent||'').replace(/\s+/g,' ').trim().slice(0,160); throw new Error('This isn’t valid XML'+(msg?' — '+msg:'.')); }
+  if(!doc.documentElement) throw new Error('This isn’t valid XML (no root element).');
+  if(doc.documentElement.tagName!=='ImportExportXml' && !doc.getElementsByTagName('Entities').length)
+    throw new Error('This doesn’t look like a Dynamics 365 solution export — expected an <ImportExportXml> file (customizations.xml).');
   const ct=(el,tag)=>{ for(const c of el.children)if(c.tagName===tag)return (c.textContent||'').trim(); return ''; };
   const child=(el,tag)=>{ for(const c of el.children)if(c.tagName===tag)return c; return null; };
   const entities={};
@@ -1552,7 +1577,7 @@ function parseCustomizationsXml(text){
   }
   for(const r of rels){ if(r.type!=='OneToMany')continue; const e=entities[r.referencing]; if(!e)continue;
     const a=e.attributes.find(x=>x.name===r.attr); if(a){ a.fk=true; a.targets=a.targets||[]; if(!a.targets.includes(r.referenced))a.targets.push(r.referenced); } }
-  if(!Object.keys(entities).length) throw new Error('no tables found');
+  if(!Object.keys(entities).length) throw new Error('No tables found. A customizations.xml normally contains <Entity> definitions — this export may not include entity metadata.');
   // security roles: keep only privileges whose entity token matches a parsed table
   const roles=[], rolesEl=doc.getElementsByTagName('Roles')[0];
   if(rolesEl)for(const role of rolesEl.getElementsByTagName('Role')){
@@ -1567,7 +1592,20 @@ function parseCustomizationsXml(text){
     roles.push({id:role.getAttribute('id')||'', name:rname, priv});
   }
   roles.sort((a,b)=>a.name.localeCompare(b.name));
-  return {entities,relationships:rels,roles};
+  // field-level security: FieldSecurityProfiles → per-profile secured-column permissions
+  const fsprofiles=[], fspEl=doc.getElementsByTagName('FieldSecurityProfiles')[0];
+  if(fspEl)for(const prof of fspEl.getElementsByTagName('FieldSecurityProfile')){
+    const pname=(prof.getAttribute('name')||prof.getAttribute('id')||'').trim(); if(!pname)continue;
+    const perms=[];
+    for(const fp of prof.getElementsByTagName('FieldPermission')){
+      const ent=(fp.getAttribute('entityname')||'').toLowerCase(), attr=(fp.getAttribute('attributename')||'').toLowerCase();
+      if(!ent||!attr)continue;
+      perms.push({ent, attr, create:fieldPermAllowed(fp.getAttribute('cancreate')), read:fieldPermAllowed(fp.getAttribute('canread')), update:fieldPermAllowed(fp.getAttribute('canupdate'))});
+    }
+    fsprofiles.push({id:prof.getAttribute('id')||'', name:pname, perms});
+  }
+  fsprofiles.sort((a,b)=>a.name.localeCompare(b.name));
+  return {entities,relationships:rels,roles,fsprofiles};
 }
 /* ---- IndexedDB storage for an imported schema (large capacity) ---- */
 const IDB_NAME='tdp-erd-db', IDB_STORE='kv', IDB_KEY='import';
@@ -1592,7 +1630,7 @@ function applySavedTheme(){ const t=savedTheme(); if(t&&['light','dark','contras
 })();
 function landingMsg(m){ const el=document.getElementById('landing-msg'); if(el){ el.textContent=m||''; el.hidden=!m; } }
 function loadSampleSchema(){ try{ const x=document.getElementById('sample-xml').textContent; startApp(parseCustomizationsXml(x), false, {filename:'Sample schema'}); }catch(e){ landingMsg('Sample failed to load: '+((e&&e.message)||e)); } }
-async function importFromLanding(text,name){ let m; try{ m=parseCustomizationsXml(text); }catch(e){ landingMsg('Could not read that XML: '+((e&&e.message)||e)); return; }
+async function importFromLanding(text,name){ let m; try{ m=parseCustomizationsXml(text); }catch(e){ landingMsg((e&&e.message)||'Could not read that XML.'); return; }
   const md={filename:name||'customizations.xml',at:Date.now(),ents:Object.keys(m.entities).length,rels:m.relationships.length};
   try{ await idbSet({xml:text,meta:md}); }catch(e){}
   startApp(m,true,md); }
@@ -1615,6 +1653,8 @@ const land=document.getElementById('landing'); if(land)land.hidden=true;
 const app=document.getElementById('app'); if(app)app.hidden=false;
 const ENT = MODEL.entities, RELS = MODEL.relationships;
 const ROLES = Array.isArray(MODEL.roles)?MODEL.roles:[];
+const FSPS = Array.isArray(MODEL.fsprofiles)?MODEL.fsprofiles:[];
+const HAS_SEC = ROLES.length>0 || FSPS.length>0;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const SVGNS='http://www.w3.org/2000/svg';
 
@@ -1667,7 +1707,7 @@ function saveState(){ try{ localStorage.setItem(LS, JSON.stringify({
   ribbonCollapsed, minimapCollapsed, mmPos, gestureSeen, dcolOrder, dcolW, dcolF, dcolHidden:[...dcolHidden],
   dsort, exportOpts, dVis:!!(document.getElementById('dVis')||{}).checked, dq:(document.getElementById('dq')||{}).value||'',
   secRole:(document.getElementById('secRole')||{}).value||'', secOnly:!(document.getElementById('secOnly'))||!!document.getElementById('secOnly').checked,
-  secSort, secFilter, secIcons, secEntFilter, secExportOpts, secMode, secVerb, secCompareRoles
+  secSort, secFilter, secIcons, secEntFilter, secExportOpts, secMode, secVerb, secCompareRoles, secSection, secFsProfile
 })); }catch(e){} }
 const saved=loadState();
 // security page state (declared here so saveState — defined above — never hits their TDZ)
@@ -1684,6 +1724,8 @@ let secExportOpts=(function(){ const d={fmt:'xlsx',roles:'current',tables:'filte
 let secMode=(saved.secMode==='compare')?'compare':'role';
 let secVerb=SEC_VERB_ORDER.includes(saved.secVerb)?saved.secVerb:'read';
 let secCompareRoles=(Array.isArray(saved.secCompareRoles)?saved.secCompareRoles:[]).filter(n=>ROLES.some(r=>r.name===n));
+let secSection=(function(){ const s=saved.secSection; if(s==='roles'&&ROLES.length)return 'roles'; if(s==='fields'&&FSPS.length)return 'fields'; return ROLES.length?'roles':'fields'; })();
+let secFsProfile=(saved.secFsProfile&&FSPS.some(p=>p.name===saved.secFsProfile))?saved.secFsProfile:(FSPS[0]?FSPS[0].name:'');
 let initVis = saved.vis&&saved.vis.length ? saved.vis.filter(id=>ENT[id]) : allIds.slice();
 if(!initVis.length) initVis = allIds.slice();
 const visible=new Set(initVis);
@@ -1714,7 +1756,7 @@ let labelsMode=['hover','always','never'].includes(saved.labelsMode)?saved.label
 let pngScale=[2,3,4].includes(saved.pngScale)?saved.pngScale:2;
 let exportTitle=saved.exportTitle!==false;
 let view=['diagram','dict','settings','security'].includes(saved.view)?saved.view:'diagram';
-if(view==='security'&&!ROLES.length)view='diagram';
+if(view==='security'&&!HAS_SEC)view='diagram';
 
 /* data-dictionary column model (order / width / per-column filters, all persisted) */
 const DCOLDEF={
@@ -2304,7 +2346,7 @@ async function doExport(kind){
 }
 
 /* ---------- status / theme ---------- */
-const APP_VERSION='2.23.0';
+const APP_VERSION='2.24.0';
 function updateStatus(ec){ document.getElementById('status').textContent=`${visible.size} of ${allIds.length} tables · ${ec} relationships shown`; }
 const themebtn=document.getElementById('themebtn');
 const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
@@ -2462,12 +2504,13 @@ addEventListener('keydown',e=>{ if(e.key==='/'&&document.activeElement!==q){e.pr
 /* ---------- import / persist XML ---------- */
 function clearLayoutState(){ try{ const st=JSON.parse(localStorage.getItem(LS)||'{}'); delete st.pos; delete st.vis; delete st.sizes; delete st.exp; delete st.vp; localStorage.setItem(LS,JSON.stringify(st)); }catch(e){} }
 async function importXmlText(text,filename){
-  let model; try{ model=parseCustomizationsXml(text); }catch(e){ toast('Could not read that XML: '+(e.message||e)); return; }
+  let model; try{ model=parseCustomizationsXml(text); }catch(e){ toast((e&&e.message)||'Could not read that XML.'); return; }
   const meta={filename:filename||'customizations.xml',at:Date.now(),ents:Object.keys(model.entities).length,rels:model.relationships.length};
   toast('Saving '+(filename||'schema')+'…');
   try{ await Promise.race([ idbSet({xml:text,meta}), new Promise((_,rej)=>setTimeout(()=>rej(new Error('storage timed out')),8000)) ]); }
   catch(e){ toast('Could not save the import: '+((e&&e.message)||e)); return; }
-  clearLayoutState(); toast('Loading '+meta.ents+' tables…'); setTimeout(()=>location.reload(),250);
+  const rc=(model.roles||[]).length, fc=(model.fsprofiles||[]).length;
+  clearLayoutState(); toast(`Loaded ${meta.ents} tables, ${meta.rels} relationships`+(rc?`, ${rc} role${rc===1?'':'s'}`:'')+(fc?`, ${fc} field profile${fc===1?'':'s'}`:'')+'…'); setTimeout(()=>location.reload(),250);
 }
 async function revertBuiltIn(){ try{ await idbDel(); }catch(e){} try{ localStorage.removeItem(XML_KEY); localStorage.removeItem(XML_META); }catch(e){} clearLayoutState(); location.reload(); }
 const xmlfile=document.getElementById('xmlfile');
@@ -2484,7 +2527,7 @@ window.addEventListener('drop',e=>{ if(dz.classList.contains('on')){ e.preventDe
 
 /* ---------- views ---------- */
 const VIEW_EL={diagram:'view-diagram',dict:'view-dict',security:'view-security',settings:'view-settings'};
-function setView(v){ if(v==='security'&&!ROLES.length)v='diagram'; view=v;
+function setView(v){ if(v==='security'&&!HAS_SEC)v='diagram'; view=v;
   document.querySelectorAll('#tabs .tab').forEach(t=>t.classList.toggle('on',t.dataset.view===v));
   for(const [k,id] of Object.entries(VIEW_EL))document.getElementById(id).classList.toggle('on',k===v);
   if(v==='dict'){ if(!dictBuilt)buildDict(); renderDict(); }
@@ -2495,7 +2538,7 @@ function setView(v){ if(v==='security'&&!ROLES.length)v='diagram'; view=v;
 }
 document.querySelectorAll('#tabs .tab').forEach(t=>t.addEventListener('click',()=>setView(t.dataset.view)));
 // the Security tab appears only when the imported file carries role metadata
-if(ROLES.length){ const st=document.getElementById('tab-security'); if(st)st.hidden=false; }
+if(HAS_SEC){ const st=document.getElementById('tab-security'); if(st)st.hidden=false; }
 /* ---------- security roles page (state initialised up top, near other saved state) ---------- */
 let secInited=false, secMenuKey=null;
 function secColActive(k){ return k==='ent' ? !!secEntFilter.length : !!(secFilter[k]&&secFilter[k].length); }
@@ -2537,7 +2580,7 @@ function openSecMenu(k,thEl){ if(secMenuKey===k){ closeSecMenu(); return; }
     else { delete secFilter[k]; m.querySelectorAll('input[data-lv]').forEach(x=>x.checked=true); }
     cb.disabled=true; const th=document.querySelector(`#sectable th[data-k="${k}"]`); if(th)th.classList.remove('filtered'); renderSecurity(); saveState(); });
 }
-function initSecurity(){ if(secInited||!ROLES.length)return; secInited=true;
+function initSecurity(){ if(secInited||!HAS_SEC)return; secInited=true;
   const sel=document.getElementById('secRole'); if(!sel)return;
   sel.innerHTML=ROLES.map(r=>`<option value="${esc(r.name)}">${esc(r.name)}</option>`).join('');
   if(saved.secRole&&ROLES.some(r=>r.name===saved.secRole))sel.value=saved.secRole;
@@ -2551,6 +2594,9 @@ function initSecurity(){ if(secInited||!ROLES.length)return; secInited=true;
   const modeSeg=document.getElementById('secMode'); if(modeSeg)modeSeg.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{ secMode=btn.dataset.v==='compare'?'compare':'role'; renderSecurity(); saveState(); }));
   const verbSel=document.getElementById('secVerb'); if(verbSel){ verbSel.innerHTML=SEC_VERB_ORDER.map(v=>`<option value="${v}">${esc(SEC_VERB_LABEL[v])}</option>`).join(''); verbSel.value=secVerb; verbSel.addEventListener('change',()=>{ secVerb=verbSel.value; renderSecurity(); saveState(); }); }
   const rolesBtn=document.getElementById('secRolesBtn'); if(rolesBtn)rolesBtn.addEventListener('click',e=>{ e.stopPropagation(); openSecRolesMenu(rolesBtn); });
+  // field-security controls
+  const secSec=document.getElementById('secSection'); if(secSec)secSec.querySelectorAll('button').forEach(btn=>btn.addEventListener('click',()=>{ secSection=btn.dataset.v==='fields'?'fields':'roles'; renderSecurity(); saveState(); }));
+  const fsSel=document.getElementById('fsProfile'); if(fsSel){ fsSel.innerHTML=FSPS.map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join(''); if(secFsProfile)fsSel.value=secFsProfile; fsSel.addEventListener('change',()=>{ secFsProfile=fsSel.value; renderSecurity(); saveState(); }); }
   const thead=document.getElementById('sectable').querySelector('thead');
   thead.addEventListener('click',e=>{ const mb=e.target.closest('.dth-menu'); if(mb){ e.stopPropagation(); openSecMenu(mb.closest('th').dataset.k, mb.closest('th')); return; }
     const l=e.target.closest('.dth-l'); if(l){ const k=l.closest('th').dataset.k; if(secSort.key===k)secSort.dir*=-1; else{secSort.key=k;secSort.dir=1;} renderSecurity(); saveState(); } });
@@ -2560,6 +2606,20 @@ function initSecurity(){ if(secInited||!ROLES.length)return; secInited=true;
   const sc=document.querySelector('#view-security .dict-scroll'); if(sc)sc.addEventListener('scroll',()=>{ if(secMenuKey!=null)closeSecMenu(); });
 }
 let secRolesMenuOpen=false;
+function syncSecSection(){
+  if(secSection==='roles'&&!ROLES.length)secSection='fields';
+  if(secSection==='fields'&&!FSPS.length)secSection='roles';
+  const both=ROLES.length&&FSPS.length, seg=document.getElementById('secSection');
+  if(seg){ seg.hidden=!both; seg.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.v===secSection)); }
+  const fields=secSection==='fields';
+  document.querySelectorAll('.sec-role').forEach(el=>el.hidden=fields);
+  const fw=document.getElementById('secFsWrap'); if(fw)fw.hidden=!fields;
+  if(fields){ ['secRoleWrap','secVerbWrap','secRolesBtn'].forEach(id=>{ const e=document.getElementById(id); if(e)e.hidden=true; }); }
+  const q=document.getElementById('secQ'); if(q)q.placeholder=fields?'Filter fields…':'Filter tables…';
+  const hint=document.getElementById('secHint'); if(hint)hint.innerHTML=fields
+    ? 'Column-level (field) security for the selected profile. <b>Yes</b> = the profile grants that permission on the secured column.'
+    : 'Table privileges granted by the selected role. Click a heading to sort · click its <b>⋯</b> to filter by access level. Empty means no privilege.';
+}
 function syncSecMode(){ document.querySelectorAll('#secMode button').forEach(b=>b.classList.toggle('on',b.dataset.v===secMode));
   const cmp=secMode==='compare';
   const rw=document.getElementById('secRoleWrap'); if(rw)rw.hidden=cmp;
@@ -2598,7 +2658,9 @@ function secVisibleIds(role){ if(!role)return [];
   const dir=secSort.dir, key=secSort.key, val=key==='ent'?(id=>(ENT[id].display||id).toLowerCase()):(id=>SEC_LEVEL_RANK[secLevelOf(role,id,key)]);
   rows.sort((a,b)=>{ const va=val(a),vb=val(b); if(va<vb)return -dir; if(va>vb)return dir; return (ENT[a].display||a).localeCompare(ENT[b].display||b); });
   return rows; }
-function renderSecurity(){ if(!ROLES.length)return; initSecurity(); syncSecMode();
+function renderSecurity(){ if(!HAS_SEC)return; initSecurity(); syncSecSection();
+  if(secSection==='fields'){ renderFieldSecurity(); return; }
+  syncSecMode();
   if(secMode==='compare'){ renderSecCompare(); return; }
   const role=secCurrentRole(); if(!role)return;
   const lvOf=(id,v)=>secLevelOf(role,id,v);
@@ -2642,6 +2704,23 @@ function renderSecCompare(){
     : `<tr><td colspan="${roles.length+1}"><div class="dict-empty">${roles.length?'No tables match these filters.':'Pick one or more roles to compare.'}</div></td></tr>`;
   document.getElementById('secCount').textContent=`${SEC_VERB_LABEL[verb]} · ${ids.length} table${ids.length===1?'':'s'} · ${roles.length} role${roles.length===1?'':'s'}`;
   document.getElementById('secLegend').innerHTML='Access &nbsp;'+SEC_LEVELS.filter(l=>l!=='none').map(l=>`<span class="lg" title="${esc(SEC_LEVEL_TIP[l])}">${secIcons?secPie(l):`<span class="slvl ${l}">${esc(SEC_LEVEL_LABEL[l])}</span>`}${esc(SEC_LEVEL_FULL[l].replace(/ \(.*/,''))}</span>`).join('');
+}
+/* ---- field-level security (FieldSecurityProfiles) ---- */
+function fsCurrentProfile(){ return FSPS.find(p=>p.name===secFsProfile)||FSPS[0]||null; }
+function renderFieldSecurity(){
+  const prof=fsCurrentProfile(), q=((document.getElementById('secQ')||{}).value||'').trim().toLowerCase(), table=document.getElementById('sectable');
+  const yn=v=>`<span class="slvl ${v?'org':'none'}" title="${v?'Allowed':'Not allowed'}">${v?'Yes':'—'}</span>`;
+  let rows=(prof?prof.perms:[]).map(p=>{ const e=ENT[p.ent], a=e&&e.attributes.find(x=>x.name===p.attr);
+    return { ent:p.ent, entdisp:(e&&e.display)||p.ent, attr:p.attr, attrdisp:(a&&a.display)||p.attr, create:p.create, read:p.read, update:p.update }; });
+  if(q)rows=rows.filter(r=>((r.ent+' '+r.entdisp+' '+r.attr+' '+r.attrdisp).toLowerCase().includes(q)));
+  rows.sort((a,b)=> a.entdisp!==b.entdisp?a.entdisp.localeCompare(b.entdisp):a.attrdisp.localeCompare(b.attrdisp));
+  table.querySelector('thead').innerHTML='<tr><th class="fs-th fs-l">Table</th><th class="fs-th fs-l">Secured column</th><th class="fs-th">Create</th><th class="fs-th">Read</th><th class="fs-th">Update</th></tr>';
+  table.querySelector('tbody').innerHTML = rows.length ? rows.map(r=>{ const e=ENT[r.ent], dot=e?`<span class="dot" style="background:var(${GVAR[e.group]})"></span>`:'<span class="dot" style="background:var(--faint)"></span>';
+    return `<tr><td class="fs-l"><div class="dt-ent">${dot}<span class="sec-tname"><span class="en">${esc(r.entdisp)}</span> <span class="el">${esc(r.ent)}</span></span></div></td>`+
+      `<td class="fs-l"><span class="mono">${esc(r.attrdisp)}</span> <span class="el">${esc(r.attr)}</span></td>`+
+      `<td>${yn(r.create)}</td><td>${yn(r.read)}</td><td>${yn(r.update)}</td></tr>`; }).join('')
+    : `<tr><td colspan="5"><div class="dict-empty">${prof?(prof.perms.length?'No secured columns match your filter.':'This profile secures no columns.'):'No field-security profiles in this file.'}</div></td></tr>`;
+  document.getElementById('secCount').textContent=(prof?`${rows.length} secured column${rows.length===1?'':'s'}`:'—');
 }
 /* ---- security export ---- */
 function openSecExportDialog(){ if(!ROLES.length)return; const role=secCurrentRole(); if(!role)return;

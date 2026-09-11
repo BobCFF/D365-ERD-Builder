@@ -7,6 +7,24 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.24.0] — 2026-09-11
+
+### Added
+- **Field-level security on the Security page.** When the file's
+  `<FieldSecurityProfiles>` carry field permissions, a **Table privileges /
+  Field security** switch appears. **Field security** picks a profile and lists
+  its **secured columns** with **Create / Read / Update** (Yes / —). The bundled
+  sample now ships two demo profiles.
+- **Import validation & feedback.** Importing an `.xml` now reports a clear
+  message when the file isn't valid XML or isn't a Dynamics 365
+  `customizations.xml` (with the parser's reason), and a successful import
+  confirms what was loaded — tables, relationships, roles, and field profiles.
+
+### Changed
+- The **Security tab** appears only when the file contains security metadata —
+  security **roles** and/or **field-security profiles** — and stays hidden
+  otherwise.
+
 ## [2.23.0] — 2026-09-11
 
 ### Added
