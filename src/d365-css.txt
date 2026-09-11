@@ -430,7 +430,8 @@ body.col-resizing{cursor:col-resize;user-select:none}
 .dmenu .dm-chk .dt-tname{min-width:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dmenu .dm-opts{display:flex;flex-direction:column;gap:1px}
 .dmenu .dm-foot{margin-top:9px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:8px}
-.dmenu .dm-clear,.dmenu .dm-remove{font:inherit;font-size:11px;background:transparent;border:1px solid var(--border);color:var(--muted);padding:3px 9px;border-radius:6px;cursor:pointer}
+.dmenu .dm-clear,.dmenu .dm-remove{font:inherit;font-size:11px;background:transparent;border:1px solid var(--border);color:var(--muted);padding:3px 9px;border-radius:6px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.dmenu .dm-clear svg,.dmenu .dm-remove svg{width:12px;height:12px;flex:none}
 .dmenu .dm-clear:hover:not(:disabled){color:var(--ink);border-color:var(--border-strong)}
 .dmenu .dm-remove:hover:not(:disabled){color:var(--pk);border-color:color-mix(in srgb,var(--pk) 55%,var(--border-strong))}
 .dmenu .dm-clear:disabled,.dmenu .dm-remove:disabled{opacity:.4;cursor:default}
