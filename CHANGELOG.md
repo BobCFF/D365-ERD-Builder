@@ -7,6 +7,14 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.16.5] — 2026-09-10
+
+### Changed
+- **Version moved to Settings.** The version number no longer prefixes the
+  diagram status bar (which now reads just "N of M tables · K relationships
+  shown"); it's shown in **Settings → Data source** with a link to the
+  changelog.
+
 ## [2.16.4] — 2026-09-10
 
 ### Fixed
