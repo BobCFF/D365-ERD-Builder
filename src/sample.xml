@@ -561,4 +561,18 @@
       </RolePrivileges>
     </Role>
   </Roles>
+  <FieldSecurityProfiles>
+    <FieldSecurityProfile id="{00000000-0000-0000-0000-0000000000f1}" name="Restricted Fields">
+      <FieldPermissions>
+        <FieldPermission entityname="account" attributename="revenue" cancreate="0" canread="4" canupdate="0" />
+        <FieldPermission entityname="contact" attributename="emailaddress1" cancreate="4" canread="4" canupdate="0" />
+        <FieldPermission entityname="lead" attributename="companyname" cancreate="4" canread="4" canupdate="4" />
+      </FieldPermissions>
+    </FieldSecurityProfile>
+    <FieldSecurityProfile id="{00000000-0000-0000-0000-0000000000f2}" name="Finance (read only)">
+      <FieldPermissions>
+        <FieldPermission entityname="account" attributename="revenue" cancreate="0" canread="4" canupdate="0" />
+      </FieldPermissions>
+    </FieldSecurityProfile>
+  </FieldSecurityProfiles>
 </ImportExportXml>
