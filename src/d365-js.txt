@@ -237,7 +237,7 @@ function saveState(){ try{ localStorage.setItem(LS, JSON.stringify({
   vis:[...visible], cardState, cats:[...cats], gc:[...gcollapsed], theme:themeChoice, vp:[curT.x,curT.y,curT.k],
   sizes:Object.fromEntries(Object.entries(sizes).map(([k,v])=>[k,[Math.round(v.w),Math.round(v.h)]])),
   notation, lineMode, lineWeight, defaultDetail, labelsMode, pngScale, exportTitle, view, railW, railCollapsed,
-  ribbonCollapsed, minimapCollapsed, legendCollapsed, mmPos, gestureSeen, dcolOrder, dcolW, dcolF, dcolHidden:[...dcolHidden],
+  ribbonCollapsed, minimapCollapsed, legendCollapsed, legendPos, mmPos, gestureSeen, dcolOrder, dcolW, dcolF, dcolHidden:[...dcolHidden],
   dsort, exportOpts, dVis:!!(document.getElementById('dVis')||{}).checked, dq:(document.getElementById('dq')||{}).value||'',
   secRole:(document.getElementById('secRole')||{}).value||'', secOnly:!(document.getElementById('secOnly'))||!!document.getElementById('secOnly').checked,
   secSort, secFilter, secIcons, secEntFilter, secExportOpts, secMode, secVerb, secCompareRoles, secSection, secFsProfile,
@@ -286,6 +286,7 @@ let railCollapsed=!!saved.railCollapsed;
 let ribbonCollapsed=!!saved.ribbonCollapsed;
 let minimapCollapsed=!!saved.minimapCollapsed;
 let legendCollapsed=!!saved.legendCollapsed;
+let legendPos=(saved.legendPos&&typeof saved.legendPos.x==='number'&&typeof saved.legendPos.y==='number')?{x:saved.legendPos.x,y:saved.legendPos.y}:null;
 let gestureSeen=!!saved.gestureSeen;
 let labelsMode=['hover','always','never'].includes(saved.labelsMode)?saved.labelsMode:'hover';
 let pngScale=[2,3,4].includes(saved.pngScale)?saved.pngScale:2;
@@ -1024,16 +1025,48 @@ function legendRows(){
   if(notation==='idef1x')return {title:'IDEF1X', rows:[['idef-dot','Child (many) end'],['idef-solid','Identifying (mandatory)'],['idef-dashed','Non-identifying (optional)']], note:'A hollow diamond marks an optional parent.'};
   return {title:'Crow’s foot', rows:[['cf-many','Many (child side)'],['cf-one','One and only one'],['cf-zeroone','Zero or one']], note:'Feet point to the “many” side.'};
 }
+// The notation legend as two-column rows for tabular exports (CSV section / XLSX sheet).
+function legendExportRows(){ const L=legendRows(); const out=[['Relationship notation',L.title]];
+  for(const [,t] of L.rows)out.push(['',t.replace(/<[^>]+>/g,'')]);
+  out.push(['',L.note]);
+  return out; }
 function renderLegend(){ const body=document.getElementById('nlBody'), title=document.getElementById('nlTitle'); if(!body)return;
   const L=legendRows(); if(title)title.textContent=L.title;
   body.innerHTML=L.rows.map(([k,t])=>`<div class="nl-row">${legendGlyph(k)}<span class="t">${t}</span></div>`).join('')
     +`<div class="nl-note">Line colour = relationship type (see the panel). ${esc(L.note)}</div>`;
 }
+// Position the legend dock at a dragged spot (clamped into the stage), else fall back to the CSS default (bottom-left).
+function legendApplyDock(){ const dock=document.getElementById('legendDock'); if(!dock)return;
+  if(legendPos){ const sw=document.getElementById('stage-wrap'); const W=sw?sw.clientWidth:innerWidth, H=sw?sw.clientHeight:innerHeight;
+    const dw=dock.offsetWidth||180, dh=dock.offsetHeight||120;
+    const x=clamp(legendPos.x,4,Math.max(4,W-dw-4)), y=clamp(legendPos.y,4,Math.max(4,H-dh-4));
+    dock.style.left=x+'px'; dock.style.top=y+'px'; dock.style.right='auto'; dock.style.bottom='auto'; }
+  else { dock.style.left=''; dock.style.top=''; dock.style.right=''; dock.style.bottom=''; } }
 function applyLegend(){ const dock=document.getElementById('notaLegend'), sh=document.getElementById('nlShow'); if(!dock||!sh)return;
-  dock.hidden=legendCollapsed; sh.hidden=!legendCollapsed; renderLegend(); }
+  dock.hidden=legendCollapsed; sh.hidden=!legendCollapsed; renderLegend(); legendApplyDock(); }
 { const mn=document.getElementById('nlMin'), sh=document.getElementById('nlShow');
   if(mn)mn.addEventListener('click',()=>{ legendCollapsed=true; applyLegend(); saveState(); });
   if(sh)sh.addEventListener('click',()=>{ legendCollapsed=false; applyLegend(); saveState(); }); }
+// Drag the legend by its header (mirrors the minimap dock). Double-click resets it.
+{ const head=document.querySelector('#notaLegend .nl-head'), dock=document.getElementById('legendDock');
+  if(head&&dock){ let d=null;
+    head.addEventListener('mousedown',e=>{ if(e.button!==0||e.target.closest('.nl-min'))return; e.preventDefault();
+      const sw=document.getElementById('stage-wrap'), sr=sw.getBoundingClientRect(), dr=dock.getBoundingClientRect();
+      d={ ox:dr.left-sr.left, oy:dr.top-sr.top, sx:e.clientX, sy:e.clientY, sw, dw:dr.width, dh:dr.height }; dock.classList.add('dragging'); });
+    window.addEventListener('mousemove',e=>{ if(!d)return; const sr=d.sw.getBoundingClientRect();
+      legendPos={ x:clamp(d.ox+(e.clientX-d.sx),4,Math.max(4,sr.width-d.dw-4)), y:clamp(d.oy+(e.clientY-d.sy),4,Math.max(4,sr.height-d.dh-4)) };
+      dock.style.left=legendPos.x+'px'; dock.style.top=legendPos.y+'px'; dock.style.right='auto'; dock.style.bottom='auto'; });
+    window.addEventListener('mouseup',()=>{ if(d){ d=null; dock.classList.remove('dragging'); saveState(); } });
+    onTouchDrag(head,{ start:(t,e)=>{ if(e.target.closest('.nl-min'))return false;
+        const sw=document.getElementById('stage-wrap'), sr=sw.getBoundingClientRect(), dr=dock.getBoundingClientRect();
+        dock.classList.add('dragging'); return { ox:dr.left-sr.left, oy:dr.top-sr.top, sx:t.clientX, sy:t.clientY, sw, dw:dr.width, dh:dr.height }; },
+      move:(t,c)=>{ const sr=c.sw.getBoundingClientRect();
+        legendPos={ x:clamp(c.ox+(t.clientX-c.sx),4,Math.max(4,sr.width-c.dw-4)), y:clamp(c.oy+(t.clientY-c.sy),4,Math.max(4,sr.height-c.dh-4)) };
+        dock.style.left=legendPos.x+'px'; dock.style.top=legendPos.y+'px'; dock.style.right='auto'; dock.style.bottom='auto'; },
+      end:()=>{ dock.classList.remove('dragging'); saveState(); } });
+    head.addEventListener('dblclick',()=>{ legendPos=null; legendApplyDock(); saveState(); });
+    window.addEventListener('resize',()=>legendApplyDock());
+  } }
 { const sel=document.getElementById('selWeight'); if(sel){ sel.value=lineWeight;
   sel.addEventListener('change',()=>{ lineWeight=LINE_W[sel.value]?sel.value:'2'; applyLineWeight(); saveState(); }); } }
 { const rz=document.getElementById('railResizer'), rail=document.getElementById('rail');
@@ -1888,6 +1921,7 @@ function runExport(ent){
   if(fmt==='csv'){
     const lines=[head.map(csvCell).join(',')];
     for(const d of rows)lines.push(cols.map(c=>csvCell(c.get(d))).join(','));
+    lines.push(''); for(const r of legendExportRows())lines.push(r.map(csvCell).join(','));
     saveExport(`${base}-${stamp}.csv`, '﻿'+lines.join('\r\n'), `${rows.length} rows`);
   } else {
     let sheets;
@@ -1900,6 +1934,7 @@ function runExport(ent){
       sheets=[{name:xlsxSheetName('Overview',used), rows:[ohead,...orows]}];
       for(const [id,rs] of byEnt)sheets.push({name:xlsxSheetName((ENT[id]||{}).display||id,used), rows:[head,...rs.map(d=>cols.map(c=>c.get(d)))]});
     }
+    { const usedNames=new Set(sheets.map(s=>s.name)); sheets.push({name:xlsxSheetName('Notation',usedNames), rows:legendExportRows()}); }
     let bytes; try{ bytes=buildXlsx(sheets); }catch(e){ toast('Excel build failed: '+(e&&e.message||e)); return; }
     saveExport(`${base}-${stamp}.xlsx`, bytes, `${sheets.length} sheet${sheets.length===1?'':'s'}`);
   }
