@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-Dtv0+8Nu4OPexk2dEmlJxN+CLCR+IaSj6V2+0c3ocjE='; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-iAGzEvOUsKA9bY+2PR2dvxaiLO/fkwcKuyCB48tAKY8='; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
 <title>D365 ERD Builder</title>
 <meta name="description" content="Turn a Dynamics 365 / Dataverse customizations.xml into an interactive entity-relationship diagram — entirely in your browser. Explore tables and lookups, then export to PNG, SVG, CSV, or Excel. Nothing is uploaded.">
 <link rel="canonical" href="https://d365-erd-builder-five.vercel.app/">
@@ -547,6 +547,7 @@ body.col-resizing{cursor:col-resize;user-select:none}
 .about b{font-weight:600}
 .about .amono{font-family:var(--font-mono);font-size:11.5px;color:var(--muted)}
 .about a{color:var(--accent)}
+.about .about-ver{display:inline-block;margin-top:6px;font-size:11.5px;color:var(--muted)}
 .danger-btn{flex:none;border-color:color-mix(in srgb,var(--pk) 55%,var(--border-strong));color:var(--pk)}
 .danger-btn:hover{background:color-mix(in srgb,var(--pk) 12%,var(--surface));border-color:var(--pk)}
 
@@ -608,7 +609,7 @@ body.col-resizing{cursor:col-resize;user-select:none}
     <div id="landing-msg" class="landing-msg" hidden></div>
     <div class="lnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6z"/></svg><span>Your file never leaves your browser — parsing and rendering happen entirely on this page. To get the XML: export a solution containing your tables from Power&nbsp;Apps, unzip it, and use the <span class="amono">customizations.xml</span> inside. <a href="PRIVACY.md" target="_blank" rel="noopener">How your data is handled →</a></span></div>
     <a href="#" id="lsample" class="lsample">Explore a sample schema instead →</a>
-    <div class="lver">D365 ERD Builder v2.16.4</div>
+    <div class="lver">D365 ERD Builder v2.16.5</div>
   </div>
 </section>
 <input type="file" id="landing-file" accept=".xml,application/xml,text/xml" hidden>
@@ -1903,8 +1904,8 @@ async function doExport(kind){
 }
 
 /* ---------- status / theme ---------- */
-const APP_VERSION='2.16.4';
-function updateStatus(ec){ document.getElementById('status').textContent=`v${APP_VERSION} · ${visible.size} of ${allIds.length} tables · ${ec} relationships shown`; }
+const APP_VERSION='2.16.5';
+function updateStatus(ec){ document.getElementById('status').textContent=`${visible.size} of ${allIds.length} tables · ${ec} relationships shown`; }
 const themebtn=document.getElementById('themebtn');
 const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
 const MOON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>';
@@ -2462,7 +2463,8 @@ function aboutHTML(){ const attrs=allIds.reduce((s,id)=>s+ENT[id].attributes.len
     : `Sample schema (bundled demo)`;
   return `${src}.<br>`+
     `<b>${allIds.length}</b> tables · <b>${attrs}</b> columns · <b>${O2M.length}</b> relationships (<b>${biz}</b> business lookups).<br>`+
-    `Parsed and rendered entirely in your browser — nothing is uploaded. An imported file is kept in this browser (IndexedDB) and reopens automatically.`;
+    `Parsed and rendered entirely in your browser — nothing is uploaded. An imported file is kept in this browser (IndexedDB) and reopens automatically.<br>`+
+    `<span class="about-ver">D365 ERD Builder <b>v${esc(APP_VERSION)}</b> · <a href="CHANGELOG.md" target="_blank" rel="noopener">changelog</a></span>`;
 }
 function syncSettings(){ setSeg('setTheme',themeChoice||'system'); setSeg('setDensity',defaultDetail); setSeg('setLabels',labelsMode);
   setSeg('setScale',String(pngScale)); setSeg('setLegend',exportTitle?'on':'off'); document.getElementById('aboutBox').innerHTML=aboutHTML();

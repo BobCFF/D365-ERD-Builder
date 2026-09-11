@@ -537,6 +537,7 @@ body.col-resizing{cursor:col-resize;user-select:none}
 .about b{font-weight:600}
 .about .amono{font-family:var(--font-mono);font-size:11.5px;color:var(--muted)}
 .about a{color:var(--accent)}
+.about .about-ver{display:inline-block;margin-top:6px;font-size:11.5px;color:var(--muted)}
 .danger-btn{flex:none;border-color:color-mix(in srgb,var(--pk) 55%,var(--border-strong));color:var(--pk)}
 .danger-btn:hover{background:color-mix(in srgb,var(--pk) 12%,var(--surface));border-color:var(--pk)}
 
