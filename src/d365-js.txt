@@ -1306,7 +1306,13 @@ function renderSecurity(){ if(!HAS_SEC)return; initSecurity(); syncSecSection();
       SEC_VERB_ORDER.map(v=>cell(id,v)).join('')+`</tr>`; }).join('')
     : `<tr><td colspan="${SEC_VERB_ORDER.length+1}"><div class="dict-empty">No tables match these filters.</div></td></tr>`;
   document.getElementById('secCount').textContent=`${rows.length} table${rows.length===1?'':'s'}`;
-  document.getElementById('secLegend').innerHTML='Access &nbsp;'+SEC_LEVELS.filter(l=>l!=='none').map(l=>`<span class="lg" title="${esc(SEC_LEVEL_TIP[l])}">${secIcons?secPie(l):`<span class="slvl ${l}">${esc(SEC_LEVEL_LABEL[l])}</span>`}${esc(SEC_LEVEL_FULL[l].replace(/ \(.*/,''))}</span>`).join('');
+  renderSecAccessBar();
+}
+// Always-visible access-level legend below the toolbar: every level (including no
+// access) as its icon (classic pie) or text label, with the full Dynamics name.
+function renderSecAccessBar(){ const el=document.getElementById('secAccessBar'); if(!el)return;
+  el.innerHTML='<span class="sab-lbl">Access levels</span>'+SEC_LEVELS.map(l=>
+    `<span class="lg" title="${esc(SEC_LEVEL_TIP[l])}">${secIcons?secPie(l):`<span class="slvl ${l}">${esc(SEC_LEVEL_LABEL[l])}</span>`}<span class="sab-name">${esc(l==='none'?'None (no access)':SEC_LEVEL_FULL[l])}</span></span>`).join('');
 }
 // compare mode: rows = tables, columns = the selected roles, cell = each role's level for the chosen privilege
 function renderSecCompare(){
@@ -1334,7 +1340,7 @@ function renderSecCompare(){
       roles.map(r=>cell(r,id)).join('')+`</tr>`; }).join('')
     : `<tr><td colspan="${roles.length+1}"><div class="dict-empty">${roles.length?'No tables match these filters.':'Pick one or more roles to compare.'}</div></td></tr>`;
   document.getElementById('secCount').textContent=`${SEC_VERB_LABEL[verb]} · ${ids.length} table${ids.length===1?'':'s'} · ${roles.length} role${roles.length===1?'':'s'}`;
-  document.getElementById('secLegend').innerHTML='Access &nbsp;'+SEC_LEVELS.filter(l=>l!=='none').map(l=>`<span class="lg" title="${esc(SEC_LEVEL_TIP[l])}">${secIcons?secPie(l):`<span class="slvl ${l}">${esc(SEC_LEVEL_LABEL[l])}</span>`}${esc(SEC_LEVEL_FULL[l].replace(/ \(.*/,''))}</span>`).join('');
+  renderSecAccessBar();
 }
 /* ---- field-level security (FieldSecurityProfiles) ---- */
 function fsCurrentProfile(){ return FSPS.find(p=>p.name===secFsProfile)||FSPS[0]||null; }

@@ -174,9 +174,9 @@
           <div class="sec-right">
             <span class="dict-count" id="secCount"></span>
             <button class="btn ghost sec-role" id="secExport" title="Export this role's table privileges"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v13M7 11l5 5 5-5"/></svg>Export…</button>
-            <span class="sec-legend sec-role" id="secLegend"></span>
           </div>
         </div>
+        <div class="sec-accessbar sec-role" id="secAccessBar" aria-label="Access-level legend"></div>
         <div class="dict-hint" id="secHint">Table privileges granted by the selected role. Click a heading to sort · click its <b>⋯</b> to filter by access level. Empty means no privilege.</div>
         <div class="dict-scroll">
           <table id="sectable" class="dgrid sgrid"><thead></thead><tbody></tbody></table>
