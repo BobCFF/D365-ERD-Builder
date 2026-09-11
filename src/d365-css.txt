@@ -416,7 +416,10 @@ body.col-resizing{cursor:col-resize;user-select:none}
 /* security roles page */
 #view-security .panel{position:relative}
 .sec-toolbar{align-items:center;gap:10px;flex-wrap:wrap}
+.sec-mode{flex:none}
 .sec-search{flex:0 1 300px;min-width:170px}
+#secExport svg,#secRolesBtn svg{width:14px;height:14px}
+#sectable thead th .sec-rolehead{display:inline-block;max-width:150px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
 .sec-right{margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .sec-right .dict-count{margin:0}
 #secExport svg{width:14px;height:14px}

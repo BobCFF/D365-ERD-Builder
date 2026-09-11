@@ -7,6 +7,20 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.23.0] — 2026-09-11
+
+### Added
+- **Role comparison view.** A **Single role / Compare** toggle on the Security
+  page. In **Compare** mode you pick a **privilege** (Create / Read / … / Share)
+  and a set of **roles**, and the grid becomes a **Table × Role** matrix showing
+  each role's access level for that privilege — so you can line roles up side by
+  side. Honours the table filter, search, "with access only", classic icons, and
+  per-column sorting; the mode, privilege, and role selection persist.
+
+### Changed
+- The Security column **⋯ menus are right-aligned under their icon**, matching
+  the Data Dictionary.
+
 ## [2.22.0] — 2026-09-11
 
 ### Added
