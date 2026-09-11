@@ -415,11 +415,16 @@ body.col-resizing{cursor:col-resize;user-select:none}
 .dgrid tbody tr:hover{background:var(--surface-2)}
 /* security roles page */
 #view-security .panel{position:relative}
-.sec-toolbar{align-items:center}
+.sec-toolbar{align-items:center;gap:10px;flex-wrap:wrap}
+.sec-search{flex:0 1 300px;min-width:170px}
+.sec-right{margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.sec-right .dict-count{margin:0}
+#secExport svg{width:14px;height:14px}
 .sec-pick{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);font-weight:600}
 .sec-pick select{font:inherit;font-size:12.5px;color:var(--ink);background:var(--field);border:1px solid var(--border-strong);border-radius:7px;padding:6px 8px;max-width:280px}
 .sec-pick select:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
-.sec-legend{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-left:auto;font-size:10.5px;color:var(--muted)}
+.sec-legend{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:10.5px;color:var(--muted)}
+.sec-legend .lg{cursor:default}
 .sec-legend .lg{display:inline-flex;align-items:center;gap:4px}
 #sectable{table-layout:auto}
 #sectable thead th{text-align:center;padding:0}

@@ -7,6 +7,22 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.22.0] — 2026-09-11
+
+### Added
+- **Export the Security page.** An **Export…** button opens a dialog to choose
+  what to include: **format** (Excel .xlsx / CSV), **roles** (this role, or all
+  roles — one worksheet each), **tables** (current filter or all), which
+  **privilege columns** (Table logical name + any of the eight verbs), and the
+  **access value** form (short "BU/PC" or full name). Choices persist.
+- **Tooltips** on **With access only**, **Classic icons**, and each **Access**
+  legend level (explaining User / BU / PC / Org scope).
+
+### Changed
+- **Condensed the Security toolbar** — the table filter is capped instead of
+  stretching full width, and the count, Export button, and legend are grouped
+  on the right, removing the large gap.
+
 ## [2.21.0] — 2026-09-11
 
 ### Added

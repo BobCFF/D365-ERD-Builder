@@ -150,15 +150,18 @@
     <section id="view-security" class="view">
       <div class="panel">
         <div class="dict-toolbar sec-toolbar">
-          <label class="sec-pick">Security role <select id="secRole"></select></label>
-          <div class="search dict-search">
+          <label class="sec-pick">Role <select id="secRole"></select></label>
+          <div class="search dict-search sec-search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
             <input id="secQ" type="search" placeholder="Filter tables…" autocomplete="off">
           </div>
-          <label class="chip"><input type="checkbox" id="secOnly" checked> With access only</label>
-          <label class="chip"><input type="checkbox" id="secIcons"> Classic icons</label>
-          <span class="dict-count" id="secCount"></span>
-          <span class="sec-legend" id="secLegend"></span>
+          <label class="chip" title="Show only tables this role has at least one privilege on"><input type="checkbox" id="secOnly" checked> With access only</label>
+          <label class="chip" title="Show the classic Dynamics access-level icons instead of text labels"><input type="checkbox" id="secIcons"> Classic icons</label>
+          <div class="sec-right">
+            <span class="dict-count" id="secCount"></span>
+            <button class="btn ghost" id="secExport" title="Export this role's table privileges"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2M12 3v13M7 11l5 5 5-5"/></svg>Export…</button>
+            <span class="sec-legend" id="secLegend"></span>
+          </div>
         </div>
         <div class="dict-hint">Table privileges granted by the selected role. Click a heading to sort · click its <b>⋯</b> to filter by access level. Empty means no privilege.</div>
         <div class="dict-scroll">
