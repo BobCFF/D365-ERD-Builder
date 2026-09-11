@@ -7,6 +7,20 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.26.0] — 2026-09-11
+
+### Added
+- **Notation legend on the Diagram.** A small legend (bottom-left of the
+  canvas) explains the relationship-notation markers for the notation you have
+  selected, and updates live when you switch notation:
+  - **Crow's foot** — many (child), one and only one, zero or one.
+  - **UML** — `*`, `1`, `0..1` multiplicities.
+  - **IDEF1X** — child (many) dot, identifying (solid) vs. non-identifying
+    (dashed + hollow diamond) relationships.
+  The glyphs mirror the ones drawn on the connectors and follow the active
+  theme. The legend can be minimized to a small button, and that state persists
+  in the browser like the minimap.
+
 ## [2.25.1] — 2026-09-11
 
 ### Changed

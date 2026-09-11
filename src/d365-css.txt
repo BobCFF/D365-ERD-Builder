@@ -352,6 +352,24 @@ input[type=checkbox]:focus-visible,input[type=radio]:focus-visible{outline:2px s
 .mm-show svg{width:18px;height:18px}
 .mm-show:hover{background:var(--surface-2)}
 @media (max-width:820px){.mmdock{display:none!important}}
+/* notation legend (bottom-left, above the status line) */
+.legend-dock{position:absolute;left:14px;bottom:48px;z-index:12;display:flex;flex-direction:column;align-items:flex-start;gap:7px}
+.nlegend{background:var(--surface);border:1px solid var(--border-strong);border-radius:9px;box-shadow:var(--shadow);overflow:hidden}
+.nl-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 6px 4px 10px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.nl-title{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);white-space:nowrap}
+.nl-min{border:none;background:none;color:var(--muted);width:20px;height:20px;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex:none}
+.nl-min:hover{background:var(--surface-3);color:var(--ink)}
+.nl-min svg{width:14px;height:14px}
+.nl-body{padding:8px 11px;display:flex;flex-direction:column;gap:8px}
+.nl-row{display:flex;align-items:center;gap:10px}
+.nl-row .g{flex:none;color:var(--ink-2);display:block}
+.nl-row .t{font-size:11px;color:var(--ink-2);line-height:1.2}
+.nl-row .t b{font-family:var(--font-mono);font-weight:700;color:var(--ink)}
+.nl-note{margin-top:1px;padding-top:7px;border-top:1px solid var(--surface-2);font-size:10px;color:var(--faint);max-width:158px;line-height:1.4}
+.nl-show{display:inline-flex;align-items:center;justify-content:center;width:34px;height:32px;border:1px solid var(--border-strong);background:var(--surface);color:var(--ink-2);border-radius:9px;box-shadow:var(--shadow);cursor:pointer}
+.nl-show:hover{background:var(--surface-2)}
+.nl-show svg{width:18px;height:18px}
+@media (max-width:820px){.legend-dock{display:none!important}}
 .status{position:absolute;left:14px;bottom:14px;font-family:var(--font-mono);font-size:10.5px;color:var(--muted);
   background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:5px 9px;box-shadow:var(--shadow)}
 .hint{position:absolute;left:50%;top:14px;transform:translateX(-50%);font-size:11.5px;color:var(--muted);

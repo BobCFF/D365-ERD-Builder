@@ -118,6 +118,13 @@
             </div>
             <button class="mm-show" id="mmShow" title="Show minimap" aria-label="Show minimap" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></button>
           </div>
+          <div id="legendDock" class="legend-dock">
+            <div class="nlegend" id="notaLegend">
+              <div class="nl-head"><span class="nl-title" id="nlTitle">Notation</span><button class="nl-min" id="nlMin" title="Hide notation legend" aria-label="Hide notation legend"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 12h14"/></svg></button></div>
+              <div class="nl-body" id="nlBody"></div>
+            </div>
+            <button class="nl-show" id="nlShow" title="Show notation legend" aria-label="Show notation legend" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h10M4 17h13"/></svg></button>
+          </div>
           <div class="floats">
             <div class="zoomctl"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button></div>
           </div>

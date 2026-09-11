@@ -237,7 +237,7 @@ function saveState(){ try{ localStorage.setItem(LS, JSON.stringify({
   vis:[...visible], cardState, cats:[...cats], gc:[...gcollapsed], theme:themeChoice, vp:[curT.x,curT.y,curT.k],
   sizes:Object.fromEntries(Object.entries(sizes).map(([k,v])=>[k,[Math.round(v.w),Math.round(v.h)]])),
   notation, lineMode, lineWeight, defaultDetail, labelsMode, pngScale, exportTitle, view, railW, railCollapsed,
-  ribbonCollapsed, minimapCollapsed, mmPos, gestureSeen, dcolOrder, dcolW, dcolF, dcolHidden:[...dcolHidden],
+  ribbonCollapsed, minimapCollapsed, legendCollapsed, mmPos, gestureSeen, dcolOrder, dcolW, dcolF, dcolHidden:[...dcolHidden],
   dsort, exportOpts, dVis:!!(document.getElementById('dVis')||{}).checked, dq:(document.getElementById('dq')||{}).value||'',
   secRole:(document.getElementById('secRole')||{}).value||'', secOnly:!(document.getElementById('secOnly'))||!!document.getElementById('secOnly').checked,
   secSort, secFilter, secIcons, secEntFilter, secExportOpts, secMode, secVerb, secCompareRoles, secSection, secFsProfile,
@@ -285,6 +285,7 @@ let railW=Math.min(560,Math.max(200, saved.railW||288));
 let railCollapsed=!!saved.railCollapsed;
 let ribbonCollapsed=!!saved.ribbonCollapsed;
 let minimapCollapsed=!!saved.minimapCollapsed;
+let legendCollapsed=!!saved.legendCollapsed;
 let gestureSeen=!!saved.gestureSeen;
 let labelsMode=['hover','always','never'].includes(saved.labelsMode)?saved.labelsMode:'hover';
 let pngScale=[2,3,4].includes(saved.pngScale)?saved.pngScale:2;
@@ -958,7 +959,7 @@ function wireSeg(elId, get, set){ const box=document.getElementById(elId);
   box.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{ set(b.dataset.v); sync(); drawLinks(); saveState(); }));
   sync();
 }
-wireSeg('segNotation',()=>notation,v=>{notation=v;});
+wireSeg('segNotation',()=>notation,v=>{notation=v; if(typeof renderLegend==='function')renderLegend();});
 wireSeg('segLines',()=>lineMode,v=>{lineMode=v;});
 document.getElementById('zin').addEventListener('click',()=>{ const r=svg.getBoundingClientRect(); zoomAt(r.width/2,r.height/2,curT.k*1.3); saveViewSoon(); });
 document.getElementById('zout').addEventListener('click',()=>{ const r=svg.getBoundingClientRect(); zoomAt(r.width/2,r.height/2,curT.k/1.3); saveViewSoon(); });
@@ -975,6 +976,36 @@ function applyRibbon(){ const rb=document.getElementById('ribbon'), tg=document.
 // Connector line weight: sets the link stroke width (CSS var) and rebuilds the
 // markers so their line-work scales with it.
 function applyLineWeight(){ document.documentElement.style.setProperty('--link-w', lwPx()+'px'); recolorMarkers(); }
+/* ---------- notation legend (explains the cardinality markers for the active notation) ---------- */
+// Standalone glyphs drawn in currentColor (follows the theme); circle/diamond fills use
+// var(--surface) so they punch through against the legend card. Kept in sync with markerDefs.
+function legendGlyph(kind){ const L='stroke="currentColor" fill="none" stroke-width="1.6"', open='fill="var(--surface)" stroke="currentColor" stroke-width="1.4"';
+  const svg=inner=>`<svg class="g" width="46" height="16" viewBox="0 0 46 16" aria-hidden="true">${inner}</svg>`;
+  switch(kind){
+    case 'cf-many':    return svg(`<path d="M2 8H30" ${L}/><path d="M30 8L44 2M30 8L44 8M30 8L44 14" stroke="currentColor" fill="none" stroke-width="1.4"/>`);
+    case 'cf-one':     return svg(`<path d="M2 8H40" ${L}/><path d="M32 3V13M37 3V13" stroke="currentColor" stroke-width="1.8"/>`);
+    case 'cf-zeroone': return svg(`<path d="M2 8H30" ${L}/><path d="M28 3V13" stroke="currentColor" stroke-width="1.8"/><circle cx="38" cy="8" r="3.4" ${open}/>`);
+    case 'idef-dot':   return svg(`<path d="M2 8H44" ${L}/><circle cx="36" cy="8" r="3.6" fill="currentColor"/>`);
+    case 'idef-solid': return svg(`<path d="M2 8H44" ${L}/>`);
+    case 'idef-dashed':return svg(`<path d="M2 8H30" ${L} stroke-dasharray="4 3"/><path d="M32 8L37 3.5L42 8L37 12.5Z" ${open}/>`);
+    case 'uml-line':   return svg(`<path d="M2 8H44" ${L}/>`);
+  }
+  return ''; }
+function legendRows(){
+  if(notation==='uml')return {title:'UML', rows:[['uml-line','<b>*</b> — many'],['uml-line','<b>1</b> — one and only one'],['uml-line','<b>0..1</b> — zero or one']], note:'Multiplicities are printed at each end.'};
+  if(notation==='idef1x')return {title:'IDEF1X', rows:[['idef-dot','Child (many) end'],['idef-solid','Identifying (mandatory)'],['idef-dashed','Non-identifying (optional)']], note:'A hollow diamond marks an optional parent.'};
+  return {title:'Crow’s foot', rows:[['cf-many','Many (child side)'],['cf-one','One and only one'],['cf-zeroone','Zero or one']], note:'Feet point to the “many” side.'};
+}
+function renderLegend(){ const body=document.getElementById('nlBody'), title=document.getElementById('nlTitle'); if(!body)return;
+  const L=legendRows(); if(title)title.textContent=L.title;
+  body.innerHTML=L.rows.map(([k,t])=>`<div class="nl-row">${legendGlyph(k)}<span class="t">${t}</span></div>`).join('')
+    +`<div class="nl-note">Line colour = relationship type (see the panel). ${esc(L.note)}</div>`;
+}
+function applyLegend(){ const dock=document.getElementById('notaLegend'), sh=document.getElementById('nlShow'); if(!dock||!sh)return;
+  dock.hidden=legendCollapsed; sh.hidden=!legendCollapsed; renderLegend(); }
+{ const mn=document.getElementById('nlMin'), sh=document.getElementById('nlShow');
+  if(mn)mn.addEventListener('click',()=>{ legendCollapsed=true; applyLegend(); saveState(); });
+  if(sh)sh.addEventListener('click',()=>{ legendCollapsed=false; applyLegend(); saveState(); }); }
 { const sel=document.getElementById('selWeight'); if(sel){ sel.value=lineWeight;
   sel.addEventListener('change',()=>{ lineWeight=LINE_W[sel.value]?sel.value:'2'; applyLineWeight(); saveState(); }); } }
 { const rz=document.getElementById('railResizer'), rail=document.getElementById('rail');
@@ -1870,7 +1901,7 @@ document.getElementById('reset2').addEventListener('click',()=>{ try{localStorag
   const rb=document.getElementById('revertBtn'); if(rb)rb.addEventListener('click',revertBuiltIn); }
 
 /* ---------- init ---------- */
-applyTheme(); applyRail(); applyRibbon(); applyLineWeight(); applyMinimap(); buildThemeSwatches(); buildSidebar(); applyRailFilter();
+applyTheme(); applyRail(); applyRibbon(); applyLineWeight(); applyMinimap(); applyLegend(); buildThemeSwatches(); buildSidebar(); applyRailFilter();
 { const _dv=document.getElementById('dVis'); if(_dv)_dv.checked=!!saved.dVis;
   const _dq=document.getElementById('dq'); if(_dq&&typeof saved.dq==='string')_dq.value=saved.dq; }
 if(importMeta){ const env=document.querySelector('#topbar .env'); if(env){ env.textContent=(importMeta.filename||'schema').replace(/\.xml$/i,''); env.title=(isImported?'Imported':'Sample')+' schema — '+(importMeta.ents||allIds.length)+' tables'; } }
