@@ -156,13 +156,15 @@
             <input id="secQ" type="search" placeholder="Filter tables…" autocomplete="off">
           </div>
           <label class="chip"><input type="checkbox" id="secOnly" checked> With access only</label>
+          <label class="chip"><input type="checkbox" id="secIcons"> Classic icons</label>
           <span class="dict-count" id="secCount"></span>
           <span class="sec-legend" id="secLegend"></span>
         </div>
-        <div class="dict-hint">Table privileges granted by the selected role. Cells show the access level; empty means the role has no privilege for that action.</div>
+        <div class="dict-hint">Table privileges granted by the selected role. Click a heading to sort · click its <b>⋯</b> to filter by access level. Empty means no privilege.</div>
         <div class="dict-scroll">
           <table id="sectable" class="dgrid sgrid"><thead></thead><tbody></tbody></table>
         </div>
+        <div id="secmenu" class="dmenu" hidden></div>
       </div>
     </section>
 

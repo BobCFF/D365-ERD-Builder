@@ -472,4 +472,93 @@
       </EntityRelationships>
     </Entity>
   </Entities>
+  <Roles>
+    <Role id="{00000000-0000-0000-0000-000000000001}" name="Salesperson">
+      <RolePrivileges>
+        <RolePrivilege name="prvCreateAccount" level="Local" />
+        <RolePrivilege name="prvReadAccount" level="Local" />
+        <RolePrivilege name="prvWriteAccount" level="Local" />
+        <RolePrivilege name="prvAppendAccount" level="Local" />
+        <RolePrivilege name="prvAppendToAccount" level="Local" />
+        <RolePrivilege name="prvAssignAccount" level="Basic" />
+        <RolePrivilege name="prvCreateContact" level="Local" />
+        <RolePrivilege name="prvReadContact" level="Local" />
+        <RolePrivilege name="prvWriteContact" level="Local" />
+        <RolePrivilege name="prvCreateLead" level="Basic" />
+        <RolePrivilege name="prvReadLead" level="Local" />
+        <RolePrivilege name="prvWriteLead" level="Basic" />
+        <RolePrivilege name="prvDeleteLead" level="Basic" />
+        <RolePrivilege name="prvCreateOpportunity" level="Local" />
+        <RolePrivilege name="prvReadOpportunity" level="Local" />
+        <RolePrivilege name="prvWriteOpportunity" level="Local" />
+        <RolePrivilege name="prvAppendOpportunity" level="Local" />
+        <RolePrivilege name="prvAppendToOpportunity" level="Local" />
+        <RolePrivilege name="prvCreateOpportunityProduct" level="Local" />
+        <RolePrivilege name="prvReadOpportunityProduct" level="Local" />
+        <RolePrivilege name="prvWriteOpportunityProduct" level="Local" />
+        <RolePrivilege name="prvReadProduct" level="Global" />
+        <RolePrivilege name="prvReadIncident" level="Local" />
+        <RolePrivilege name="prvReadsystemuser" level="Global" />
+        <RolePrivilege name="prvReadBusinessUnit" level="Local" />
+      </RolePrivileges>
+    </Role>
+    <Role id="{00000000-0000-0000-0000-000000000002}" name="Sales Manager">
+      <RolePrivileges>
+        <RolePrivilege name="prvCreateAccount" level="Deep" />
+        <RolePrivilege name="prvReadAccount" level="8" />
+        <RolePrivilege name="prvWriteAccount" level="Deep" />
+        <RolePrivilege name="prvDeleteAccount" level="Deep" />
+        <RolePrivilege name="prvAppendAccount" level="Deep" />
+        <RolePrivilege name="prvAppendToAccount" level="Deep" />
+        <RolePrivilege name="prvAssignAccount" level="Deep" />
+        <RolePrivilege name="prvShareAccount" level="Deep" />
+        <RolePrivilege name="prvReadContact" level="Global" />
+        <RolePrivilege name="prvWriteContact" level="Deep" />
+        <RolePrivilege name="prvReadLead" level="Global" />
+        <RolePrivilege name="prvWriteLead" level="Deep" />
+        <RolePrivilege name="prvAssignLead" level="Deep" />
+        <RolePrivilege name="prvCreateOpportunity" level="Deep" />
+        <RolePrivilege name="prvReadOpportunity" level="Global" />
+        <RolePrivilege name="prvWriteOpportunity" level="Deep" />
+        <RolePrivilege name="prvDeleteOpportunity" level="4" />
+        <RolePrivilege name="prvAssignOpportunity" level="Deep" />
+        <RolePrivilege name="prvShareOpportunity" level="Deep" />
+        <RolePrivilege name="prvCreateOpportunityProduct" level="Deep" />
+        <RolePrivilege name="prvReadOpportunityProduct" level="Deep" />
+        <RolePrivilege name="prvWriteOpportunityProduct" level="Deep" />
+        <RolePrivilege name="prvReadProduct" level="Global" />
+        <RolePrivilege name="prvReadIncident" level="Global" />
+        <RolePrivilege name="prvReadsystemuser" level="Global" />
+        <RolePrivilege name="prvReadBusinessUnit" level="Global" />
+      </RolePrivileges>
+    </Role>
+    <Role id="{00000000-0000-0000-0000-000000000003}" name="Customer Service Rep">
+      <RolePrivileges>
+        <RolePrivilege name="prvCreateIncident" level="Local" />
+        <RolePrivilege name="prvReadIncident" level="Local" />
+        <RolePrivilege name="prvWriteIncident" level="Local" />
+        <RolePrivilege name="prvAppendIncident" level="Local" />
+        <RolePrivilege name="prvAppendToIncident" level="Local" />
+        <RolePrivilege name="prvAssignIncident" level="Basic" />
+        <RolePrivilege name="prvReadAccount" level="Global" />
+        <RolePrivilege name="prvReadContact" level="Global" />
+        <RolePrivilege name="prvWriteContact" level="Local" />
+        <RolePrivilege name="prvReadProduct" level="Global" />
+        <RolePrivilege name="prvReadsystemuser" level="Global" />
+      </RolePrivileges>
+    </Role>
+    <Role id="{00000000-0000-0000-0000-000000000004}" name="Read Only">
+      <RolePrivileges>
+        <RolePrivilege name="prvReadAccount" level="Global" />
+        <RolePrivilege name="prvReadContact" level="Global" />
+        <RolePrivilege name="prvReadLead" level="Global" />
+        <RolePrivilege name="prvReadOpportunity" level="Global" />
+        <RolePrivilege name="prvReadOpportunityProduct" level="Global" />
+        <RolePrivilege name="prvReadProduct" level="Global" />
+        <RolePrivilege name="prvReadIncident" level="Global" />
+        <RolePrivilege name="prvReadsystemuser" level="Global" />
+        <RolePrivilege name="prvReadBusinessUnit" level="Global" />
+      </RolePrivileges>
+    </Role>
+  </Roles>
 </ImportExportXml>

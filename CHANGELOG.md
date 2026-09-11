@@ -7,6 +7,24 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.20.0] — 2026-09-11
+
+### Added
+- **Security page column controls.** Each column now has a **⋯** menu — sort
+  ascending/descending and (for privilege columns) filter by access level with
+  a checklist; the header shows a dot when a column filter is active, and
+  clicking a heading sorts by it. Sort + filters persist.
+- **Classic icons toggle.** A **Classic icons** switch renders the familiar
+  Dynamics pie glyphs (outlined circle → quarter/half/three-quarter wedge →
+  full disc) instead of the text pills; choice persists.
+- **Demo roles in the sample.** The bundled sample now ships four example roles
+  (Salesperson, Sales Manager, Customer Service Rep, Read Only) so the Security
+  tab is visible without importing a file.
+
+### Changed
+- Security access level **Deep** is now labelled **PC** (Parent: Child).
+- The Security **access legend** hides on narrow screens so the toolbar stays tidy.
+
 ## [2.19.0] — 2026-09-11
 
 ### Added
