@@ -7,6 +7,16 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.27.0] — 2026-09-11
+
+### Added
+- **Notation legend in PNG / SVG exports.** The exported image's title block now
+  includes the same relationship-notation legend shown on the Diagram — the
+  cardinality markers for the active notation (crow's foot, UML `* / 1 / 0..1`,
+  or IDEF1X dot / diamond) — as a second row beneath the relationship-type
+  colour legend. It appears whenever the **Title & legend block** export setting
+  is on (the default) and there are relationships to show.
+
 ## [2.26.0] — 2026-09-11
 
 ### Added
