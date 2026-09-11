@@ -7,6 +7,16 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.28.1] — 2026-09-11
+
+### Fixed
+- **Self-referencing loop is now a clear "U" / horseshoe.** The loop for a
+  table's self-referencing lookup left the box edge diagonally, pinching the
+  curve so the cardinality markers crowded the card. Its tips now leave the edge
+  horizontally (control points level with each endpoint) and the endpoints are
+  spread further apart, so the notation markers (crow's-foot / one, or the
+  IDEF1X dot / diamond) sit clear of the box and point straight into it.
+
 ## [2.28.0] — 2026-09-11
 
 ### Added
