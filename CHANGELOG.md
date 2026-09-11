@@ -7,6 +7,16 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.17.1] — 2026-09-11
+
+### Added
+- **Remove a column from its own filter menu.** A column's **⋯** menu now has a
+  **Remove column** button beside **Clear column**; it hides the column (a
+  removed column is restored from the **Columns** menu). The Columns chooser now
+  lists **every** column — base columns as well as the optional metadata ones —
+  so any column can be toggled off and back on. The last visible column can't be
+  removed. Works on the main Data Dictionary tab and in the per-table dialog.
+
 ## [2.17.0] — 2026-09-11
 
 ### Added

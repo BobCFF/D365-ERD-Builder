@@ -223,8 +223,9 @@ function defaultDcolF(){ const o={}; for(const k of DCOL_ALL)o[k]=fState(DCOLDEF
 let dcolOrder=(function(){ let o=Array.isArray(saved.dcolOrder)?saved.dcolOrder.filter(k=>DCOLDEF[k]):[]; o=[...new Set(o)];
   for(const k of DCOL_ALL)if(!o.includes(k))o.push(k); return o.length?o:DCOL_ALL.slice(); })();
 let dcolW={}; DCOL_ALL.forEach(k=>{ const v=saved.dcolW&&typeof saved.dcolW[k]==='number'?saved.dcolW[k]:DCOLDEF[k].w; dcolW[k]=Math.max(DCOLDEF[k].min,Math.min(900,v)); });
-// hidden columns (meta only; base columns always shown). Default hides meta with on:false.
-let dcolHidden=Array.isArray(saved.dcolHidden)?new Set(saved.dcolHidden.filter(k=>DCOLDEF[k]&&DCOLDEF[k].meta)):new Set(META_COLS.filter(m=>!m.on).map(m=>m.key));
+// hidden columns — any column can be removed via its menu / the Columns chooser and is restored there.
+// Default hides meta with on:false; base columns default visible.
+let dcolHidden=Array.isArray(saved.dcolHidden)?new Set(saved.dcolHidden.filter(k=>DCOLDEF[k])):new Set(META_COLS.filter(m=>!m.on).map(m=>m.key));
 let dcolF=defaultDcolF();
 if(saved.dcolF&&typeof saved.dcolF==='object'){ for(const k of DCOL_ALL){ const s=saved.dcolF[k]; if(s&&typeof s==='object')Object.assign(dcolF[k],s); if(dcolF[k].groups&&!Array.isArray(dcolF[k].groups))dcolF[k].groups=[]; if(dcolF[k].sel&&!Array.isArray(dcolF[k].sel))dcolF[k].sel=[]; } }
 if(!Array.isArray(dcolF.ent.tables))dcolF.ent.tables=[];
@@ -1079,7 +1080,7 @@ function renderGrid(g){
 function renderDict(){ if(dictBuilt)renderGrid(mainGrid); }
 /* ---- per-column filter menu (per-grid: g.dmenuKey / g.menu) ---- */
 function radioRow(field,val,cur,label){ return `<label class="dm-opt"><input type="radio" name="dm-${field}" data-v="${val}" ${cur===val?'checked':''}><span>${esc(label)}</span></label>`; }
-function dmenuHTML(k){ const def=DCOLDEF[k], f=dcolF[k]; let h=`<div class="dm-h">Filter · ${esc(def.label)}</div>`;
+function dmenuHTML(g,k){ const def=DCOLDEF[k], f=dcolF[k]; let h=`<div class="dm-h">Filter · ${esc(def.label)}</div>`;
   if(def.filter==='group'){
     h+=`<input class="dm-q" id="dm-q" type="search" placeholder="Table contains…" value="${esc(f.q)}">`;
     h+=`<div class="dm-sub">Groups</div><div class="dm-list">`+GROUPS.filter(g=>allIds.some(id=>ENT[id].group===g[0])).map(g=>
@@ -1102,11 +1103,15 @@ function dmenuHTML(k){ const def=DCOLDEF[k], f=dcolF[k]; let h=`<div class="dm-h
   } else if(def.filter==='boolsel'){
     h+=`<div class="dm-opts">`+radioRow('mode','',f.mode,'Any')+radioRow('mode','yes',f.mode,'Yes')+radioRow('mode','no',f.mode,'No')+`</div>`;
   }
-  h+=`<div class="dm-foot"><button class="dm-clear" ${dcolActive(k)?'':'disabled'}>Clear column</button></div>`;
+  // Clear column (reset its filter) + Remove column (hide it; restore from the Columns chooser).
+  // Remove is disabled when it would leave the grid with no visible column.
+  const lastOne=visCols(g).length<=1;
+  h+=`<div class="dm-foot"><button class="dm-clear" ${dcolActive(k)?'':'disabled'}>Clear column</button>`+
+    `<button class="dm-remove" ${lastOne?'disabled':''} title="Hide this column (restore it from the Columns menu)">Remove column</button></div>`;
   return h; }
 function closeDMenu(g){ if(!g||g.dmenuKey==null)return; g.menu.hidden=true; g.menu.innerHTML=''; g.dmenuKey=null; }
 function openDMenu(g,k,thEl){ if(g.dmenuKey===k){ closeDMenu(g); return; }
-  const m=g.menu; g.dmenuKey=k; m.innerHTML=dmenuHTML(k); m.hidden=false;
+  const m=g.menu; g.dmenuKey=k; m.innerHTML=dmenuHTML(g,k); m.hidden=false;
   const mw=Math.max(m.offsetWidth,220);
   if(g.fixed){ // dialog: menu is body-level and positioned in viewport coords (above the modal)
     const br=thEl.getBoundingClientRect(); let left=Math.max(6,Math.min(br.right-mw, innerWidth-mw-6));
@@ -1128,7 +1133,8 @@ function wireDMenu(g,k){ const m=g.menu, f=dcolF[k], def=DCOLDEF[k];
   m.querySelectorAll('input[data-ent]').forEach(c=>c.addEventListener('change',()=>{ const id=c.dataset.ent; f.tables=f.tables.filter(x=>x!==id); if(c.checked)f.tables.push(id); dmApply(g); }));
   m.querySelectorAll('input[data-t]').forEach(c=>c.addEventListener('change',()=>{ const t=c.dataset.t; f.sel=f.sel.filter(x=>x!==t); if(c.checked)f.sel.push(t); dmApply(g); }));
   m.querySelectorAll('input[name^="dm-"]').forEach(r=>r.addEventListener('change',()=>{ if(!r.checked)return; const field=r.getAttribute('name').slice(3); f[field]=r.dataset.v; dmApply(g); }));
-  const cb=m.querySelector('.dm-clear'); if(cb)cb.addEventListener('click',()=>{ resetDcol(k); m.innerHTML=dmenuHTML(k); wireDMenu(g,k); dmApply(g); });
+  const cb=m.querySelector('.dm-clear'); if(cb)cb.addEventListener('click',()=>{ resetDcol(k); m.innerHTML=dmenuHTML(g,k); wireDMenu(g,k); dmApply(g); });
+  const rm=m.querySelector('.dm-remove'); if(rm)rm.addEventListener('click',()=>{ if(visCols(g).length<=1)return; dcolHidden.add(k); closeDMenu(g); renderGrid(g); saveState(); });
 }
 function resetDcol(k){ dcolF[k]=fState(DCOLDEF[k].filter); }
 function clearAllDcol(g){ dcolF=defaultDcolF(); closeDMenu(g); renderGrid(g); saveState(); }
@@ -1177,13 +1183,16 @@ function wireGridHead(g){ const table=g.table, thead=table.querySelector('thead'
     dragK=null; clearDrop(); renderGrid(g); saveState(); });
   thead.addEventListener('dragend',()=>{ dragK=null; clearDrop(); });
 }
-/* ---- metadata column chooser (per-grid: g.colsMenu / g.colsOpen / g.colsBtn) ---- */
+/* ---- column chooser: toggle any column on/off (per-grid: g.colsMenu / g.colsOpen / g.colsBtn) ---- */
 function closeColsMenu(g){ if(!g||!g.colsOpen)return; g.colsMenu.hidden=true; g.colsMenu.innerHTML=''; g.colsOpen=false; }
 function openColsMenu(g){ if(g.colsOpen){ closeColsMenu(g); return; } closeDMenu(g);
-  const m=g.colsMenu, btn=g.colsBtn; const avail=META_COLS.filter(x=>DMETA_AVAIL.has(x.key));
-  let h=`<div class="dm-h">Metadata columns</div>`;
-  if(!avail.length){ h+=`<div class="dm-note">No optional metadata was found in this file. Export an unmanaged solution's <b>customizations.xml</b> for the richest set.</div>`; }
-  else { h+=`<div class="dm-list">`+avail.map(x=>`<label class="dm-chk"><input type="checkbox" data-col="${x.key}" ${dcolHidden.has(x.key)?'':'checked'}><span class="dt-tname">${esc(x.label)}</span></label>`).join('')+`</div>`; }
+  const m=g.colsMenu, btn=g.colsBtn, omit=g.omit;
+  const chk=k=>`<label class="dm-chk"><input type="checkbox" data-col="${k}" ${dcolHidden.has(k)?'':'checked'}><span class="dt-tname">${esc(DCOLDEF[k].label)}</span></label>`;
+  // base columns first (any the grid omits, e.g. Table in the dialog, are not listed), then the metadata present in the file
+  const base=BASE_COLS.filter(k=>!(omit&&omit.has(k))), avail=META_COLS.filter(x=>DMETA_AVAIL.has(x.key)&&!(omit&&omit.has(x.key)));
+  let h=`<div class="dm-h">Columns</div><div class="dm-list">`+base.map(chk).join('')+`</div>`;
+  if(avail.length){ h+=`<div class="dm-sub">Metadata</div><div class="dm-list">`+avail.map(x=>chk(x.key)).join('')+`</div>`; }
+  else { h+=`<div class="dm-note">No optional metadata was found in this file. Export an unmanaged solution's <b>customizations.xml</b> for the richest set.</div>`; }
   m.innerHTML=h; m.hidden=false; g.colsOpen=true;
   const mw=Math.max(m.offsetWidth,220);
   if(g.fixed){ const br=btn.getBoundingClientRect(); let left=Math.max(6,Math.min(br.left, innerWidth-mw-6));
@@ -1192,7 +1201,9 @@ function openColsMenu(g){ if(g.colsOpen){ closeColsMenu(g); return; } closeDMenu
   } else { const panel=g.posEl, pr=panel.getBoundingClientRect(), br=btn.getBoundingClientRect();
     let left=br.left-pr.left; left=Math.max(6,Math.min(left, pr.width-mw-6));
     m.style.left=left+'px'; m.style.top=(br.bottom-pr.top+3)+'px'; }
-  m.querySelectorAll('input[data-col]').forEach(c=>c.addEventListener('change',()=>{ const k=c.dataset.col; if(c.checked)dcolHidden.delete(k); else dcolHidden.add(k); renderGrid(g); saveState(); })); }
+  m.querySelectorAll('input[data-col]').forEach(c=>c.addEventListener('change',()=>{ const k=c.dataset.col;
+    if(!c.checked && visCols(g).length<=1){ c.checked=true; return; } // keep at least one column visible
+    if(c.checked)dcolHidden.delete(k); else dcolHidden.add(k); renderGrid(g); saveState(); })); }
 /* ---- main-tab grid + its toolbar wiring ---- */
 const mainGrid={ table:document.getElementById('dicttable'), menu:document.getElementById('dmenu'),
   colsMenu:document.getElementById('dcolsmenu'), colsBtn:document.getElementById('dCols'),
