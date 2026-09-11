@@ -467,6 +467,12 @@ body.col-resizing{cursor:col-resize;user-select:none}
 .sec-legend .spie{width:13px;height:13px}
 /* the legend is a nicety — drop it before the toolbar wraps awkwardly on narrow screens */
 @media (max-width:820px){ .sec-legend{display:none} }
+/* always-visible access-level legend bar below the Security toolbar (wraps, never hidden) */
+.sec-accessbar{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:7px 16px;border-bottom:1px solid var(--surface-2);background:var(--surface)}
+.sec-accessbar .sab-lbl{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--faint)}
+.sec-accessbar .lg{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);cursor:default}
+.sec-accessbar .sab-name{color:var(--ink-2)}
+.sec-accessbar .spie{width:14px;height:14px}
 .slvl{display:inline-block;min-width:38px;text-align:center;font-size:10px;font-weight:700;letter-spacing:.02em;padding:2px 7px;border-radius:5px;border:1px solid transparent;text-transform:uppercase}
 .slvl.none{color:var(--faint);font-weight:400}
 .slvl.user{background:color-mix(in srgb,var(--accent) 14%,var(--surface));color:var(--accent);border-color:color-mix(in srgb,var(--accent) 24%,transparent)}

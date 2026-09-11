@@ -7,6 +7,19 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.31.0] — 2026-09-11
+
+### Changed
+- **Access-level legend on the Security page.** Replaced the small, easily-missed
+  legend strip (top-right of the toolbar, hidden on narrow screens) with a
+  dedicated **Access levels** bar below the toolbar. It lists every level —
+  **None**, User (Basic), Business Unit (Local), Parent: Child (Deep), and
+  Organization (Global) — each with its classic pie icon or text label
+  (matching the "Classic icons" toggle) and full Dynamics name. It stays visible
+  at all widths (wraps instead of hiding) and shows in both single-role and
+  Compare views (hidden in the Field security section, which doesn't use access
+  levels).
+
 ## [2.30.0] — 2026-09-11
 
 ### Added
