@@ -7,6 +7,13 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.32.3] — 2026-09-12
+
+### Changed
+- **Zebra striping.** The Data Dictionary grid and the per-table dialog grid now
+  shade every other row a touch lighter for easier row tracking. Hover still
+  highlights the full row, and the Security grid is unchanged.
+
 ## [2.32.2] — 2026-09-12
 
 ### Fixed
