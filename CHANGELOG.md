@@ -7,6 +7,12 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.32.2] — 2026-09-12
+
+### Fixed
+- **"Forget & clear" button label.** The confirm button showed a literal
+  `&amp;` (the label was HTML-escaped twice). It now reads "Forget & clear".
+
 ## [2.32.1] — 2026-09-12
 
 ### Changed
