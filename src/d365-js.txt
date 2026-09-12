@@ -1892,6 +1892,15 @@ function openModal(html,cls){ const o=document.getElementById('modal'); o.innerH
   o.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',closeModal)); return o.querySelector('.modal-card'); }
 let _modalCleanup=null;
 function closeModal(){ const o=document.getElementById('modal'); o.hidden=true; o.innerHTML=''; if(_modalCleanup){ const c=_modalCleanup; _modalCleanup=null; c(); } }
+// Small confirm dialog for destructive actions. `body` may contain safe HTML.
+function openConfirm(opts){
+  const card=openModal(
+    `<div class="modal-h"><div class="modal-t">${esc(opts.title||'Are you sure?')}</div><button class="modal-x" data-close aria-label="Close">${IC_X}</button></div>`+
+    `<div class="modal-body"><p class="confirm-msg">${opts.body||''}</p></div>`+
+    `<div class="modal-foot"><button class="btn" data-close>${esc(opts.cancelLabel||'Cancel')}</button><button class="btn ${opts.danger===false?'primary':'danger-btn'}" id="confirmGo">${esc(opts.confirmLabel||'Confirm')}</button></div>`,
+    'modal-confirm');
+  const go=card.querySelector('#confirmGo'); if(go){ go.addEventListener('click',()=>{ closeModal(); opts.onConfirm&&opts.onConfirm(); }); go.focus(); }
+}
 document.getElementById('modal').addEventListener('mousedown',e=>{ if(e.target.id==='modal')closeModal(); });
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!document.getElementById('modal').hidden)closeModal(); });
 let _floatMenu=null;
@@ -2023,9 +2032,19 @@ wireSetSeg('setDensity',v=>{ defaultDetail=v; visible.forEach(refreshNode); draw
 wireSetSeg('setLabels',v=>{ labelsMode=v; drawLinks(); });
 wireSetSeg('setScale',v=>{ pngScale=parseInt(v,10)||2; });
 wireSetSeg('setLegend',v=>{ exportTitle=(v==='on'); });
-document.getElementById('reset2').addEventListener('click',()=>{ try{localStorage.removeItem(LS);}catch(e){} location.reload(); });
+document.getElementById('reset2').addEventListener('click',()=>openConfirm({
+  title:'Reset to defaults?',
+  body:'This clears your saved layout, sizes, visible tables, filters, and preferences in this browser. Your imported schema is kept. This can’t be undone.',
+  confirmLabel:'Reset to defaults',
+  onConfirm:()=>{ try{localStorage.removeItem(LS);}catch(e){} location.reload(); }
+}));
 { const ib=document.getElementById('importBtn2'); if(ib)ib.addEventListener('click',pickXml);
-  const rb=document.getElementById('revertBtn'); if(rb)rb.addEventListener('click',revertBuiltIn); }
+  const rb=document.getElementById('revertBtn'); if(rb)rb.addEventListener('click',()=>openConfirm({
+    title:'Forget this file?',
+    body:'This removes the imported schema and your layout from this browser (localStorage + IndexedDB) and returns to the upload screen. This can’t be undone.',
+    confirmLabel:'Forget &amp; clear',
+    onConfirm:revertBuiltIn
+  })); }
 
 /* ---------- init ---------- */
 applyTheme(); applyRail(); applyRibbon(); applyLineWeight(); applyMinimap(); applyLegend(); buildThemeSwatches(); buildSidebar(); applyRailFilter();
