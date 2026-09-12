@@ -7,6 +7,17 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.33.0] — 2026-09-12
+
+### Added
+- **"Pipes" line style.** A new Lines option on the Diagram routes connectors
+  orthogonally — right angles only, with each side running horizontally to a
+  shared vertical channel so lines stay parallel and uniform. Corners are
+  rounded for a smoother look, and where a horizontal run crosses another line's
+  vertical run it draws a small semicircular **hop** (pipe-jump), so crossings
+  read clearly. Applies on screen and in PNG/SVG exports; self-references route
+  as a rounded rectangular tab.
+
 ## [2.32.4] — 2026-09-12
 
 ### Changed
