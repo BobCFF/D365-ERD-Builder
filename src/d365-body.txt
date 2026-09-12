@@ -60,7 +60,7 @@
           </div>
           <div class="ribbon-div"></div>
           <div class="ribbon-group">
-            <div class="ribbon-row"><div class="seg" id="segLines"><button data-v="straight">Straight</button><button data-v="curved">Curved</button><button data-v="s">S-curve</button></div></div>
+            <div class="ribbon-row"><div class="seg" id="segLines"><button data-v="straight">Straight</button><button data-v="curved">Curved</button><button data-v="s">S-curve</button><button data-v="ortho">Pipes</button></div></div>
             <span class="ribbon-label">Lines</span>
           </div>
           <div class="ribbon-div"></div>
