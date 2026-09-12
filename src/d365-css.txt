@@ -433,6 +433,11 @@ input[type=checkbox]:focus-visible,input[type=radio]:focus-visible{outline:2px s
 body.col-resizing{cursor:col-resize;user-select:none}
 .dgrid td{padding:7px 12px;border-bottom:1px solid var(--surface-2);vertical-align:top;overflow:hidden;text-overflow:ellipsis}
 .dgrid tbody tr:hover{background:var(--surface-2)}
+/* zebra striping on the Data Dictionary grid and the per-entity dialog grid (not the Security grid) */
+#dicttable tbody tr:nth-child(even),
+.modal-grid .dgrid tbody tr:nth-child(even){background:color-mix(in srgb,var(--surface-2) 45%,transparent)}
+#dicttable tbody tr:hover,
+.modal-grid .dgrid tbody tr:hover{background:var(--surface-2)}
 /* security roles page */
 #view-security .panel{position:relative}
 .sec-toolbar{align-items:center;gap:10px;flex-wrap:wrap}
