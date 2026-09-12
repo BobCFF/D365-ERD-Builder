@@ -517,6 +517,8 @@ body.col-resizing{cursor:col-resize;user-select:none}
 .modal-card{background:var(--surface);border:1px solid var(--border-strong);border-radius:14px;box-shadow:0 24px 70px rgba(0,0,0,.4);
   width:100%;max-width:560px;max-height:86vh;display:flex;flex-direction:column;overflow:hidden}
 .modal-card.modal-wide{max-width:860px}
+.modal-card.modal-confirm{max-width:440px}
+.confirm-msg{margin:0;font-size:13px;line-height:1.55;color:var(--ink-2)}
 .modal-h{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border)}
 .modal-t{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
 .modal-t .dot{width:11px;height:11px;border-radius:3px;flex:none}

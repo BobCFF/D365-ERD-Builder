@@ -7,6 +7,14 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.32.1] — 2026-09-12
+
+### Changed
+- **Confirmation before destructive Settings actions.** "Forget this file" and
+  "Reset to defaults" now show a confirmation dialog first (with Cancel), so an
+  accidental click no longer wipes your imported schema or layout without
+  warning.
+
 ## [2.32.0] — 2026-09-11
 
 ### Added
