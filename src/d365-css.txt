@@ -264,7 +264,7 @@ input[type=checkbox]:focus-visible,input[type=radio]:focus-visible{outline:2px s
 .seg-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin:8px 16px 3px}
 .seg{display:flex;margin:0 16px 6px;border:1px solid var(--border-strong);border-radius:8px;overflow:hidden}
 .seg button{flex:1;border:none;background:var(--surface);color:var(--muted);font-family:var(--font-ui);
-  font-size:11.5px;font-weight:600;padding:6px 4px;cursor:pointer}
+  font-size:11.5px;font-weight:600;padding:6px 4px;cursor:pointer;white-space:nowrap}
 .seg button+button{border-left:1px solid var(--border)}
 .seg button:hover{background:var(--surface-2)}
 .seg button.on{background:var(--accent);color:#fff}

@@ -7,6 +7,13 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.33.1] — 2026-09-12
+
+### Fixed
+- **"S-curve" label no longer wraps.** Segmented-control buttons keep their
+  labels on one line (`white-space: nowrap`), so the Lines "S-curve" option no
+  longer breaks across two rows.
+
 ## [2.33.0] — 2026-09-12
 
 ### Added
