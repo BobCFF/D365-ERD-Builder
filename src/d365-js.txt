@@ -2042,7 +2042,7 @@ document.getElementById('reset2').addEventListener('click',()=>openConfirm({
   const rb=document.getElementById('revertBtn'); if(rb)rb.addEventListener('click',()=>openConfirm({
     title:'Forget this file?',
     body:'This removes the imported schema and your layout from this browser (localStorage + IndexedDB) and returns to the upload screen. This can’t be undone.',
-    confirmLabel:'Forget &amp; clear',
+    confirmLabel:'Forget & clear',
     onConfirm:revertBuiltIn
   })); }
 
