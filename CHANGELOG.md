@@ -7,6 +7,12 @@ released version below.
 The format follows [Keep a Changelog](https://keepachangelog.com/), and the
 project uses [Semantic Versioning](https://semver.org/): `MAJOR.MINOR.PATCH`.
 
+## [2.32.4] — 2026-09-12
+
+### Changed
+- **Zebra striping on the Security grid.** The Security table now alternates row
+  shading like the Data Dictionary and dialog grids.
+
 ## [2.32.3] — 2026-09-12
 
 ### Changed
